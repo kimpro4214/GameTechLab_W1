@@ -117,7 +117,7 @@ public:
 		// 겹친 거리를 질량 비율에 따라 나누어 두 공을 서로 밀어냄
 		const float Penetration = RadiusSum - Distance;
 		const float PenetrationSlop = 0.001f;
-		const float CorrectionPercent = 0.8f;
+		const float CorrectionPercent = 0.25f;
 		const float CorrectedPenetration =
 			Penetration > PenetrationSlop ? Penetration - PenetrationSlop : 0.0f;
 		const FVector Correction =
@@ -527,6 +527,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	float FrictionCoefficient = 0.0f;
 	float AngularDamping = 0.0f;
 	bool bShowCollisionDebug = true;
+	const int PhysicsSubsteps = 2;
+	const int CollisionSolverIterations = 8;
 
 	// 공은 조건에 따라 UPrimitive 이중 포인터로 관리
 	srand(static_cast<unsigned int>(GetTickCount()));
@@ -606,8 +608,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 
 		// 핀볼 움직임 || 중력 || 블랙홀이 켜져 있다면 물리 시뮬레이션을 갱신
-		const float	  DeltaTime = 1.0f / (float)targetFPS;
-		const FVector GravityVelocityChange = GravityAcceleration * DeltaTime;
+		const float FrameDeltaTime = 1.0f / (float)targetFPS;
+		const float SubstepDeltaTime = FrameDeltaTime / (float)PhysicsSubsteps;
+		const FVector GravityVelocityChange = GravityAcceleration * SubstepDeltaTime;
 
 		for (int i = 0; i < UBall::TotalNumBalls; ++i)
 		{
@@ -615,38 +618,48 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			Ball->bHasCollisionDebug = false;
 		}
 
-		for (int i = 0; i < UBall::TotalNumBalls - 1; ++i)
+		// Integrate and solve contacts at smaller time intervals within this frame.
+		for (int Substep = 0; Substep < PhysicsSubsteps; ++Substep)
 		{
-			UBall* Ball = static_cast<UBall*>(PrimitiveList[i]);
-			
-			Ball->AddVelocity(GravityVelocityChange);
-			if (bEnableTestTorque)
+			for (int i = 0; i < UBall::TotalNumBalls - 1; ++i)
 			{
-				Ball->AddTorque(TestTorque, DeltaTime);
-			}
-			Ball->Move(DeltaTime, AngularDamping);
-		}
+				UBall* Ball = static_cast<UBall*>(PrimitiveList[i]);
 
-		// 같은 공 쌍을 중복 처리하지 않도록 j는 i + 1부터 검사
-		for (int i = 0; i < UBall::TotalNumBalls; ++i)
-		{
-			for (int j = i + 1; j < UBall::TotalNumBalls; ++j)
-			{
-				if (PrimitiveList[i]->IsColliding(PrimitiveList[j]))
+				Ball->AddVelocity(GravityVelocityChange);
+				if (bEnableTestTorque)
 				{
-					PrimitiveList[i]->ResolveCollision(
-						PrimitiveList[j], Restitution, FrictionCoefficient);
+					Ball->AddTorque(TestTorque, SubstepDeltaTime);
+				}
+				Ball->Move(SubstepDeltaTime, AngularDamping);
+			}
+
+			// Repeatedly solve contacts at the position sampled by this substep.
+			for (int SolverIteration = 0;
+				SolverIteration < CollisionSolverIterations;
+				++SolverIteration)
+			{
+				// 같은 공 쌍을 중복 처리하지 않도록 j는 i + 1부터 검사
+				for (int i = 0; i < UBall::TotalNumBalls; ++i)
+				{
+					for (int j = i + 1; j < UBall::TotalNumBalls; ++j)
+					{
+						if (PrimitiveList[i]->IsColliding(PrimitiveList[j]))
+						{
+							PrimitiveList[i]->ResolveCollision(
+								PrimitiveList[j], Restitution, FrictionCoefficient);
+						}
+					}
+				}
+
+				// 위치 보정으로 벽 밖에 밀린 공도 같은 솔버 반복 안에서 다시 해결합니다.
+				for (int i = 0; i < UBall::TotalNumBalls; ++i)
+				{
+					UBall* Ball = static_cast<UBall*>(PrimitiveList[i]);
+					Ball->CheckBorderCollision(
+						leftBorder, rightBorder, topBorder, bottomBorder,
+						Restitution, FrictionCoefficient);
 				}
 			}
-		}
-		
-		// 공끼리의 위치 보정으로 벽 밖에 밀릴 수 있으므로 벽 충돌을 마지막에 처리
-		for (int i = 0; i < UBall::TotalNumBalls; ++i)
-		{
-			UBall* Ball = static_cast<UBall*>(PrimitiveList[i]);
-			Ball->CheckBorderCollision(
-				leftBorder, rightBorder, topBorder, bottomBorder,
-				Restitution, FrictionCoefficient);
 		}
 		// 준비 작업
 		renderer.Prepare();
@@ -692,6 +705,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		ImGui::SliderFloat("Restitution", &Restitution, 0.0f, 1.0f, "%.2f");
 		ImGui::SliderFloat("Friction", &FrictionCoefficient, 0.0f, 1.0f, "%.2f");
 		ImGui::SliderFloat("Angular Damping", &AngularDamping, 0.0f, 5.0f, "%.2f");
+		ImGui::Text("Physics Substeps: %d", PhysicsSubsteps);
+		ImGui::Text("Collision Solver Iterations: %d", CollisionSolverIterations);
 		ImGui::Checkbox("Show Collision Debug", &bShowCollisionDebug);
 		if (ImGui::Button("Reset Rotation"))
 		{
