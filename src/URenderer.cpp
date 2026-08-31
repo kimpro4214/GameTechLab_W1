@@ -178,7 +178,7 @@ void URenderer::ReleaseConstantBuffer()
 	}
 }
 
-void URenderer::UpdateConstant(const FVector& Offset, float Scale)
+void URenderer::UpdateConstant(const FVector& Offset, float Scale, float RotationAngle)
 {
 	if (ConstantBuffer)
 	{
@@ -189,6 +189,7 @@ void URenderer::UpdateConstant(const FVector& Offset, float Scale)
 		{
 			constants->Offset = Offset;
 			constants->Scale = Scale;
+			constants->RotationAngle = RotationAngle;
 		}
 		DeviceContext->Unmap(ConstantBuffer, 0);
 	}

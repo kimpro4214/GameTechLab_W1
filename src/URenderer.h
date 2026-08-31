@@ -27,7 +27,7 @@ public:
 
 	void CreateConstantBuffer();
 	void ReleaseConstantBuffer();
-	void UpdateConstant(const FVector& Offset, float Scale);
+	void UpdateConstant(const FVector& Offset, float Scale, float RotationAngle);
 
 	void RenderPrimitive(ID3D11Buffer* pBuffer, UINT numVertices);
 
@@ -64,6 +64,8 @@ private:
 	struct FConstants
 	{
 		FVector Offset;
-		float	Scale;
+		float Scale;
+		float RotationAngle;
+		float Padding[3];
 	};
 };
