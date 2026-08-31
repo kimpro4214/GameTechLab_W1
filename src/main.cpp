@@ -17,63 +17,6 @@
 #include "Sphere.h"
 #include "URenderer.h"
 
-//// 삼각형을 하드 코딩
-//FVertexSimple triangle_vertices[] = {
-//	{ 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f },  // Top vertex (red)
-//	{ 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f }, // Bottom-right vertex (green)
-//	{ -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f } // Bottom-left vertex (blue)
-//};
-
-//FVertexSimple cube_vertices[] = {
-//	// Front face (Z+)
-//	{ -0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f }, // Bottom-left (red)
-//	{ -0.5f, 0.5f, 0.5f, 1.0f, 1.0f, 0.0f, 1.0f },	// Top-left (yellow)
-//	{ 0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f },	// Bottom-right (green)
-//	{ -0.5f, 0.5f, 0.5f, 1.0f, 1.0f, 0.0f, 1.0f },	// Top-left (yellow)
-//	{ 0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f },	// Top-right (blue)
-//	{ 0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f },	// Bottom-right (green)
-//
-//	// Back face (Z-)
-//	{ -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f }, // Bottom-left (cyan)
-//	{ 0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 1.0f },	 // Bottom-right (magenta)
-//	{ -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f },	 // Top-left (blue)
-//	{ -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f },	 // Top-left (blue)
-//	{ 0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 1.0f },	 // Bottom-right (magenta)
-//	{ 0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 1.0f },	 // Top-right (yellow)
-//
-//	// Left face (X-)
-//	{ -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 1.0f }, // Bottom-left (purple)
-//	{ -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f },	 // Top-left (blue)
-//	{ -0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f },	 // Bottom-right (green)
-//	{ -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f },	 // Top-left (blue)
-//	{ -0.5f, 0.5f, 0.5f, 1.0f, 1.0f, 0.0f, 1.0f },	 // Top-right (yellow)
-//	{ -0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f },	 // Bottom-right (green)
-//
-//	// Right face (X+)
-//	{ 0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.0f, 1.0f }, // Bottom-left (orange)
-//	{ 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 1.0f },	// Bottom-right (gray)
-//	{ 0.5f, 0.5f, -0.5f, 0.5f, 0.0f, 0.5f, 1.0f },	// Top-left (purple)
-//	{ 0.5f, 0.5f, -0.5f, 0.5f, 0.0f, 0.5f, 1.0f },	// Top-left (purple)
-//	{ 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 1.0f },	// Bottom-right (gray)
-//	{ 0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 0.5f, 1.0f },	// Top-right (dark blue)
-//
-//	// Top face (Y+)
-//	{ -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.5f, 1.0f }, // Bottom-left (light green)
-//	{ -0.5f, 0.5f, 0.5f, 0.0f, 0.5f, 1.0f, 1.0f },	// Top-left (cyan)
-//	{ 0.5f, 0.5f, -0.5f, 0.5f, 1.0f, 1.0f, 1.0f },	// Bottom-right (white)
-//	{ -0.5f, 0.5f, 0.5f, 0.0f, 0.5f, 1.0f, 1.0f },	// Top-left (cyan)
-//	{ 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.0f, 1.0f },	// Top-right (brown)
-//	{ 0.5f, 0.5f, -0.5f, 0.5f, 1.0f, 1.0f, 1.0f },	// Bottom-right (white)
-//
-//	// Bottom face (Y-)
-//	{ -0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.0f, 1.0f }, // Bottom-left (brown)
-//	{ -0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f },	 // Top-left (red)
-//	{ 0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.5f, 1.0f },	 // Bottom-right (purple)
-//	{ -0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f },	 // Top-left (red)
-//	{ 0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f },	 // Top-right (green)
-//	{ 0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.5f, 1.0f },	 // Bottom-right (purple)
-//};
-
 class UPrimitive
 {
 public:
@@ -230,14 +173,14 @@ public:
 
 int UBall::TotalNumBalls = 0;
 
-float RandomFloat(float Min, float Max)
+float RandomFloat(float Min, float Max) // 나중에 과일 뽑을 때 사용예정
 {
 	return Min + ((float)rand() / (float)RAND_MAX) * (Max - Min);
 }
 
 UBall* CreateRandomBall()
 {
-	const float	  Radius = (0.05); // 나중에 과일 랜덤 생성으로 수정
+	const float	  Radius = (0.05f); // 나중에 과일 랜덤 생성으로 수정
 	const FVector Location(
 		0.0f - (Radius * 0.5f),
 		0.9f,
@@ -303,84 +246,6 @@ void ReleasePrimitiveList(UPrimitive**& PrimitiveList)
 	delete[] PrimitiveList;
 	PrimitiveList = nullptr;
 }
-
-//// 마우스로 지나간 자리에 그려지는 공은 물리 공과 구분하여 위치만 관리
-//struct FBallBrush
-//{
-//	FVector* DrawingBallLocations = nullptr;
-//	int		 NumDrawingBalls = 0;
-//	int		 DrawingBallCapacity = 0;
-//	FVector	 LastDrawLocation;
-//	bool	 bHasLastDrawLocation = false;
-//
-//	FBallBrush() = default;
-//
-//	~FBallBrush()
-//	{
-//		delete[] DrawingBallLocations;
-//	}
-//
-//	FBallBrush(const FBallBrush&) = delete;
-//	FBallBrush& operator=(const FBallBrush&) = delete;
-//
-//	void AddDrawingBall(const FVector& Location)
-//	{
-//		if (NumDrawingBalls == DrawingBallCapacity)
-//		{
-//			const int NewCapacity = DrawingBallCapacity == 0 ? 64 : DrawingBallCapacity * 2;
-//			FVector* TempDrawingBallLocations = new FVector[NewCapacity];
-//
-//			for (int i = 0; i < NumDrawingBalls; ++i)
-//			{
-//				TempDrawingBallLocations[i] = DrawingBallLocations[i];
-//			}
-//
-//			delete[] DrawingBallLocations;
-//			DrawingBallLocations = TempDrawingBallLocations;
-//			DrawingBallCapacity = NewCapacity;
-//		}
-//
-//		DrawingBallLocations[NumDrawingBalls] = Location;
-//		++NumDrawingBalls;
-//	}
-//
-//	void DrawTo(const FVector& Location, float Spacing)
-//	{
-//		if (!bHasLastDrawLocation)
-//		{
-//			AddDrawingBall(Location);
-//			LastDrawLocation = Location;
-//			bHasLastDrawLocation = true;
-//			return;
-//		}
-//
-//		FVector Delta = Location - LastDrawLocation;
-//		float	Distance = sqrtf(FVector::DotProduct(Delta, Delta));
-//
-//		// 마우스가 한 프레임에 멀리 이동해도 중간을 일정한 간격의 공으로 채움
-//		while (Distance >= Spacing)
-//		{
-//			const float MoveRatio = Spacing / Distance;
-//			LastDrawLocation += Delta * MoveRatio;
-//			AddDrawingBall(LastDrawLocation);
-//
-//			Delta = Location - LastDrawLocation;
-//			Distance = sqrtf(FVector::DotProduct(Delta, Delta));
-//		}
-//	}
-//
-//	void EndStroke()
-//	{
-//		bHasLastDrawLocation = false;
-//	}
-//
-//	void Clear()
-//	{
-//		NumDrawingBalls = 0;
-//		EndStroke();
-//	}
-//};
-
 
 bool ConvertMouseToWorldLocation(
 	const ImVec2& MousePosition,
@@ -477,18 +342,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	const float topBorder = -1.0f;
 	const float bottomBorder = 1.0f;
 
-	//bool		  bPinballMovement = true;
-	bool		  bEnableCheckCollision = true;
-	bool		  bEnableGravity = true;
-	//bool		  bEnableBallDrawing = false;
-	//bool		  bEnableBlackHole = false;
-	//const float	  BlackHoleStrength = 5.0f;
 	const FVector GravityAcceleration(0.0f, -9.81f, 0.0f);
-	//const float	  DrawingBallRadius = 0.025f;
-	//const float	  DrawingBallSpacing = DrawingBallRadius * 1.5f;
-	//const float	  BlackHoleSoftening = 0.05f;
-	//const float	  MaxBlackHoleAcceleration = 30.0f;
-	//FBallBrush	  BallBrush;
 
 	// 공은 조건에 따라 UPrimitive 이중 포인터로 관리
 	srand(static_cast<unsigned int>(GetTickCount()));
@@ -531,33 +385,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				bIsExit = true;
 				break;
 			}
-			//else if (msg.message == WM_KEYDOWN) // 키보드 눌렸을 때
-			//{
-			//	// 키보드 입력을 받을 공 지정
-			//	UBall* ControlledBall = static_cast<UBall*>(PrimitiveList[0]);
-
-			//	// 눌린 키가 방향키라면 해당 방향에 맞춰서
-			//	// 첫 번째 공의 위치를 조정합니다.
-			//	if (msg.wParam == VK_LEFT)
-			//	{
-			//		ControlledBall->Location.x -= 0.01f;
-			//	}
-			//	if (msg.wParam == VK_RIGHT)
-			//	{
-			//		ControlledBall->Location.x += 0.01f;
-			//	}
-			//	if (msg.wParam == VK_UP)
-			//	{
-			//		ControlledBall->Location.y += 0.01f;
-			//	}
-			//	if (msg.wParam == VK_DOWN)
-			//	{
-			//		ControlledBall->Location.y -= 0.01f;
-			//	}
-			//	// 키보드 처리 직후에 하면 밖을 벗어났다면 화면 안쪽으로 위치시킨다.
-			//	// 화면을 벗어나지 않아야 한다면
-			//	ControlledBall->CheckBorderCollision(leftBorder, rightBorder, topBorder, bottomBorder);
-			//}
 		}
 
 		ImGui_ImplDX11_NewFrame();
@@ -570,8 +397,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		const bool	 bHasMouseWorldLocation =
 			ConvertMouseToWorldLocation(MousePosition, renderer.ViewportInfo, MouseWorldLocation);
 		const bool bCanUseSceneMouse = bHasMouseWorldLocation && !FrameIO.WantCaptureMouse;
-		//const bool bIsBlackHoleActive =
-		//	bEnableBlackHole && bCanUseSceneMouse && ImGui::IsMouseDown(ImGuiMouseButton_Right);
 
 		if (bCanUseSceneMouse)
 		{
@@ -596,80 +421,36 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 		}
 
-		//if (bCanUseSceneMouse && ImGui::IsMouseDown(ImGuiMouseButton_Left))
-		//{
-		//	//BallBrush.DrawTo(MouseWorldLocation, DrawingBallSpacing);
-		//}
-		else
-		{
-			//BallBrush.EndStroke();
-		}
-
 		// 핀볼 움직임 || 중력 || 블랙홀이 켜져 있다면 물리 시뮬레이션을 갱신
-		if (bEnableGravity)
+		const float	  DeltaTime = 1.0f / (float)targetFPS;
+		const FVector GravityVelocityChange = GravityAcceleration * DeltaTime;
+
+		for (int i = 0; i < UBall::TotalNumBalls - 1; ++i)
 		{
-			const float	  DeltaTime = 1.0f / (float)targetFPS;
-			const FVector GravityVelocityChange = GravityAcceleration * DeltaTime;
-
-			for (int i = 0; i < UBall::TotalNumBalls - 1; ++i)
-			{
-				UBall* Ball = static_cast<UBall*>(PrimitiveList[i]);
-				if (bEnableGravity)
-				{
-					Ball->AddVelocity(GravityVelocityChange);
-				}
-
-				//if (bIsBlackHoleActive)
-				//{
-				//	const FVector Direction = MouseWorldLocation - Ball->Location;
-				//	const float	  DistanceSquared = FVector::DotProduct(Direction, Direction);
-
-				//	if (DistanceSquared > 0.000001f)
-				//	{
-				//		const FVector Normal = Direction / sqrtf(DistanceSquared);
-				//		const float	  ForceFalloff = 1.0f / (DistanceSquared + BlackHoleSoftening);
-				//		FVector		  BlackHoleAcceleration = Normal * (BlackHoleStrength * ForceFalloff);
-
-				//		const float AccelerationSquared =
-				//			FVector::DotProduct(BlackHoleAcceleration, BlackHoleAcceleration);
-				//		if (AccelerationSquared > MaxBlackHoleAcceleration * MaxBlackHoleAcceleration)
-				//		{
-				//			BlackHoleAcceleration *= MaxBlackHoleAcceleration / sqrtf(AccelerationSquared);
-				//		}
-
-				//		Ball->AddVelocity(BlackHoleAcceleration * DeltaTime);
-				//	}
-				//}
-
-				Ball->Move(DeltaTime);
-			}
-
-			if (bEnableCheckCollision)
-			{
-				// 같은 공 쌍을 중복 처리하지 않도록 j는 i + 1부터 검사
-				for (int i = 0; i < UBall::TotalNumBalls; ++i)
-				{
-					for (int j = i + 1; j < UBall::TotalNumBalls; ++j)
-					{
-						if (PrimitiveList[i]->IsColliding(PrimitiveList[j]))
-						{
-							PrimitiveList[i]->ResolveCollision(PrimitiveList[j]);
-						}
-					}
-				}
-			}
-
-			// 공끼리의 위치 보정으로 벽 밖에 밀릴 수 있으므로 벽 충돌을 마지막에 처리
-			for (int i = 0; i < UBall::TotalNumBalls; ++i)
-			{
-				UBall* Ball = static_cast<UBall*>(PrimitiveList[i]);
-				Ball->CheckBorderCollision(leftBorder, rightBorder, topBorder, bottomBorder);
-			}
+			UBall* Ball = static_cast<UBall*>(PrimitiveList[i]);
+			
+			Ball->AddVelocity(GravityVelocityChange);
+			Ball->Move(DeltaTime);
 		}
 
-		////////////////////////////////////////////
-		// 매번 실행되는 코드를 여기에 추가합니다.
-
+		// 같은 공 쌍을 중복 처리하지 않도록 j는 i + 1부터 검사
+		for (int i = 0; i < UBall::TotalNumBalls; ++i)
+		{
+			for (int j = i + 1; j < UBall::TotalNumBalls; ++j)
+			{
+				if (PrimitiveList[i]->IsColliding(PrimitiveList[j]))
+				{
+					PrimitiveList[i]->ResolveCollision(PrimitiveList[j]);
+				}
+			}
+		}
+		
+		// 공끼리의 위치 보정으로 벽 밖에 밀릴 수 있으므로 벽 충돌을 마지막에 처리
+		for (int i = 0; i < UBall::TotalNumBalls; ++i)
+		{
+			UBall* Ball = static_cast<UBall*>(PrimitiveList[i]);
+			Ball->CheckBorderCollision(leftBorder, rightBorder, topBorder, bottomBorder);
+		}
 		// 준비 작업
 		renderer.Prepare();
 		renderer.PrepareShader();
@@ -682,67 +463,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			renderer.RenderPrimitive(vertexBufferSphere, numVerticesSphere);
 		}
 
-		// 그림용 공도 기존 버텍스 버퍼를 공유하여 렌더링
-		//for (int i = 0; i < BallBrush.NumDrawingBalls; ++i)
-		//{
-		//	renderer.UpdateConstant(BallBrush.DrawingBallLocations[i], DrawingBallRadius / scaleMod);
-		//	renderer.RenderPrimitive(vertexBufferSphere, numVerticesSphere);
-		//}
-
 		// 이후 ImGui UI 컨트롤 추가는 ImGui::NewFrame()과 ImGui::Render() 사이인 여기에 위치합니다.
 		ImGui::Begin("Jungle Property Window");
-
-		//ImGui::Text("Hello Watermelon Game!");
-		//ImGui::Text("Total Balls: %d", UBall::TotalNumBalls);
-
-		//ImGui::SetNextItemWidth(120.0f);
-		//bool bBallCountChanged = ImGui::InputInt(
-		//	"##NumberOfBalls",
-		//	&DesiredNumBalls,
-		//	0,
-		//	0,
-		//	ImGuiInputTextFlags_ParseEmptyRefVal);
-		//ImGui::SameLine();
-		//if (ImGui::Button("-##NumberOfBalls"))
-		//{
-		//	--DesiredNumBalls;
-		//	bBallCountChanged = true;
-		//}
-		//ImGui::SameLine();
-		//if (ImGui::Button("+##NumberOfBalls"))
-		//{
-		//	++DesiredNumBalls;
-		//	bBallCountChanged = true;
-		//}
-		//ImGui::SameLine();
-		//ImGui::Text("Number of Balls");
-
-		//if (bBallCountChanged)
-		//{
-		//	if (DesiredNumBalls < 1)
-		//	{
-		//		DesiredNumBalls = 1;
-		//	}
-
-		//	ResizePrimitiveList(PrimitiveList, DesiredNumBalls);
-		//	DesiredNumBalls = UBall::TotalNumBalls;
-		//}
-
-		//ImGui::Checkbox("Pinball Movement", &bPinballMovement);
-
-		//ImGui::Checkbox("Enable Collision", &bEnableCheckCollision);
-
-		//ImGui::Checkbox("Enable Gravity", &bEnableGravity);
-
-		//ImGui::Checkbox("Enable Ball Drawing", &bEnableBallDrawing);
-		//ImGui::SameLine();
-		//if (ImGui::Button("Clear Drawing"))
-		//{
-		//	//BallBrush.Clear();
-		//}
-		//ImGui::Text("Drawing Balls: %d", BallBrush.NumDrawingBalls);
-
-		//ImGui::Checkbox("Enable Black Hole", &bEnableBlackHole);
 
 		ImGui::End();
 
@@ -764,8 +486,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			// 한 프레임이 소요된 시간 계산 (밀리초 단위로 변환)
 			elapsedTime = (endTime.QuadPart - startTime.QuadPart) * 1000.0 / frequency.QuadPart;
 		} while (elapsedTime < targetFrameTime);
-
-		////////////////////////////////////////////
 	}
 
 	// 여기에서 ImGui 소멸
