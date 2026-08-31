@@ -1,0 +1,11 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\external",
+    "\\external\\ImGui",
+    "\\external\\ImGui\\backends",
+    "\\src"
+  ],
+  "SelectedNode": "\\main.cpp",
+  "PreviewInSolutionExplorer": false
+}
