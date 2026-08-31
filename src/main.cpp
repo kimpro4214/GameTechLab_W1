@@ -22,7 +22,7 @@ class UPrimitive
 public:
 	virtual ~UPrimitive() = default;
 	virtual bool IsColliding(const UPrimitive* Other) const = 0;
-	virtual void ResolveCollision(UPrimitive* Other) = 0;
+	virtual void ResolveCollision(UPrimitive* Other, float Restitution, float FrictionCoefficient) = 0;
 	virtual void AddVelocity(const FVector& DeltaVelocity) = 0;
 };
 
@@ -33,10 +33,17 @@ public:
 	FVector	   Velocity;
 	float	   Radius;
 	float	   Mass;
+	float      RotationAngle;
+	float      AngularVelocity;
+	FVector    LastCollisionPoint;
+	FVector    LastCollisionNormal;
+	FVector    LastCollisionTangent;
+	bool       bHasCollisionDebug;
 	static int TotalNumBalls;
 
 	UBall(const FVector& InitialLocation = FVector(), const FVector& InitialVelocity = FVector(), float InitialRadius = 0.1f)
-		: Location(InitialLocation), Velocity(InitialVelocity), Radius(0.0f), Mass(0.0f)
+		: Location(InitialLocation), Velocity(InitialVelocity), Radius(0.0f), Mass(0.0f),
+		  RotationAngle(0.0f), AngularVelocity(0.0f), bHasCollisionDebug(false)
 	{
 		SetRadius(InitialRadius);
 		++TotalNumBalls;
@@ -64,7 +71,7 @@ public:
 		return FVector::DotProduct(Delta, Delta) <= RadiusSum * RadiusSum;
 	}
 
-	void ResolveCollision(UPrimitive* Other) override
+	void ResolveCollision(UPrimitive* Other, float Restitution, float FrictionCoefficient) override
 	{
 		UBall* OtherBall = dynamic_cast<UBall*>(Other);
 		if (OtherBall == nullptr || OtherBall == this)
@@ -81,27 +88,62 @@ public:
 			return;
 		}
 
+		const FVector RelativeVelocity = OtherBall->Velocity - Velocity;
+
 		float	Distance = 0.0f;
 		FVector CollisionNormal(1.0f, 0.0f, 0.0f);
 
-		if (DistanceSquared > 0.000001f)
+		const float Epsilon = 0.000001f;
+		if (DistanceSquared > Epsilon)
 		{
 			Distance = sqrtf(DistanceSquared);
 			CollisionNormal = Delta / Distance;
 		}
+		else
+		{
+			const float RelativeSpeedSquared = FVector::DotProduct(RelativeVelocity, RelativeVelocity);
+			if (RelativeSpeedSquared > Epsilon)
+			{
+				CollisionNormal = RelativeVelocity * (-1.0f / sqrtf(RelativeSpeedSquared));
+			}
+		}
 
 		const float InverseMass = 1.0f / Mass;
 		const float OtherInverseMass = 1.0f / OtherBall->Mass;
+		const float InverseMomentOfInertia = 1.0f / GetMomentOfInertia();
+		const float OtherInverseMomentOfInertia = 1.0f / OtherBall->GetMomentOfInertia();
 		const float InverseMassSum = InverseMass + OtherInverseMass;
 
 		// 겹친 거리를 질량 비율에 따라 나누어 두 공을 서로 밀어냄
-		const float	  Penetration = RadiusSum - Distance;
-		const FVector Correction = CollisionNormal * (Penetration / InverseMassSum);
+		const float Penetration = RadiusSum - Distance;
+		const float PenetrationSlop = 0.001f;
+		const float CorrectionPercent = 0.8f;
+		const float CorrectedPenetration =
+			Penetration > PenetrationSlop ? Penetration - PenetrationSlop : 0.0f;
+		const FVector Correction =
+			CollisionNormal * (CorrectedPenetration * CorrectionPercent / InverseMassSum);
 		Location -= Correction * InverseMass;
 		OtherBall->Location += Correction * OtherInverseMass;
 
-		const FVector RelativeVelocity = OtherBall->Velocity - Velocity;
-		const float	  VelocityAlongNormal = FVector::DotProduct(RelativeVelocity, CollisionNormal);
+		const FVector ContactOffset = CollisionNormal * Radius;
+		const FVector OtherContactOffset = CollisionNormal * -OtherBall->Radius;
+		const FVector ContactVelocity =
+			Velocity + FVector::CrossProduct2D(AngularVelocity, ContactOffset);
+		const FVector OtherContactVelocity =
+			OtherBall->Velocity +
+			FVector::CrossProduct2D(OtherBall->AngularVelocity, OtherContactOffset);
+		const FVector RelativeContactVelocity = OtherContactVelocity - ContactVelocity;
+		const float VelocityAlongNormal =
+			FVector::DotProduct(RelativeContactVelocity, CollisionNormal);
+
+		LastCollisionPoint = Location + ContactOffset;
+		LastCollisionNormal = CollisionNormal;
+		LastCollisionTangent = FVector(-CollisionNormal.y, CollisionNormal.x, 0.0f);
+		bHasCollisionDebug = true;
+		OtherBall->LastCollisionPoint = LastCollisionPoint;
+		OtherBall->LastCollisionNormal = CollisionNormal * -1.0f;
+		OtherBall->LastCollisionTangent = LastCollisionTangent;
+		OtherBall->bHasCollisionDebug = true;
 
 		// 이미 서로 멀어지는 중이라면 위치만 보정하고 추가 충격량은 적용 X
 		if (VelocityAlongNormal >= 0.0f)
@@ -111,56 +153,193 @@ public:
 
 		// 공기 저항 없고, 마찰 없고, 공 끼리 탄성 충돌을 하기에 반발계수를 1로 설정
 		// 반발계수 1인 완전 탄성 충돌의 충격량을 계산
-		const float	  Impulse = -(1.0f + 1.0f) * VelocityAlongNormal / InverseMassSum;
-		const FVector ImpulseVector = CollisionNormal * Impulse;
-		Velocity -= ImpulseVector * InverseMass;
-		OtherBall->Velocity += ImpulseVector * OtherInverseMass;
+		const float ContactNormalCross = FVector::CrossProduct2D(ContactOffset, CollisionNormal);
+		const float OtherContactNormalCross = FVector::CrossProduct2D(OtherContactOffset, CollisionNormal);
+		const float NormalImpulseDenominator =
+			InverseMassSum +
+			ContactNormalCross * ContactNormalCross * InverseMomentOfInertia +
+			OtherContactNormalCross * OtherContactNormalCross * OtherInverseMomentOfInertia;
+		if (NormalImpulseDenominator <= Epsilon)
+		{
+			return;
+		}
+
+		const float NormalImpulseMagnitude =
+			-(1.0f + Restitution) * VelocityAlongNormal / NormalImpulseDenominator;
+		const FVector NormalImpulse = CollisionNormal * NormalImpulseMagnitude;
+		Velocity -= NormalImpulse * InverseMass;
+		OtherBall->Velocity += NormalImpulse * OtherInverseMass;
+		AngularVelocity -=
+			FVector::CrossProduct2D(ContactOffset, NormalImpulse) * InverseMomentOfInertia;
+		OtherBall->AngularVelocity +=
+			FVector::CrossProduct2D(OtherContactOffset, NormalImpulse) * OtherInverseMomentOfInertia;
+
+		const FVector NewContactVelocity =
+			Velocity + FVector::CrossProduct2D(AngularVelocity, ContactOffset);
+		const FVector NewOtherContactVelocity =
+			OtherBall->Velocity +
+			FVector::CrossProduct2D(OtherBall->AngularVelocity, OtherContactOffset);
+		const FVector NewRelativeContactVelocity = NewOtherContactVelocity - NewContactVelocity;
+		const float NewVelocityAlongNormal =
+			FVector::DotProduct(NewRelativeContactVelocity, CollisionNormal);
+		const FVector TangentVelocity =
+			NewRelativeContactVelocity - CollisionNormal * NewVelocityAlongNormal;
+		const float TangentSpeedSquared = FVector::DotProduct(TangentVelocity, TangentVelocity);
+
+		if (TangentSpeedSquared > Epsilon)
+		{
+			const FVector Tangent = TangentVelocity / sqrtf(TangentSpeedSquared);
+			LastCollisionTangent = Tangent;
+			OtherBall->LastCollisionTangent = Tangent;
+
+			const float ContactTangentCross = FVector::CrossProduct2D(ContactOffset, Tangent);
+			const float OtherContactTangentCross = FVector::CrossProduct2D(OtherContactOffset, Tangent);
+			const float TangentialImpulseDenominator =
+				InverseMassSum +
+				ContactTangentCross * ContactTangentCross * InverseMomentOfInertia +
+				OtherContactTangentCross * OtherContactTangentCross * OtherInverseMomentOfInertia;
+			if (TangentialImpulseDenominator <= Epsilon)
+			{
+				return;
+			}
+
+			float TangentialImpulseMagnitude =
+				-FVector::DotProduct(NewRelativeContactVelocity, Tangent) /
+				TangentialImpulseDenominator;
+			const float MaxFrictionImpulse = FrictionCoefficient * NormalImpulseMagnitude;
+			if (TangentialImpulseMagnitude > MaxFrictionImpulse)
+			{
+				TangentialImpulseMagnitude = MaxFrictionImpulse;
+			}
+			else if (TangentialImpulseMagnitude < -MaxFrictionImpulse)
+			{
+				TangentialImpulseMagnitude = -MaxFrictionImpulse;
+			}
+
+			const FVector FrictionImpulse = Tangent * TangentialImpulseMagnitude;
+			Velocity -= FrictionImpulse * InverseMass;
+			OtherBall->Velocity += FrictionImpulse * OtherInverseMass;
+			AngularVelocity -=
+				FVector::CrossProduct2D(ContactOffset, FrictionImpulse) * InverseMomentOfInertia;
+			OtherBall->AngularVelocity +=
+				FVector::CrossProduct2D(OtherContactOffset, FrictionImpulse) * OtherInverseMomentOfInertia;
+		}
 	}
 
 	void AddVelocity(const FVector& DeltaVelocity) override
 	{
 		Velocity += DeltaVelocity;
 	}
-	// 공기 저항과 마찰을 고려하지 않으므로 속도 감쇠 X & 각속도 고려 X
-	void Move(float DeltaTime)
+
+	float GetMomentOfInertia() const
 	{
-		Location += Velocity * DeltaTime;
+		return 0.5f * Mass * Radius * Radius;
 	}
 
-	void CheckBorderCollision(float Left, float Right, float Top, float Bottom)
+	void AddTorque(float Torque, float DeltaTime)
+	{
+		const float AngularAcceleration = Torque / GetMomentOfInertia();
+		AngularVelocity += AngularAcceleration * DeltaTime;
+	}
+
+	// 공기 저항과 마찰을 고려하지 않으므로 속도 감쇠 X & 각속도 고려 X
+	void Move(float DeltaTime, float AngularDamping)
+	{
+		Location += Velocity * DeltaTime;
+		AngularVelocity /= 1.0f + AngularDamping * DeltaTime;
+		RotationAngle += AngularVelocity * DeltaTime;
+		RotationAngle = fmodf(RotationAngle, 6.28318530718f);
+	}
+
+	void ResolveBorderContact(const FVector& CollisionNormal, float Restitution,
+		float FrictionCoefficient)
+	{
+		const float Epsilon = 0.000001f;
+		const float InverseMass = 1.0f / Mass;
+		const float InverseMomentOfInertia = 1.0f / GetMomentOfInertia();
+		const FVector ContactOffset = CollisionNormal * -Radius;
+		FVector ContactVelocity =
+			Velocity + FVector::CrossProduct2D(AngularVelocity, ContactOffset);
+		const float VelocityAlongNormal = FVector::DotProduct(ContactVelocity, CollisionNormal);
+		if (VelocityAlongNormal >= 0.0f)
+		{
+			return;
+		}
+
+		const float ContactNormalCross = FVector::CrossProduct2D(ContactOffset, CollisionNormal);
+		const float NormalImpulseDenominator =
+			InverseMass + ContactNormalCross * ContactNormalCross * InverseMomentOfInertia;
+		if (NormalImpulseDenominator <= Epsilon)
+		{
+			return;
+		}
+
+		const float NormalImpulseMagnitude =
+			-(1.0f + Restitution) * VelocityAlongNormal / NormalImpulseDenominator;
+		const FVector NormalImpulse = CollisionNormal * NormalImpulseMagnitude;
+		Velocity += NormalImpulse * InverseMass;
+		AngularVelocity +=
+			FVector::CrossProduct2D(ContactOffset, NormalImpulse) * InverseMomentOfInertia;
+
+		ContactVelocity = Velocity + FVector::CrossProduct2D(AngularVelocity, ContactOffset);
+		const float NewVelocityAlongNormal = FVector::DotProduct(ContactVelocity, CollisionNormal);
+		const FVector TangentVelocity = ContactVelocity - CollisionNormal * NewVelocityAlongNormal;
+		const float TangentSpeedSquared = FVector::DotProduct(TangentVelocity, TangentVelocity);
+		if (TangentSpeedSquared <= Epsilon)
+		{
+			return;
+		}
+
+		const FVector Tangent = TangentVelocity / sqrtf(TangentSpeedSquared);
+		const float ContactTangentCross = FVector::CrossProduct2D(ContactOffset, Tangent);
+		const float TangentialImpulseDenominator =
+			InverseMass + ContactTangentCross * ContactTangentCross * InverseMomentOfInertia;
+		if (TangentialImpulseDenominator <= Epsilon)
+		{
+			return;
+		}
+
+		float TangentialImpulseMagnitude =
+			-FVector::DotProduct(ContactVelocity, Tangent) / TangentialImpulseDenominator;
+		const float MaxFrictionImpulse = FrictionCoefficient * NormalImpulseMagnitude;
+		if (TangentialImpulseMagnitude > MaxFrictionImpulse)
+		{
+			TangentialImpulseMagnitude = MaxFrictionImpulse;
+		}
+		else if (TangentialImpulseMagnitude < -MaxFrictionImpulse)
+		{
+			TangentialImpulseMagnitude = -MaxFrictionImpulse;
+		}
+
+		const FVector FrictionImpulse = Tangent * TangentialImpulseMagnitude;
+		Velocity += FrictionImpulse * InverseMass;
+		AngularVelocity +=
+			FVector::CrossProduct2D(ContactOffset, FrictionImpulse) * InverseMomentOfInertia;
+	}
+
+	void CheckBorderCollision(float Left, float Right, float Top, float Bottom,
+		float Restitution, float FrictionCoefficient)
 	{
 		if (Location.x - Radius < Left)
 		{
 			Location.x = Left + Radius;
-			if (Velocity.x < 0.0f)
-			{
-				Velocity.x *= -1.0f;
-			}
+			ResolveBorderContact(FVector(1.0f, 0.0f, 0.0f), Restitution, FrictionCoefficient);
 		}
 		else if (Location.x + Radius > Right)
 		{
 			Location.x = Right - Radius;
-			if (Velocity.x > 0.0f)
-			{
-				Velocity.x *= -1.0f;
-			}
+			ResolveBorderContact(FVector(-1.0f, 0.0f, 0.0f), Restitution, FrictionCoefficient);
 		}
 
 		if (Location.y - Radius < Top)
 		{
 			Location.y = Top + Radius;
-			if (Velocity.y < 0.0f)
-			{
-				Velocity.y *= -1.0f;
-			}
+			ResolveBorderContact(FVector(0.0f, 1.0f, 0.0f), Restitution, FrictionCoefficient);
 		}
 		else if (Location.y + Radius > Bottom)
 		{
 			Location.y = Bottom - Radius;
-			if (Velocity.y > 0.0f)
-			{
-				Velocity.y *= -1.0f;
-			}
+			ResolveBorderContact(FVector(0.0f, -1.0f, 0.0f), Restitution, FrictionCoefficient);
 		}
 	}
 
@@ -266,6 +445,13 @@ bool ConvertMouseToWorldLocation(
 	return true;
 }
 
+ImVec2 ConvertWorldToScreenLocation(const FVector& WorldLocation, const D3D11_VIEWPORT& Viewport)
+{
+	return ImVec2(
+		Viewport.TopLeftX + (WorldLocation.x + 1.0f) * 0.5f * Viewport.Width,
+		Viewport.TopLeftY + (1.0f - WorldLocation.y) * 0.5f * Viewport.Height);
+}
+
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 // 각종 메시지를 처리할 함수
@@ -343,6 +529,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	const float bottomBorder = 1.0f;
 
 	const FVector GravityAcceleration(0.0f, -9.81f, 0.0f);
+	bool bEnableTestTorque = false;
+	float TestTorque = 0.001f;
+	float Restitution = 1.0f;
+	float FrictionCoefficient = 0.0f;
+	float AngularDamping = 0.0f;
+	bool bShowCollisionDebug = true;
 
 	// 공은 조건에 따라 UPrimitive 이중 포인터로 관리
 	srand(static_cast<unsigned int>(GetTickCount()));
@@ -425,12 +617,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		const float	  DeltaTime = 1.0f / (float)targetFPS;
 		const FVector GravityVelocityChange = GravityAcceleration * DeltaTime;
 
+		for (int i = 0; i < UBall::TotalNumBalls; ++i)
+		{
+			UBall* Ball = static_cast<UBall*>(PrimitiveList[i]);
+			Ball->bHasCollisionDebug = false;
+		}
+
 		for (int i = 0; i < UBall::TotalNumBalls - 1; ++i)
 		{
 			UBall* Ball = static_cast<UBall*>(PrimitiveList[i]);
 			
 			Ball->AddVelocity(GravityVelocityChange);
-			Ball->Move(DeltaTime);
+			if (bEnableTestTorque)
+			{
+				Ball->AddTorque(TestTorque, DeltaTime);
+			}
+			Ball->Move(DeltaTime, AngularDamping);
 		}
 
 		// 같은 공 쌍을 중복 처리하지 않도록 j는 i + 1부터 검사
@@ -440,7 +642,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			{
 				if (PrimitiveList[i]->IsColliding(PrimitiveList[j]))
 				{
-					PrimitiveList[i]->ResolveCollision(PrimitiveList[j]);
+					PrimitiveList[i]->ResolveCollision(
+						PrimitiveList[j], Restitution, FrictionCoefficient);
 				}
 			}
 		}
@@ -449,7 +652,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		for (int i = 0; i < UBall::TotalNumBalls; ++i)
 		{
 			UBall* Ball = static_cast<UBall*>(PrimitiveList[i]);
-			Ball->CheckBorderCollision(leftBorder, rightBorder, topBorder, bottomBorder);
+			Ball->CheckBorderCollision(
+				leftBorder, rightBorder, topBorder, bottomBorder,
+				Restitution, FrictionCoefficient);
 		}
 		// 준비 작업
 		renderer.Prepare();
@@ -459,12 +664,46 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		for (int i = 0; i < UBall::TotalNumBalls; ++i)
 		{
 			UBall* Ball = static_cast<UBall*>(PrimitiveList[i]);
-			renderer.UpdateConstant(Ball->Location, Ball->Radius / scaleMod);
+			renderer.UpdateConstant(Ball->Location, Ball->Radius / scaleMod, Ball->RotationAngle);
 			renderer.RenderPrimitive(vertexBufferSphere, numVerticesSphere);
+		}
+
+		UBall* DebugBall = static_cast<UBall*>(PrimitiveList[0]);
+		if (bShowCollisionDebug && DebugBall->bHasCollisionDebug)
+		{
+			const float DebugVectorLength = 0.15f;
+			const ImVec2 ContactScreen = ConvertWorldToScreenLocation(
+				DebugBall->LastCollisionPoint, renderer.ViewportInfo);
+			const ImVec2 NormalScreen = ConvertWorldToScreenLocation(
+				DebugBall->LastCollisionPoint +
+				DebugBall->LastCollisionNormal * DebugVectorLength,
+				renderer.ViewportInfo);
+			const ImVec2 TangentScreen = ConvertWorldToScreenLocation(
+				DebugBall->LastCollisionPoint +
+				DebugBall->LastCollisionTangent * DebugVectorLength,
+				renderer.ViewportInfo);
+			ImDrawList* DebugDrawList = ImGui::GetForegroundDrawList();
+			DebugDrawList->AddCircleFilled(ContactScreen, 4.0f, IM_COL32(255, 80, 80, 255));
+			DebugDrawList->AddLine(ContactScreen, NormalScreen, IM_COL32(80, 255, 80, 255), 2.0f);
+			DebugDrawList->AddLine(ContactScreen, TangentScreen, IM_COL32(255, 220, 80, 255), 2.0f);
 		}
 
 		// 이후 ImGui UI 컨트롤 추가는 ImGui::NewFrame()과 ImGui::Render() 사이인 여기에 위치합니다.
 		ImGui::Begin("Jungle Property Window");
+
+		ImGui::Text("Angle: %.3f, Angular Velocity: %.3f",
+			DebugBall->RotationAngle, DebugBall->AngularVelocity);
+		ImGui::Checkbox("Enable Test Torque", &bEnableTestTorque);
+		ImGui::DragFloat("Test Torque", &TestTorque, 0.0001f, -0.01f, 0.01f, "%.4f");
+		ImGui::SliderFloat("Restitution", &Restitution, 0.0f, 1.0f, "%.2f");
+		ImGui::SliderFloat("Friction", &FrictionCoefficient, 0.0f, 1.0f, "%.2f");
+		ImGui::SliderFloat("Angular Damping", &AngularDamping, 0.0f, 5.0f, "%.2f");
+		ImGui::Checkbox("Show Collision Debug", &bShowCollisionDebug);
+		if (ImGui::Button("Reset Rotation"))
+		{
+			DebugBall->RotationAngle = 0.0f;
+			DebugBall->AngularVelocity = 0.0f;
+		}
 
 		ImGui::End();
 

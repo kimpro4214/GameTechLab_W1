@@ -54,4 +54,14 @@ struct FVector
 	{
 		return A.x * B.x + A.y * B.y + A.z * B.z;
 	}
+
+	static float CrossProduct2D(const FVector& A, const FVector& B)
+	{
+		return A.x * B.y - A.y * B.x;
+	}
+
+	static FVector CrossProduct2D(float AngularSpeed, const FVector& Vector)
+	{
+		return FVector(-AngularSpeed * Vector.y, AngularSpeed * Vector.x, 0.0f);
+	}
 };

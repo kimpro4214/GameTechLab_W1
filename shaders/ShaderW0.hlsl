@@ -3,6 +3,8 @@ cbuffer constants : register(b0)
 {
     float3 Offset;
     float Scale;
+    float RotationAngle;
+    float3 Padding;
 }
 
 struct VS_INPUT
@@ -21,11 +23,15 @@ PS_INPUT mainVS(VS_INPUT input)
 {
     PS_INPUT output;
     
-    // Pass the position directly to the pixel shader (no transformation)
-    //output.position = input.position;
-    
-    // 하나의 구 버텍스 버퍼를 공의 위치와 크기에 맞게 변환합니다.
-    output.position = float4(input.position.xyz * Scale + Offset, input.position.w);
+    float3 localPosition = input.position.xyz;
+    float c = cos(RotationAngle);
+    float s = sin(RotationAngle);
+    float2 rotatedPosition;
+    rotatedPosition.x = localPosition.x * c - localPosition.y * s;
+    rotatedPosition.y = localPosition.x * s + localPosition.y * c;
+
+    float3 worldPosition = float3(rotatedPosition, localPosition.z) * Scale + Offset;
+    output.position = float4(worldPosition, input.position.w);
     
     // Pass the color to the pixel shader
     output.color = input.color;
