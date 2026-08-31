@@ -1,0 +1,14 @@
+{
+    "version": 1,
+    "revision": 0,
+    "rules": [
+        {
+            "primary-output": "Week0\\x64\\Debug\\URenderer.obj",
+            "outputs": [
+                "Week0\\x64\\Debug\\URenderer.cpp.obj.dt.module.json",
+                "Week0\\x64\\Debug\\URenderer.cpp.obj.dt.d.json"
+            ],
+            "requires": []
+        }
+    ]
+}

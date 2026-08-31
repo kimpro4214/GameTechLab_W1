@@ -1,0 +1,22 @@
+{
+    "version": 1,
+    "revision": 0,
+    "rules": [
+        {
+            "primary-output": "Week0\\x64\\Debug\\FVertexSimple.obj",
+            "outputs": [
+                "Week0\\x64\\Debug\\FVertexSimple.h_C0017796503CF68F.ifc.dt.module.json",
+                "Week0\\x64\\Debug\\FVertexSimple.h_C0017796503CF68F.ifc.dt.d.json",
+                "Week0\\x64\\Debug\\FVertexSimple.h.ifc"
+            ],
+            "provides": [
+                {
+                    "logical-name": "C:\\Users\\JUNGLE\\Projects\\GameTechLab_W1\\src\\FVertexSimple.h",
+                    "source-path": "c:\\users\\jungle\\projects\\gametechlab_w1\\src\\fvertexsimple.h",
+                    "lookup-method": "absolute"
+                }
+            ],
+            "requires": []
+        }
+    ]
+}
