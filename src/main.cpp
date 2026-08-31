@@ -357,9 +357,11 @@ float RandomFloat(float Min, float Max) // 나중에 과일 뽑을 때 사용예
 	return Min + ((float)rand() / (float)RAND_MAX) * (Max - Min);
 }
 
+float spawnRadius = 0.05f;
+
 UBall* CreateRandomBall()
 {
-	const float	  Radius = (0.05f); // 나중에 과일 랜덤 생성으로 수정
+	const float	  Radius = spawnRadius; // 나중에 과일 랜덤 생성으로 수정
 	const FVector Location(
 		0.0f - (Radius * 0.5f),
 		0.9f,
@@ -509,16 +511,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	UINT numVerticesSphere = sizeof(sphere_vertices) / sizeof(FVertexSimple);
 
-	// 버텍스 버퍼로 넘기기 전에 Scale Down합니다.
-	float scaleMod = 0.1f;
-
-	for (UINT i = 0; i < numVerticesSphere; ++i)
-	{
-		sphere_vertices[i].x *= scaleMod;
-		sphere_vertices[i].y *= scaleMod;
-		sphere_vertices[i].z *= scaleMod;
-	}
-
 	// 버텍스 버퍼 하나만 생성
 	ID3D11Buffer* vertexBufferSphere = renderer.CreateVertexBuffer(sphere_vertices, sizeof(sphere_vertices));
 
@@ -664,7 +656,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		for (int i = 0; i < UBall::TotalNumBalls; ++i)
 		{
 			UBall* Ball = static_cast<UBall*>(PrimitiveList[i]);
-			renderer.UpdateConstant(Ball->Location, Ball->Radius / scaleMod, Ball->RotationAngle);
+			renderer.UpdateConstant(Ball->Location, Ball->Radius, Ball->RotationAngle);
 			renderer.RenderPrimitive(vertexBufferSphere, numVerticesSphere);
 		}
 
@@ -690,6 +682,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 		// 이후 ImGui UI 컨트롤 추가는 ImGui::NewFrame()과 ImGui::Render() 사이인 여기에 위치합니다.
 		ImGui::Begin("Jungle Property Window");
+
+		ImGui::SliderFloat("Spawn Radius", &spawnRadius, 0.01f, 0.4f);
 
 		ImGui::Text("Angle: %.3f, Angular Velocity: %.3f",
 			DebugBall->RotationAngle, DebugBall->AngularVelocity);
