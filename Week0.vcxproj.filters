@@ -45,17 +45,12 @@
     <ClCompile Include="src\ImGui\imgui_widgets.cpp">
       <Filter>ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="src\FVertexSimple.h">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="src\main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="ShaderW0.hlsl">
-      <Filter>소스 파일</Filter>
-    </FxCompile>
+    <ClCompile Include="src\FVertexSimple.h">
+      <Filter>헤더 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Sphere.h">
@@ -89,7 +84,12 @@
       <Filter>ImGui</Filter>
     </ClInclude>
     <ClInclude Include="src\FVector.h">
-      <Filter>소스 파일</Filter>
+      <Filter>헤더 파일</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="shaders\ShaderW0.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
