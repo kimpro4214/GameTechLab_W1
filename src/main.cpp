@@ -8,14 +8,8 @@
 #include "ImGui/imgui_impl_win32.h"
 
 #include "FVector.h"
-#include "FVertexSimple.h"
-#include "Sphere.h"
 #include "URenderer.h"
-#include "RenderPipeline.h"
-#include "Material.h"
-#include "Mesh.h"
-
-#include <memory>
+#include "FruitRenderer.h"
 
 class UPrimitive
 {
@@ -598,14 +592,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-struct FruitObjectConstants
-{
-	FVector Offset;
-	float Scale;
-	float RotationAngle;
-	FVector FruitColor;
-};
-
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
 	// 윈도우 클래스 이름
@@ -631,30 +617,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// D3D11 생성하는 함수를 호출합니다.
 	renderer.Create(hWnd);
 
-	// 과일 렌더링용 렌더 파이프라인, 머티리얼, 메시 생성
-	D3D11_INPUT_ELEMENT_DESC FruitInputLayout[] = {
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	};
-
-	RenderPipelineDesc FruitPipelineDesc{};
-	FruitPipelineDesc.ShaderFileName = L"shaders/FruitShader.hlsl";
-	FruitPipelineDesc.VertexEntryPoint = "mainVS";
-	FruitPipelineDesc.PixelEntryPoint = "mainPS";
-	FruitPipelineDesc.InputElements = FruitInputLayout;
-	FruitPipelineDesc.InputElementCount = 2;
-
-	Material FruitMaterial = Material{ renderer.CreateRenderPipeline(FruitPipelineDesc) };
-
-	MeshDesc FruitMeshDesc{};
-	FruitMeshDesc.VertexData = sphere_vertices;
-	FruitMeshDesc.VertexDataSize = sizeof(sphere_vertices);
-	FruitMeshDesc.VertexStride = sizeof(FVertexSimple);
-	FruitMeshDesc.VertexCount = sizeof(sphere_vertices) / sizeof(FVertexSimple);
-
-	std::shared_ptr<Mesh> FruitMesh = renderer.CreateMesh(FruitMeshDesc);
-
-	auto FruitObjectConstantBuffer = renderer.CreateDynamicConstantBuffer(sizeof(FruitObjectConstants) + 0xf & 0xfffffff0);
+	FruitRenderer FruitRenderer{ renderer };
+	FruitRenderer.Initialize();
 
 	renderer.InitImGui(hWnd);
 
@@ -892,9 +856,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		for (int i = 0; i < UBall::TotalNumBalls; ++i)
 		{
 			UBall* Ball = static_cast<UBall*>(PrimitiveList[i]);
-			FruitObjectConstants Constants{ Ball->Location, Ball->Radius, Ball->RotationAngle, GetFruitColor(Ball->Radius) };
-			renderer.UpdateDynamicConstantBuffer(FruitObjectConstantBuffer, Constants);
-			renderer.Draw(FruitMaterial, *FruitMesh, FruitObjectConstantBuffer.Get());
+			FruitRenderer.Draw(Ball->Level, Ball->Location, Ball->Radius, Ball->RotationAngle);
 		}
 
 		// 아직 놓지 않은 과일이 바닥까지 수직으로 떨어질 경로를 표시합니다.

@@ -17,8 +17,10 @@ public:
 		assert(RenderPipeline);
 	}
 
-
 	const RenderPipeline& GetRendererPipeline() const { return *RenderPipeline; };
+
+	void SetTextureSRV(Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> TextureSRV) { this->TextureSRV = TextureSRV; };
+	void SetSamplerState(Microsoft::WRL::ComPtr<ID3D11SamplerState> SamplerState) { this->SamplerState = SamplerState; };
 
 private:
 	friend class URenderer;
@@ -26,4 +28,7 @@ private:
 	void BindResources(ID3D11DeviceContext* Context) const;
 
 	std::shared_ptr<const RenderPipeline> RenderPipeline = nullptr;
+
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> TextureSRV;
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> SamplerState;
 };
