@@ -59,5 +59,5 @@ void UBall::SetLevel(int NewLevel, float NewRadius)
 void UBall::SetRadius(float NewRadius)
 {
 	Radius = NewRadius > 0.0f ? NewRadius : 0.01f;
-	Mass = Radius * Radius;
+	Mass = 0.01f;
 }
