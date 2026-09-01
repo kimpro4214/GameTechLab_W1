@@ -41,6 +41,7 @@ public:
 	bool				bHasCollisionDebug;
 	bool				bHasCollisionThisFrame;
 	bool				bHasTouchedSomething;
+	bool				bHasBeenDropped;
 	static const float	DropTime;
 	static bool			bCanDropBall;
 	static int			NextLevel;
@@ -55,7 +56,7 @@ public:
 	UBall(const FVector& InitialLocation = FVector(), const FVector& InitialVelocity = FVector(), int InitialLevel = 0)
 		: Location(InitialLocation), Velocity(InitialVelocity), Level(InitialLevel), Radius(0.0f), Mass(0.0f),
 		RotationAngle(0.0f), AngularVelocity(0.0f), bHasCollisionDebug(false),
-		bHasCollisionThisFrame(false), bHasTouchedSomething(false)
+		bHasCollisionThisFrame(false), bHasTouchedSomething(false), bHasBeenDropped(false)
 	{
 		SetRadius(BallSizes[Level]);
 		CurrentIndex = TotalNumBalls;
@@ -289,7 +290,6 @@ public:
 		float FrictionCoefficient)
 	{
 		bHasCollisionThisFrame = true;
-		bHasTouchedSomething = true;
 		const float Epsilon = 0.000001f;
 		const float InverseMass = 1.0f / Mass;
 		const float InverseMomentOfInertia = 1.0f / GetMomentOfInertia();
@@ -370,6 +370,8 @@ public:
 		if (Location.y - Radius < Top)
 		{
 			Location.y = Top + Radius;
+			// 중력이 -Y 방향이므로 Top 경계가 실제 바닥입니다.
+			bHasTouchedSomething = true;
 			ResolveBorderContact(FVector(0.0f, 1.0f, 0.0f), Restitution, FrictionCoefficient);
 		}
 		else if (Location.y + Radius > Bottom)
@@ -407,6 +409,7 @@ FVector GetFruitColor(float Radius)
 
 bool IsTouchingGameOverLine(const UBall& Ball, float GameOverLineY)
 {
+	// 쌓인 공의 위쪽 끝이 게임 오버 선 위로 올라왔는지 검사합니다.
 	return Ball.Location.y + Ball.Radius >= GameOverLineY;
 }
 
@@ -730,6 +733,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		// 게임 영역에서 잡은 공은 경계 밖에서 마우스를 놓아도 떨어집니다.
 		if (!bIsGameOver && UBall::bCanDropBall && bIsDraggingBall && ImGui::IsMouseReleased(ImGuiMouseButton_Left))
 		{
+			// 마우스를 놓은 뒤부터만 이 공을 물리/충돌/게임 오버 판정에 포함합니다.
+			static_cast<UBall*>(PrimitiveList[UBall::CurrentIndex])->bHasBeenDropped = true;
 			++DesiredNumBalls;
 			ResizePrimitiveList(PrimitiveList, DesiredNumBalls);
 			DesiredNumBalls = UBall::TotalNumBalls;
@@ -755,11 +760,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		{
 			for (int i = 0; i < UBall::TotalNumBalls; ++i)
 			{
-				if (i == UBall::CurrentIndex) // 대기중인 볼 제외
+				UBall* Ball = static_cast<UBall*>(PrimitiveList[i]);
+				if (!Ball->bHasBeenDropped) // 마우스를 아직 놓지 않은 대기 공 제외
 				{
 					continue;
 				}
-				UBall* Ball = static_cast<UBall*>(PrimitiveList[i]);
 
 				Ball->AddVelocity(GravityVelocityChange);
 				if (bEnableTestTorque)
@@ -778,21 +783,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				int TotalBall = UBall::TotalNumBalls;
 				for (int i = 0; i < TotalBall; ++i)
 				{
-					if (i == UBall::CurrentIndex) // 대기중인 볼 제외
+					UBall* BallA = static_cast<UBall*>(PrimitiveList[i]);
+					if (!BallA->bHasBeenDropped) // 마우스를 아직 놓지 않은 대기 공 제외
 					{
 						continue;
 					}
 					for (int j = i + 1; j < TotalBall; ++j)
 					{
-						if (j == UBall::CurrentIndex) // 대기중인 볼 제외
+						UBall* BallB = static_cast<UBall*>(PrimitiveList[j]);
+						if (!BallB->bHasBeenDropped) // 마우스를 아직 놓지 않은 대기 공 제외
 						{
 							continue;
 						}
 						if (PrimitiveList[i]->IsColliding(PrimitiveList[j]))
 						{
 
-							UBall* BallA = static_cast<UBall*>(PrimitiveList[i]);
-							UBall* BallB = static_cast<UBall*>(PrimitiveList[j]);
 							BallA->bHasCollisionThisFrame = true;
 							BallB->bHasCollisionThisFrame = true;
 							BallA->bHasTouchedSomething = true;
@@ -813,6 +818,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				for (int i = 0; i < UBall::TotalNumBalls; ++i)
 				{
 					UBall* Ball = static_cast<UBall*>(PrimitiveList[i]);
+					if (!Ball->bHasBeenDropped)
+					{
+						continue;
+					}
 					Ball->CheckBorderCollision(
 						leftBorder, rightBorder, topBorder, bottomBorder,
 						Restitution, FrictionCoefficient);
@@ -822,13 +831,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		// 준비 작업
 		for (int i = 0; i < UBall::TotalNumBalls; ++i)
 		{
-			if (i == UBall::CurrentIndex)
-			{
-				continue;
-			}
-
 			UBall* Ball = static_cast<UBall*>(PrimitiveList[i]);
-			if (Ball->bHasTouchedSomething && IsTouchingGameOverLine(*Ball, GameOverLineY))
+			if (Ball->bHasBeenDropped && Ball->bHasTouchedSomething &&
+				IsTouchingGameOverLine(*Ball, GameOverLineY))
 			{
 				bIsGameOver = true;
 				break;
