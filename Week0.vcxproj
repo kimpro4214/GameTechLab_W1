@@ -93,7 +93,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)/src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)src\External</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -113,7 +113,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)/src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)src\External</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -131,7 +131,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)/src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)src\External</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -151,7 +151,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)/src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)src\External</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -163,14 +163,15 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\External\ImGui\imgui.cpp" />
+    <ClCompile Include="src\External\ImGui\imgui_demo.cpp" />
+    <ClCompile Include="src\External\ImGui\imgui_draw.cpp" />
+    <ClCompile Include="src\External\ImGui\imgui_impl_dx11.cpp" />
+    <ClCompile Include="src\External\ImGui\imgui_impl_win32.cpp" />
+    <ClCompile Include="src\External\ImGui\imgui_tables.cpp" />
+    <ClCompile Include="src\External\ImGui\imgui_widgets.cpp" />
+    <ClCompile Include="src\External\WICTextureLoader\WICTextureLoader11.cpp" />
     <ClCompile Include="src\SpriteVertex.h" />
-    <ClCompile Include="src\ImGui\imgui.cpp" />
-    <ClCompile Include="src\ImGui\imgui_demo.cpp" />
-    <ClCompile Include="src\ImGui\imgui_draw.cpp" />
-    <ClCompile Include="src\ImGui\imgui_impl_dx11.cpp" />
-    <ClCompile Include="src\ImGui\imgui_impl_win32.cpp" />
-    <ClCompile Include="src\ImGui\imgui_tables.cpp" />
-    <ClCompile Include="src\ImGui\imgui_widgets.cpp" />
     <ClCompile Include="src\App\GameApplication.cpp" />
     <ClCompile Include="src\Game\FruitCatalog.cpp" />
     <ClCompile Include="src\Game\GameController.cpp" />
@@ -187,9 +188,17 @@
     <ClCompile Include="src\Rendering\FruitRenderer.cpp" />
     <ClCompile Include="src\Rendering\FruitVisuals.cpp" />
     <ClCompile Include="src\UI\GameUI.cpp" />
-    <ClCompile Include="src\WICTextureLoader\WICTextureLoader11.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\External\ImGui\imconfig.h" />
+    <ClInclude Include="src\External\ImGui\imgui.h" />
+    <ClInclude Include="src\External\ImGui\imgui_impl_dx11.h" />
+    <ClInclude Include="src\External\ImGui\imgui_impl_win32.h" />
+    <ClInclude Include="src\External\ImGui\imgui_internal.h" />
+    <ClInclude Include="src\External\ImGui\imstb_rectpack.h" />
+    <ClInclude Include="src\External\ImGui\imstb_textedit.h" />
+    <ClInclude Include="src\External\ImGui\imstb_truetype.h" />
+    <ClInclude Include="src\External\WICTextureLoader\WICTextureLoader11.h" />
     <ClInclude Include="src\FVector.h" />
     <ClInclude Include="src\App\GameApplication.h" />
     <ClInclude Include="src\Game\FruitCatalog.h" />
@@ -197,14 +206,6 @@
     <ClInclude Include="src\Game\GameController.h" />
     <ClInclude Include="src\Game\GameInput.h" />
     <ClInclude Include="src\Game\GameSession.h" />
-    <ClInclude Include="src\ImGui\imconfig.h" />
-    <ClInclude Include="src\ImGui\imgui.h" />
-    <ClInclude Include="src\ImGui\imgui_impl_dx11.h" />
-    <ClInclude Include="src\ImGui\imgui_impl_win32.h" />
-    <ClInclude Include="src\ImGui\imgui_internal.h" />
-    <ClInclude Include="src\ImGui\imstb_rectpack.h" />
-    <ClInclude Include="src\ImGui\imstb_textedit.h" />
-    <ClInclude Include="src\ImGui\imstb_truetype.h" />
     <ClInclude Include="src\Material.h" />
     <ClInclude Include="src\RenderPipeline.h" />
     <ClInclude Include="src\Mesh.h" />
@@ -217,7 +218,6 @@
     <ClInclude Include="src\Rendering\FruitRenderer.h" />
     <ClInclude Include="src\Rendering\FruitVisuals.h" />
     <ClInclude Include="src\UI\GameUI.h" />
-    <ClInclude Include="src\WICTextureLoader\WICTextureLoader11.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\FruitShader.hlsl">
