@@ -48,6 +48,7 @@ public:
 	static int			TotalNumBalls;
 	static int			TotalScore;
 	static int			CurrentIndex;
+	static int			StorageLevel;
 	static const float	BallSizes[11];
 	static const int	ScoreList[11];
 	int					Level;
@@ -386,6 +387,34 @@ public:
 		Radius = NewRadius > 0.0f ? NewRadius : 0.01f;
 		Mass = Radius * Radius;
 	}
+
+	static void Swap(UPrimitive**& PrimitiveList)
+	{
+		UBall* CurrentBall = dynamic_cast<UBall*>(PrimitiveList[UBall::CurrentIndex]);
+		if (CurrentBall == nullptr)
+		{
+			return ;
+		}
+		if (UBall::StorageLevel == -1)
+		{
+			UBall::StorageLevel = CurrentBall->Level;
+			CurrentBall->Level = UBall::NextLevel;
+			UBall::NextLevel = rand() % 5;
+		}
+		else
+		{
+			int temp = CurrentBall->Level;
+			CurrentBall->Level = UBall::StorageLevel;
+			UBall::StorageLevel = temp;
+		}
+		const FVector NewLocation(
+			0.0f - (UBall::BallSizes[CurrentBall->Level] * 0.5f),
+			0.9f,
+			0.0f);
+		CurrentBall->Location = NewLocation;
+		CurrentBall->SetRadius(UBall::BallSizes[CurrentBall->Level]);
+		return ;
+	}
 };
 
 FVector GetFruitColor(float Radius)
@@ -453,6 +482,7 @@ int			UBall::TotalNumBalls = 0;
 int			UBall::TotalScore = 0;
 int			UBall::CurrentIndex = 0;
 int			UBall::NextLevel = rand() % 5;
+int			UBall::StorageLevel = -1;
 const float	UBall::BallSizes[11] = { 0.05f, 0.07f, 0.09f, 0.11f, 0.13f, 0.16f, 0.19f, 0.22f, 0.25f, 0.3f, 0.4f };
 const int	UBall::ScoreList[11] = { 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66 };
 const float UBall::DropTime = 600.0f;
@@ -477,8 +507,6 @@ UBall* CreateRandomBall()
 
 	return new UBall(Location, Velocity, CurrentLevel);
 }
-
-
 
 void ResizePrimitiveList(UPrimitive**& PrimitiveList, int TargetNumBalls)
 {
@@ -743,6 +771,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			QueryPerformanceCounter(&dropTime);
 		}
 
+		if (bCanUseSceneMouse && ImGui::IsMouseReleased(ImGuiMouseButton_Right))
+		{
+			UBall::Swap(PrimitiveList);
+		}
+
 		// 핀볼 움직임 || 중력 || 블랙홀이 켜져 있다면 물리 시뮬레이션을 갱신
 		const float FrameDeltaTime = 1.0f / (float)targetFPS;
 		const float SubstepDeltaTime = FrameDeltaTime / (float)PhysicsSubsteps;
@@ -902,6 +935,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		ImGui::Text("Next Fruit Color");
 		DrawFruitPreview(NextFruitColor);
 
+		ImGui::Text("Storage Fruit Color (RightClick)");
+		if (UBall::StorageLevel == -1)
+		{
+			ImGui::Text("Empty");
+		}
+		else
+		{
+			const FVector StorageFruitColor = GetFruitColor(UBall::BallSizes[UBall::StorageLevel]);
+			DrawFruitPreview(StorageFruitColor);
+		}
 		ImGui::Text("Angle: %.3f, Angular Velocity: %.3f",
 			DebugBall->RotationAngle, DebugBall->AngularVelocity);
 		ImGui::Checkbox("Enable Test Torque", &bEnableTestTorque);
