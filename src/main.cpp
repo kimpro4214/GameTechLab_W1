@@ -719,9 +719,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 		if (bCanUseSceneMouse && ImGui::IsMouseReleased(ImGuiMouseButton_Right))
 		{
-			char Buffer[256];
-			sprintf_s(Buffer, "Swap 진행 \n");
-			OutputDebugStringA(Buffer);
 			UBall::Swap(PrimitiveList);
 		}
 
