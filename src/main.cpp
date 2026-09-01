@@ -610,8 +610,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	const int PhysicsSubsteps = 2;
 	const int CollisionSolverIterations = 8;
 
-	const float FruitRad[11] = { 0.05f, 0.07f, 0.075f, 0.1f, 0.125f, 0.15f, 0.175f, 0.2f, 0.25f, 0.275f, 0.4f };
-
 	// 공은 조건에 따라 UPrimitive 이중 포인터로 관리
 	srand(static_cast<unsigned int>(GetTickCount()));
 	UPrimitive** PrimitiveList = nullptr;
@@ -835,10 +833,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			DebugBall->AngularVelocity = 0.0f;
 		}
 		ImGui::Text("Fruit Sequence");
-		const int FruitCount = sizeof(FruitRad) / sizeof(FruitRad[0]);
+		const int FruitCount = sizeof(UBall::BallSizes) / sizeof(UBall::BallSizes[0]);
 		for (int i = 0; i < FruitCount; ++i)
 		{
-			const FVector FruitColor = GetFruitColor(FruitRad[i]);
+			const FVector FruitColor = GetFruitColor(UBall::BallSizes[i]);
 			DrawFruitPreview(FruitColor);
 			const bool bHasNextFruit = i < FruitCount - 1;
 			const bool bIsEndOfRow = (i + 1) % 3 == 0;
