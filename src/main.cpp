@@ -535,7 +535,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	// 화면의 경계 위치를 나타내는 상수 변수 설정(NDC 좌표계)
 	const float leftBorder = -1.0f;
-	const float rightBorder = 1.0f;
+	const float rightBorder = 0.5f;
 	const float topBorder = -1.0f;
 	const float bottomBorder = 1.0f;
 
@@ -601,7 +601,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		FVector		 MouseWorldLocation;
 		const bool	 bHasMouseWorldLocation =
 			ConvertMouseToWorldLocation(MousePosition, renderer.ViewportInfo, MouseWorldLocation);
-		const bool bCanUseSceneMouse = bHasMouseWorldLocation && !FrameIO.WantCaptureMouse;
+		const bool bIsMouseInGameBounds =
+			bHasMouseWorldLocation &&
+			MouseWorldLocation.x >= leftBorder && MouseWorldLocation.x <= rightBorder &&
+			MouseWorldLocation.y >= topBorder && MouseWorldLocation.y <= bottomBorder;
+		const bool bCanUseSceneMouse = bIsMouseInGameBounds && !FrameIO.WantCaptureMouse;
 
 		if (bCanUseSceneMouse)
 		{
@@ -713,7 +717,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			DebugDrawList->AddLine(ContactScreen, TangentScreen, IM_COL32(255, 220, 80, 255), 2.0f);
 		}
 
+		const ImVec2 GameTopLeft = ConvertWorldToScreenLocation(
+			FVector(leftBorder, topBorder, 0.0f), renderer.ViewportInfo);
+		const ImVec2 GameBottomRight = ConvertWorldToScreenLocation(
+			FVector(rightBorder, bottomBorder, 0.0f), renderer.ViewportInfo);
+		ImGui::GetForegroundDrawList()->AddRect(
+			GameTopLeft, GameBottomRight, IM_COL32(255, 255, 255, 180), 0.0f, 0, 2.0f);
+
 		// 이후 ImGui UI 컨트롤 추가는 ImGui::NewFrame()과 ImGui::Render() 사이인 여기에 위치합니다.
+		ImGui::SetNextWindowPos(
+			ImVec2(renderer.ViewportInfo.Width * 0.75f, 0.0f), ImGuiCond_Always);
+		ImGui::SetNextWindowSize(
+			ImVec2(renderer.ViewportInfo.Width * 0.25f, renderer.ViewportInfo.Height),
+			ImGuiCond_Always);
 		ImGui::Begin("Jungle Property Window");
 
 		ImGui::SliderFloat("Spawn Radius", &spawnRadius, 0.01f, 0.4f);
