@@ -27,7 +27,8 @@ public:
 
 	void CreateConstantBuffer();
 	void ReleaseConstantBuffer();
-	void UpdateConstant(const FVector& Offset, float Scale, float RotationAngle);
+	void UpdateConstant(const FVector& Offset, float Scale, float RotationAngle,
+		const FVector& FruitColor);
 
 	void RenderPrimitive(ID3D11Buffer* pBuffer, UINT numVertices);
 
@@ -66,6 +67,6 @@ private:
 		FVector Offset;
 		float Scale;
 		float RotationAngle;
-		float Padding[3];
+		FVector FruitColor;
 	};
 };

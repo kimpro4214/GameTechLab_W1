@@ -39,9 +39,12 @@ public:
 	FVector				LastCollisionNormal;
 	FVector				LastCollisionTangent;
 	bool				bHasCollisionDebug;
+	static const float	DropTime;
+	static bool			bCanDropBall;
+	static int			NextLevel;
 	static int			TotalNumBalls;
 	static int			TotalScore;
-	static int			NextNumber;
+	static int			CurrentIndex;
 	static const float	BallSizes[11];
 	static const int	ScoreList[11];
 	int					Level;
@@ -52,7 +55,7 @@ public:
 		RotationAngle(0.0f), AngularVelocity(0.0f), bHasCollisionDebug(false)
 	{
 		SetRadius(BallSizes[Level]);
-		NextNumber = TotalNumBalls;
+		CurrentIndex = TotalNumBalls;
 		++TotalNumBalls;
 	}
 
@@ -92,9 +95,9 @@ public:
 		delete PrimitiveList[OtherBall];
 		if (OtherBall != UBall::TotalNumBalls)
 		{
-			PrimitiveList[OtherBall] = PrimitiveList[NextNumber];
-			PrimitiveList[NextNumber] = PrimitiveList[UBall::TotalNumBalls];
-			NextNumber = OtherBall;
+			PrimitiveList[OtherBall] = PrimitiveList[CurrentIndex];
+			PrimitiveList[CurrentIndex] = PrimitiveList[UBall::TotalNumBalls];
+			CurrentIndex = OtherBall;
 		}
 		PrimitiveList[UBall::TotalNumBalls] = nullptr;
 	}
@@ -378,11 +381,33 @@ public:
 	}
 };
 
+FVector GetFruitColor(float Radius)
+{
+	constexpr float ScaleStandard = 16.5f / 0.05f;
+	const float StandardizedScale = Radius * ScaleStandard;
+
+	if (StandardizedScale <= 16.5f) return FVector(0.95f, 0.05f, 0.05f);
+	if (StandardizedScale <= 24.0f) return FVector(0.99f, 0.41f, 0.30f);
+	if (StandardizedScale <= 30.5f) return FVector(0.63f, 0.42f, 1.00f);
+	if (StandardizedScale <= 36.5f) return FVector(1.00f, 0.72f, 0.00f);
+	if (StandardizedScale <= 44.5f) return FVector(0.99f, 0.55f, 0.17f);
+	if (StandardizedScale <= 57.0f) return FVector(0.95f, 0.05f, 0.05f);
+	if (StandardizedScale <= 64.5f) return FVector(0.98f, 0.94f, 0.62f);
+	if (StandardizedScale <= 78.0f) return FVector(1.00f, 0.71f, 0.68f);
+	if (StandardizedScale <= 88.5f) return FVector(0.97f, 0.92f, 0.04f);
+	if (StandardizedScale <= 110.0f) return FVector(0.62f, 0.87f, 0.07f);
+
+	return FVector(0.08f, 0.61f, 0.04f);
+}
+
+bool		UBall::bCanDropBall = true;
 int			UBall::TotalNumBalls = 0;
 int			UBall::TotalScore = 0;
-int			UBall::NextNumber = 0;
+int			UBall::CurrentIndex = 0;
+int			UBall::NextLevel = rand() % 5;
 const float	UBall::BallSizes[11] = { 0.05f, 0.07f, 0.09f, 0.11f, 0.13f, 0.16f, 0.19f, 0.22f, 0.25f, 0.3f, 0.4f };
 const int	UBall::ScoreList[11] = { 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66 };
+const float UBall::DropTime = 600.0f;
 
 
 float RandomFloat(float Min, float Max) // 사용 안하는데 나중에 사용할 지 몰라서 삭제 보류
@@ -390,14 +415,12 @@ float RandomFloat(float Min, float Max) // 사용 안하는데 나중에 사용�
 	return Min + ((float)rand() / (float)RAND_MAX) * (Max - Min);
 }
 
-
-float spawnRadius = 0.05f;
-
 UBall* CreateRandomBall()
 {
-	int Level = rand() % 5;
+	int CurrentLevel = UBall::NextLevel;
+	UBall::NextLevel = rand() % 5;
 	const FVector Location(
-		0.0f - (UBall::BallSizes[Level] * 0.5f),
+		0.0f - (UBall::BallSizes[CurrentLevel] * 0.5f),
 		0.9f,
 		0.0f);
 	FVector Velocity(
@@ -405,7 +428,7 @@ UBall* CreateRandomBall()
 		0.0f,
 		0.0f);
 
-	return new UBall(Location, Velocity, Level);
+	return new UBall(Location, Velocity, CurrentLevel);
 }
 
 
@@ -434,10 +457,6 @@ void ResizePrimitiveList(UPrimitive**& PrimitiveList, int TargetNumBalls)
 	for (int i = CurrentNumBalls; i < TargetNumBalls; ++i)
 	{
 		TempPrimitiveList[i] = CreateRandomBall();
-
-		char Buffer[256];
-		sprintf_s(Buffer, "볼 생성 완료 TotalBall : %d, 내 번호 : %d\n", UBall::TotalNumBalls, CurrentNumBalls);
-		OutputDebugStringA(Buffer);
 	}
 
 	delete[] PrimitiveList;
@@ -543,7 +562,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	// 화면의 경계 위치를 나타내는 상수 변수 설정(NDC 좌표계)
 	const float leftBorder = -1.0f;
-	const float rightBorder = 1.0f;
+	const float rightBorder = 0.5f;
 	const float topBorder = -1.0f;
 	const float bottomBorder = 1.0f;
 
@@ -561,6 +580,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	srand(static_cast<unsigned int>(GetTickCount()));
 	UPrimitive** PrimitiveList = nullptr;
 	ResizePrimitiveList(PrimitiveList, 1);
+	bool bIsDraggingBall = false;
 
 	// FPS 제한을 위한 설정
 	const int	 targetFPS = 30;
@@ -570,7 +590,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	LARGE_INTEGER frequency;
 	QueryPerformanceFrequency(&frequency);
 
-	LARGE_INTEGER startTime, endTime;
+	LARGE_INTEGER startTime, endTime, dropTime;
 	double		  elapsedTime = 0.0;
 
 	bool bIsExit = false;
@@ -608,36 +628,29 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		FVector		 MouseWorldLocation;
 		const bool	 bHasMouseWorldLocation =
 			ConvertMouseToWorldLocation(MousePosition, renderer.ViewportInfo, MouseWorldLocation);
-		const bool bCanUseSceneMouse = bHasMouseWorldLocation && !FrameIO.WantCaptureMouse;
+		const bool bIsMouseInGameBounds =
+			bHasMouseWorldLocation &&
+			MouseWorldLocation.x >= leftBorder && MouseWorldLocation.x <= rightBorder &&
+			MouseWorldLocation.y >= topBorder && MouseWorldLocation.y <= bottomBorder;
+		const bool bCanUseSceneMouse = bIsMouseInGameBounds && !FrameIO.WantCaptureMouse;
+		int DesiredNumBalls = UBall::TotalNumBalls;
 
-		if (bCanUseSceneMouse)
+		if (bCanUseSceneMouse && ImGui::IsMouseDown(ImGuiMouseButton_Left))
 		{
-			int DesiredNumBalls = UBall::TotalNumBalls;
-			if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
-			{
-				if (DesiredNumBalls < 1)
-				{
-					DesiredNumBalls = 1;
-				}
-				else
-				{
-					DesiredNumBalls++;
-				}
+			UBall* CurrentBall = static_cast<UBall*>(PrimitiveList[UBall::CurrentIndex]);
+			CurrentBall->Location.x = MouseWorldLocation.x;
+			bIsDraggingBall = true;
+		}
 
-				ResizePrimitiveList(PrimitiveList, DesiredNumBalls);
-				DesiredNumBalls = UBall::TotalNumBalls;
-			}
-			else if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
-			{
-				char Buffer[256];
-				sprintf_s(Buffer, "마우스 누르는 중 UBall::NextNumber = %d  TotalNumBalls = %d DesiredNumBalls : %d\n", UBall::NextNumber, UBall::TotalNumBalls, DesiredNumBalls);
-				OutputDebugStringA(Buffer);
-
-				UBall* CurrentBall = static_cast<UBall*>(PrimitiveList[UBall::NextNumber]);
-				CurrentBall->Location.x = MouseWorldLocation.x;
-
-				
-			}
+		// 게임 영역에서 잡은 공은 경계 밖에서 마우스를 놓아도 떨어집니다.
+		if (UBall::bCanDropBall && bIsDraggingBall && ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+		{
+			++DesiredNumBalls;
+			ResizePrimitiveList(PrimitiveList, DesiredNumBalls);
+			DesiredNumBalls = UBall::TotalNumBalls;
+			bIsDraggingBall = false;
+			UBall::bCanDropBall = false;
+			QueryPerformanceCounter(&dropTime);
 		}
 
 		// 핀볼 움직임 || 중력 || 블랙홀이 켜져 있다면 물리 시뮬레이션을 갱신
@@ -651,12 +664,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			Ball->bHasCollisionDebug = false;
 		}
 
-		// Integrate and solve contacts at smaller time intervals within this frame.
+		// substep 단위로 물리 시뮬레이션을 반복 수행
 		for (int Substep = 0; Substep < PhysicsSubsteps; ++Substep)
 		{
 			for (int i = 0; i < UBall::TotalNumBalls; ++i)
 			{
-				if (i == UBall::NextNumber) // 대기중인 볼 제외
+				if (i == UBall::CurrentIndex) // 대기중인 볼 제외
 				{
 					continue;
 				}
@@ -670,7 +683,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				Ball->Move(SubstepDeltaTime, AngularDamping);
 			}
 
-			// Repeatedly solve contacts at the position sampled by this substep.
+			// 반복계수와 마찰계수를 고려하여 충돌을 해결하는 솔버 반복
 			for (int SolverIteration = 0;
 				SolverIteration < CollisionSolverIterations;
 				++SolverIteration)
@@ -679,13 +692,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				int TotalBall = UBall::TotalNumBalls;
 				for (int i = 0; i < TotalBall; ++i)
 				{
-					if (i == UBall::NextNumber) // 대기중인 볼 제외
+					if (i == UBall::CurrentIndex) // 대기중인 볼 제외
 					{
 						continue;
 					}
 					for (int j = i + 1; j < TotalBall; ++j)
 					{
-						if (j == UBall::NextNumber) // 대기중인 볼 제외
+						if (j == UBall::CurrentIndex) // 대기중인 볼 제외
 						{
 							continue;
 						}
@@ -698,10 +711,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 							{
 								BallA->Merge(PrimitiveList, j);
 								TotalBall--;
-
-								char Buffer[256];
-								sprintf_s(Buffer, "머지 완료 현재 BallA : %d, 현재 BallB : %d, TotalBall : %d\n", i, j, UBall::TotalNumBalls);
-								OutputDebugStringA(Buffer);
 								break;
 							}
 							PrimitiveList[i]->ResolveCollision(
@@ -728,7 +737,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		for (int i = 0; i < UBall::TotalNumBalls; ++i)
 		{
 			UBall* Ball = static_cast<UBall*>(PrimitiveList[i]);
-			renderer.UpdateConstant(Ball->Location, Ball->Radius, Ball->RotationAngle);
+			renderer.UpdateConstant(Ball->Location, Ball->Radius, Ball->RotationAngle,
+				GetFruitColor(Ball->Radius));
 			renderer.RenderPrimitive(vertexBufferSphere, numVerticesSphere);
 		}
 
@@ -752,13 +762,49 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			DebugDrawList->AddLine(ContactScreen, TangentScreen, IM_COL32(255, 220, 80, 255), 2.0f);
 		}
 
+		const ImVec2 GameTopLeft = ConvertWorldToScreenLocation(
+			FVector(leftBorder, topBorder, 0.0f), renderer.ViewportInfo);
+		const ImVec2 GameBottomRight = ConvertWorldToScreenLocation(
+			FVector(rightBorder, bottomBorder, 0.0f), renderer.ViewportInfo);
+		ImGui::GetForegroundDrawList()->AddRect(
+			GameTopLeft, GameBottomRight, IM_COL32(255, 255, 255, 180), 0.0f, 0, 2.0f);
+
 		// 이후 ImGui UI 컨트롤 추가는 ImGui::NewFrame()과 ImGui::Render() 사이인 여기에 위치합니다.
+		ImGui::SetNextWindowPos(
+			ImVec2(renderer.ViewportInfo.Width * 0.75f, 0.0f), ImGuiCond_Always);
+		ImGui::SetNextWindowSize(
+			ImVec2(renderer.ViewportInfo.Width * 0.25f, renderer.ViewportInfo.Height),
+			ImGuiCond_Always);
 		ImGui::Begin("Jungle Property Window");
 
 		ImGui::Text("Total Score : %d", UBall::TotalScore);
-		ImGui::Text("Test TotalBall : %d", UBall::TotalNumBalls);
 
-		ImGui::SliderFloat("Spawn Radius", &spawnRadius, 0.01f, 0.4f);
+		const FVector NextFruitColor = GetFruitColor(UBall::BallSizes[UBall::NextLevel]);
+		ImGui::Text("Next Fruit Color");
+		const ImVec2 PreviewSize(40.0f, 40.0f);
+		const ImVec2 PreviewPosition = ImGui::GetCursorScreenPos();
+		const ImVec2 PreviewCenter(
+			PreviewPosition.x + PreviewSize.x * 0.5f,
+			PreviewPosition.y + PreviewSize.y * 0.5f);
+		ImDrawList* PreviewDrawList = ImGui::GetWindowDrawList();
+		constexpr float PreviewRadius = 18.0f;
+		for (int PixelY = -18; PixelY <= 18; ++PixelY)
+		{
+			const float VerticalOffset = static_cast<float>(PixelY);
+			const float HalfWidth = sqrtf(PreviewRadius * PreviewRadius - VerticalOffset * VerticalOffset);
+			const float GradientT = 0.7f - VerticalOffset / (2.0f * PreviewRadius);
+			const ImVec4 GradientColor(
+				1.0f + (NextFruitColor.x - 1.0f) * GradientT,
+				1.0f + (NextFruitColor.y - 1.0f) * GradientT,
+				1.0f + (NextFruitColor.z - 1.0f) * GradientT,
+				1.0f);
+			PreviewDrawList->AddLine(
+				ImVec2(PreviewCenter.x - HalfWidth, PreviewCenter.y + VerticalOffset),
+				ImVec2(PreviewCenter.x + HalfWidth, PreviewCenter.y + VerticalOffset),
+				ImGui::ColorConvertFloat4ToU32(GradientColor), 1.0f);
+		}
+		PreviewDrawList->AddCircle(PreviewCenter, PreviewRadius, IM_COL32(255, 255, 255, 255));
+		ImGui::Dummy(PreviewSize);
 
 		ImGui::Text("Angle: %.3f, Angular Velocity: %.3f",
 			DebugBall->RotationAngle, DebugBall->AngularVelocity);
@@ -795,6 +841,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 			// 한 프레임이 소요된 시간 계산 (밀리초 단위로 변환)
 			elapsedTime = (endTime.QuadPart - startTime.QuadPart) * 1000.0 / frequency.QuadPart;
+			if (!UBall::bCanDropBall)
+			{
+				double DropElapsedTime = (endTime.QuadPart - dropTime.QuadPart) * 1000.0 / frequency.QuadPart;
+				if (DropElapsedTime >= UBall::DropTime)
+				{
+					UBall::bCanDropBall = true;
+				}
+			}
 		} while (elapsedTime < targetFrameTime);
 	}
 

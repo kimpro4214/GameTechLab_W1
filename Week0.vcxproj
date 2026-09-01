@@ -161,7 +161,6 @@
     <ClCompile Include="src\URenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Sphere.h" />
     <ClInclude Include="src\FVector.h" />
     <ClInclude Include="src\ImGui\imconfig.h" />
     <ClInclude Include="src\ImGui\imgui.h" />
@@ -171,6 +170,7 @@
     <ClInclude Include="src\ImGui\imstb_rectpack.h" />
     <ClInclude Include="src\ImGui\imstb_textedit.h" />
     <ClInclude Include="src\ImGui\imstb_truetype.h" />
+    <ClInclude Include="src\Sphere.h" />
     <ClInclude Include="src\URenderer.h" />
   </ItemGroup>
   <ItemGroup>

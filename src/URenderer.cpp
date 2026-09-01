@@ -178,7 +178,8 @@ void URenderer::ReleaseConstantBuffer()
 	}
 }
 
-void URenderer::UpdateConstant(const FVector& Offset, float Scale, float RotationAngle)
+void URenderer::UpdateConstant(const FVector& Offset, float Scale, float RotationAngle,
+	const FVector& FruitColor)
 {
 	if (ConstantBuffer)
 	{
@@ -190,6 +191,7 @@ void URenderer::UpdateConstant(const FVector& Offset, float Scale, float Rotatio
 			constants->Offset = Offset;
 			constants->Scale = Scale;
 			constants->RotationAngle = RotationAngle;
+			constants->FruitColor = FruitColor;
 		}
 		DeviceContext->Unmap(ConstantBuffer, 0);
 	}
