@@ -186,7 +186,6 @@
     <ClCompile Include="src\Physics\UBall.cpp" />
     <ClCompile Include="src\Platform\Win32Window.cpp" />
     <ClCompile Include="src\Rendering\FruitRenderer.cpp" />
-    <ClCompile Include="src\Rendering\FruitVisuals.cpp" />
     <ClCompile Include="src\UI\GameUI.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -216,7 +215,6 @@
     <ClInclude Include="src\Physics\UPrimitive.h" />
     <ClInclude Include="src\Platform\Win32Window.h" />
     <ClInclude Include="src\Rendering\FruitRenderer.h" />
-    <ClInclude Include="src\Rendering\FruitVisuals.h" />
     <ClInclude Include="src\UI\GameUI.h" />
   </ItemGroup>
   <ItemGroup>

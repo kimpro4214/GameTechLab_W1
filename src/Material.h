@@ -18,8 +18,8 @@ public:
 	}
 
 	const RenderPipeline& GetRendererPipeline() const { return *RenderPipeline; };
-
 	void SetTextureSRV(Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> TextureSRV) { this->TextureSRV = TextureSRV; };
+	ID3D11ShaderResourceView* GetTextureSRV() const { return TextureSRV.Get(); };
 	void SetSamplerState(Microsoft::WRL::ComPtr<ID3D11SamplerState> SamplerState) { this->SamplerState = SamplerState; };
 
 private:

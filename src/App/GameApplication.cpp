@@ -173,7 +173,7 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 
 		Renderer.Prepare();
 		FruitSceneRenderer.Draw(Renderer, Session.GetBalls());
-		ApplyUICommand(UI.Draw(Session, Renderer.ViewportInfo), Session, Controller);
+		ApplyUICommand(UI.Draw(Session, Renderer.ViewportInfo, FruitSceneRenderer), Session, Controller);
 
 		ImGui::Render();
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());

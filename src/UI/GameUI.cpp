@@ -4,7 +4,7 @@
 #include "Game/GameConfig.h"
 #include "Game/GameSession.h"
 #include "ImGui/imgui.h"
-#include "Rendering/FruitVisuals.h"
+#include "Rendering/FruitRenderer.h"
 
 #include <cmath>
 
@@ -16,12 +16,13 @@ namespace
 
 EGameUICommand GameUI::Draw(
 	const GameSession& Session,
-	const D3D11_VIEWPORT& Viewport) const
+	const D3D11_VIEWPORT& Viewport,
+	const FruitRenderer& InFruitRenderer) const
 {
 	DrawSceneOverlay(Session, Viewport);
 	const EGameUICommand Command = Session.IsMainMenu()
 		? DrawMainMenu(Viewport)
-		: DrawGamePanel(Session, Viewport);
+		: DrawGamePanel(Session, Viewport, InFruitRenderer);
 	DrawCreatorCredit(Viewport);
 	return Command;
 }
@@ -94,7 +95,8 @@ EGameUICommand GameUI::DrawMainMenu(const D3D11_VIEWPORT& Viewport) const
 
 EGameUICommand GameUI::DrawGamePanel(
 	const GameSession& Session,
-	const D3D11_VIEWPORT& Viewport) const
+	const D3D11_VIEWPORT& Viewport,
+	const FruitRenderer& InFruitRenderer) const
 {
 	EGameUICommand Command = EGameUICommand::None;
 	ImGui::SetNextWindowPos(ImVec2(Viewport.Width * 0.75f, 0.0f), ImGuiCond_Always);
@@ -125,7 +127,7 @@ EGameUICommand GameUI::DrawGamePanel(
 	}
 
 	ImGui::Text("Next Fruit Color");
-	DrawFruitPreview(GetFruitColor(FruitCatalog::GetRadius(Session.GetNextLevel())));
+	DrawFruitPreview(InFruitRenderer.GetFruitTextureSRV(Session.GetNextLevel()));
 
 	ImGui::Text("Storage Fruit Color (RightClick)");
 	if (Session.GetStorageLevel() == -1)
@@ -134,14 +136,13 @@ EGameUICommand GameUI::DrawGamePanel(
 	}
 	else
 	{
-		DrawFruitPreview(GetFruitColor(
-			FruitCatalog::GetRadius(Session.GetStorageLevel())));
+		DrawFruitPreview(InFruitRenderer.GetFruitTextureSRV(Session.GetStorageLevel()));
 	}
 
 	ImGui::Text("Fruit Sequence");
 	for (std::size_t i = 0; i < FruitCatalog::LevelCount; ++i)
 	{
-		DrawFruitPreview(GetFruitColor(FruitCatalog::GetRadius(static_cast<int>(i))));
+		DrawFruitPreview(InFruitRenderer.GetFruitTextureSRV(i));
 		const bool bHasNextFruit = i + 1 < FruitCatalog::LevelCount;
 		const bool bIsEndOfRow = (i + 1) % 3 == 0;
 		if (bHasNextFruit)
@@ -183,39 +184,23 @@ void GameUI::DrawCreatorCredit(const D3D11_VIEWPORT& Viewport) const
 	ImGui::End();
 }
 
-void GameUI::DrawFruitPreview(const FVector& FruitColor) const
+void GameUI::DrawFruitPreview(ID3D11ShaderResourceView* TextureSRV) const
 {
 	const ImVec2 PreviewSize(FruitPreviewSize, FruitPreviewSize);
+
+	if (!TextureSRV)
+	{
+		ImGui::Dummy(PreviewSize);
+		return;
+	}
+
 	const ImVec2 PreviewPosition = ImGui::GetCursorScreenPos();
 	const ImVec2 PreviewCenter(
 		PreviewPosition.x + PreviewSize.x * 0.5f,
 		PreviewPosition.y + PreviewSize.y * 0.5f);
 	ImDrawList* DrawList = ImGui::GetWindowDrawList();
 
-	for (int PixelY = -18; PixelY <= 18; ++PixelY)
-	{
-		const float VerticalOffset = static_cast<float>(PixelY);
-		const float HalfWidth = sqrtf(
-			FruitPreviewRadius * FruitPreviewRadius - VerticalOffset * VerticalOffset);
-		const float GradientT = 0.7f - VerticalOffset / (2.0f * FruitPreviewRadius);
-		const ImVec4 GradientColor(
-			1.0f + (FruitColor.x - 1.0f) * GradientT,
-			1.0f + (FruitColor.y - 1.0f) * GradientT,
-			1.0f + (FruitColor.z - 1.0f) * GradientT,
-			1.0f);
-
-		DrawList->AddLine(
-			ImVec2(PreviewCenter.x - HalfWidth, PreviewCenter.y + VerticalOffset),
-			ImVec2(PreviewCenter.x + HalfWidth, PreviewCenter.y + VerticalOffset),
-			ImGui::ColorConvertFloat4ToU32(GradientColor),
-			1.0f);
-	}
-
-	DrawList->AddCircle(
-		PreviewCenter,
-		FruitPreviewRadius,
-		IM_COL32(255, 255, 255, 255));
-	ImGui::Dummy(PreviewSize);
+	ImGui::Image(reinterpret_cast<ImTextureID>(TextureSRV), PreviewSize);
 }
 
 ImVec2 GameUI::ConvertWorldToScreen(

@@ -75,9 +75,6 @@
     <ClCompile Include="src\Rendering\FruitRenderer.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="src\Rendering\FruitVisuals.cpp">
-      <Filter>Rendering</Filter>
-    </ClCompile>
     <ClCompile Include="src\UI\GameUI.cpp">
       <Filter>UI</Filter>
     </ClCompile>
@@ -159,9 +156,6 @@
       <Filter>Platform</Filter>
     </ClInclude>
     <ClInclude Include="src\Rendering\FruitRenderer.h">
-      <Filter>Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Rendering\FruitVisuals.h">
       <Filter>Rendering</Filter>
     </ClInclude>
     <ClInclude Include="src\UI\GameUI.h">
