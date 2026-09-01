@@ -29,21 +29,22 @@ public:
 class UBall : public UPrimitive
 {
 public:
-	FVector	   Location;
-	FVector	   Velocity;
-	float	   Radius;
-	float	   Mass;
-	float      RotationAngle;
-	float      AngularVelocity;
-	FVector    LastCollisionPoint;
-	FVector    LastCollisionNormal;
-	FVector    LastCollisionTangent;
-	bool       bHasCollisionDebug;
-	static int TotalNumBalls;
-	static int TotalScore;
+	FVector				Location;
+	FVector				Velocity;
+	float				Radius;
+	float				Mass;
+	float				RotationAngle;
+	float				AngularVelocity;
+	FVector				LastCollisionPoint;
+	FVector				LastCollisionNormal;
+	FVector				LastCollisionTangent;
+	bool				bHasCollisionDebug;
+	static int			TotalNumBalls;
+	static int			TotalScore;
+	static int			NextNumber;
 	static const float	BallSizes[11];
 	static const int	ScoreList[11];
-	int			Level;
+	int					Level;
 
 
 	UBall(const FVector& InitialLocation = FVector(), const FVector& InitialVelocity = FVector(), int InitialLevel = 0)
@@ -51,6 +52,7 @@ public:
 		RotationAngle(0.0f), AngularVelocity(0.0f), bHasCollisionDebug(false)
 	{
 		SetRadius(BallSizes[Level]);
+		NextNumber = TotalNumBalls;
 		++TotalNumBalls;
 	}
 
@@ -88,7 +90,12 @@ public:
 		SetRadius(UBall::BallSizes[Level]);
 
 		delete PrimitiveList[OtherBall];
-		PrimitiveList[OtherBall] = PrimitiveList[UBall::TotalNumBalls];
+		if (OtherBall != UBall::TotalNumBalls)
+		{
+			PrimitiveList[OtherBall] = PrimitiveList[NextNumber];
+			PrimitiveList[NextNumber] = PrimitiveList[UBall::TotalNumBalls];
+			NextNumber = OtherBall;
+		}
 		PrimitiveList[UBall::TotalNumBalls] = nullptr;
 	}
 
@@ -371,13 +378,14 @@ public:
 	}
 };
 
-int UBall::TotalNumBalls = 0;
-int UBall::TotalScore = 0;
-const float UBall::BallSizes[11] = { 0.05f, 0.07f, 0.09f, 0.11f, 0.13f, 0.16f, 0.19f, 0.22f, 0.25f, 0.3f, 0.4f };
-const int UBall::ScoreList[11] = { 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66 };
+int			UBall::TotalNumBalls = 0;
+int			UBall::TotalScore = 0;
+int			UBall::NextNumber = 0;
+const float	UBall::BallSizes[11] = { 0.05f, 0.07f, 0.09f, 0.11f, 0.13f, 0.16f, 0.19f, 0.22f, 0.25f, 0.3f, 0.4f };
+const int	UBall::ScoreList[11] = { 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66 };
 
 
-float RandomFloat(float Min, float Max)
+float RandomFloat(float Min, float Max) // 사용 안하는데 나중에 사용할 지 몰라서 삭제 보류
 {
 	return Min + ((float)rand() / (float)RAND_MAX) * (Max - Min);
 }
@@ -426,6 +434,10 @@ void ResizePrimitiveList(UPrimitive**& PrimitiveList, int TargetNumBalls)
 	for (int i = CurrentNumBalls; i < TargetNumBalls; ++i)
 	{
 		TempPrimitiveList[i] = CreateRandomBall();
+
+		char Buffer[256];
+		sprintf_s(Buffer, "볼 생성 완료 TotalBall : %d, 내 번호 : %d\n", UBall::TotalNumBalls, CurrentNumBalls);
+		OutputDebugStringA(Buffer);
 	}
 
 	delete[] PrimitiveList;
@@ -617,8 +629,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 			else if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
 			{
-				UBall* CurrentBall = static_cast<UBall*>(PrimitiveList[DesiredNumBalls - 1]);
+				char Buffer[256];
+				sprintf_s(Buffer, "마우스 누르는 중 UBall::NextNumber = %d  TotalNumBalls = %d DesiredNumBalls : %d\n", UBall::NextNumber, UBall::TotalNumBalls, DesiredNumBalls);
+				OutputDebugStringA(Buffer);
+
+				UBall* CurrentBall = static_cast<UBall*>(PrimitiveList[UBall::NextNumber]);
 				CurrentBall->Location.x = MouseWorldLocation.x;
+
+				
 			}
 		}
 
@@ -636,8 +654,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		// Integrate and solve contacts at smaller time intervals within this frame.
 		for (int Substep = 0; Substep < PhysicsSubsteps; ++Substep)
 		{
-			for (int i = 0; i < UBall::TotalNumBalls - 1; ++i)
+			for (int i = 0; i < UBall::TotalNumBalls; ++i)
 			{
+				if (i == UBall::NextNumber) // 대기중인 볼 제외
+				{
+					continue;
+				}
 				UBall* Ball = static_cast<UBall*>(PrimitiveList[i]);
 
 				Ball->AddVelocity(GravityVelocityChange);
@@ -655,10 +677,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			{
 
 				int TotalBall = UBall::TotalNumBalls;
-				for (int i = 0; i < TotalBall - 1; ++i) // 마지막 볼은 아직 낙하 안했기 때문에 검사에서 제외
+				for (int i = 0; i < TotalBall; ++i)
 				{
-					for (int j = i + 1; j < TotalBall - 1; ++j)
+					if (i == UBall::NextNumber) // 대기중인 볼 제외
 					{
+						continue;
+					}
+					for (int j = i + 1; j < TotalBall; ++j)
+					{
+						if (j == UBall::NextNumber) // 대기중인 볼 제외
+						{
+							continue;
+						}
 						if (PrimitiveList[i]->IsColliding(PrimitiveList[j]))
 						{
 
@@ -667,8 +697,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 							if (BallA->IsMergeable(BallB))
 							{
 								BallA->Merge(PrimitiveList, j);
-								//j--;
 								TotalBall--;
+
+								char Buffer[256];
+								sprintf_s(Buffer, "머지 완료 현재 BallA : %d, 현재 BallB : %d, TotalBall : %d\n", i, j, UBall::TotalNumBalls);
+								OutputDebugStringA(Buffer);
 								break;
 							}
 							PrimitiveList[i]->ResolveCollision(
@@ -723,6 +756,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		ImGui::Begin("Jungle Property Window");
 
 		ImGui::Text("Total Score : %d", UBall::TotalScore);
+		ImGui::Text("Test TotalBall : %d", UBall::TotalNumBalls);
 
 		ImGui::SliderFloat("Spawn Radius", &spawnRadius, 0.01f, 0.4f);
 
