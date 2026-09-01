@@ -554,6 +554,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	UPrimitive** PrimitiveList = nullptr;
 	ResizePrimitiveList(PrimitiveList, 1);
 	int DesiredNumBalls = UBall::TotalNumBalls;
+	bool bIsDraggingBall = false;
 
 	// FPS 제한을 위한 설정
 	const int	 targetFPS = 30;
@@ -607,27 +608,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			MouseWorldLocation.y >= topBorder && MouseWorldLocation.y <= bottomBorder;
 		const bool bCanUseSceneMouse = bIsMouseInGameBounds && !FrameIO.WantCaptureMouse;
 
-		if (bCanUseSceneMouse)
+		if (bCanUseSceneMouse && ImGui::IsMouseDown(ImGuiMouseButton_Left))
 		{
-			if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
-			{
-				if (DesiredNumBalls < 1)
-				{
-					DesiredNumBalls = 1;
-				}
-				else
-				{
-					DesiredNumBalls++;
-				}
+			UBall* CurrentBall = static_cast<UBall*>(PrimitiveList[DesiredNumBalls - 1]);
+			CurrentBall->Location.x = MouseWorldLocation.x;
+			bIsDraggingBall = true;
+		}
 
-				ResizePrimitiveList(PrimitiveList, DesiredNumBalls);
-				DesiredNumBalls = UBall::TotalNumBalls;
-			}
-			else if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
-			{
-				UBall* CurrentBall = static_cast<UBall*>(PrimitiveList[DesiredNumBalls - 1]);
-				CurrentBall->Location.x = MouseWorldLocation.x;
-			}
+		// 게임 영역에서 잡은 공은 경계 밖에서 마우스를 놓아도 떨어집니다.
+		if (bIsDraggingBall && ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+		{
+			++DesiredNumBalls;
+			ResizePrimitiveList(PrimitiveList, DesiredNumBalls);
+			DesiredNumBalls = UBall::TotalNumBalls;
+			bIsDraggingBall = false;
 		}
 
 		// 핀볼 움직임 || 중력 || 블랙홀이 켜져 있다면 물리 시뮬레이션을 갱신
