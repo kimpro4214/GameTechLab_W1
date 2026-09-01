@@ -205,7 +205,7 @@ Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> URenderer::LoadTexture(LPCWSTR 
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Result;
 
 	const HRESULT hr = DirectX::CreateWICTextureFromFile(Device, FilePath, nullptr, Result.GetAddressOf());
-	
+
 	return SUCCEEDED(hr) ? Result : Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>{};
 }
 
@@ -214,7 +214,7 @@ Microsoft::WRL::ComPtr<ID3D11SamplerState> URenderer::CreateSamplerState(const D
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> Result;
 
 	const HRESULT hr = Device->CreateSamplerState(&Desc, Result.GetAddressOf());
-	
+
 	return SUCCEEDED(hr) ? Result : Microsoft::WRL::ComPtr<ID3D11SamplerState>{};
 }
 
