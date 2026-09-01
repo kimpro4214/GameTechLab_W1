@@ -350,6 +350,25 @@ public:
 	}
 };
 
+FVector GetFruitColor(float Radius)
+{
+	constexpr float ScaleStandard = 16.5f / 0.05f;
+	const float StandardizedScale = Radius * ScaleStandard;
+
+	if (StandardizedScale <= 16.5f) return FVector(0.95f, 0.05f, 0.05f);
+	if (StandardizedScale <= 24.0f) return FVector(0.99f, 0.41f, 0.30f);
+	if (StandardizedScale <= 30.5f) return FVector(0.63f, 0.42f, 1.00f);
+	if (StandardizedScale <= 34.5f) return FVector(1.00f, 0.72f, 0.00f);
+	if (StandardizedScale <= 44.5f) return FVector(0.99f, 0.55f, 0.17f);
+	if (StandardizedScale <= 57.0f) return FVector(0.95f, 0.05f, 0.05f);
+	if (StandardizedScale <= 64.5f) return FVector(0.98f, 0.94f, 0.62f);
+	if (StandardizedScale <= 78.0f) return FVector(1.00f, 0.71f, 0.68f);
+	if (StandardizedScale <= 88.5f) return FVector(0.97f, 0.92f, 0.04f);
+	if (StandardizedScale <= 110.0f) return FVector(0.62f, 0.87f, 0.07f);
+
+	return FVector(0.08f, 0.61f, 0.04f);
+}
+
 int UBall::TotalNumBalls = 0;
 
 float RandomFloat(float Min, float Max) // 나중에 과일 뽑을 때 사용예정
@@ -618,7 +637,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			Ball->bHasCollisionDebug = false;
 		}
 
-		// Integrate and solve contacts at smaller time intervals within this frame.
+		// substep 단위로 물리 시뮬레이션을 반복 수행
 		for (int Substep = 0; Substep < PhysicsSubsteps; ++Substep)
 		{
 			for (int i = 0; i < UBall::TotalNumBalls - 1; ++i)
@@ -633,7 +652,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				Ball->Move(SubstepDeltaTime, AngularDamping);
 			}
 
-			// Repeatedly solve contacts at the position sampled by this substep.
+			// 반복계수와 마찰계수를 고려하여 충돌을 해결하는 솔버 반복
 			for (int SolverIteration = 0;
 				SolverIteration < CollisionSolverIterations;
 				++SolverIteration)
@@ -669,7 +688,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		for (int i = 0; i < UBall::TotalNumBalls; ++i)
 		{
 			UBall* Ball = static_cast<UBall*>(PrimitiveList[i]);
-			renderer.UpdateConstant(Ball->Location, Ball->Radius, Ball->RotationAngle);
+			renderer.UpdateConstant(Ball->Location, Ball->Radius, Ball->RotationAngle,
+				GetFruitColor(Ball->Radius));
 			renderer.RenderPrimitive(vertexBufferSphere, numVerticesSphere);
 		}
 
@@ -697,6 +717,32 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		ImGui::Begin("Jungle Property Window");
 
 		ImGui::SliderFloat("Spawn Radius", &spawnRadius, 0.01f, 0.4f);
+		const FVector NextFruitColor = GetFruitColor(spawnRadius);
+		ImGui::Text("Next Fruit Color");
+		const ImVec2 PreviewSize(40.0f, 40.0f);
+		const ImVec2 PreviewPosition = ImGui::GetCursorScreenPos();
+		const ImVec2 PreviewCenter(
+			PreviewPosition.x + PreviewSize.x * 0.5f,
+			PreviewPosition.y + PreviewSize.y * 0.5f);
+		ImDrawList* PreviewDrawList = ImGui::GetWindowDrawList();
+		constexpr float PreviewRadius = 18.0f;
+		for (int PixelY = -18; PixelY <= 18; ++PixelY)
+		{
+			const float VerticalOffset = static_cast<float>(PixelY);
+			const float HalfWidth = sqrtf(PreviewRadius * PreviewRadius - VerticalOffset * VerticalOffset);
+			const float GradientT = 0.7f - VerticalOffset / (2.0f * PreviewRadius);
+			const ImVec4 GradientColor(
+				1.0f + (NextFruitColor.x - 1.0f) * GradientT,
+				1.0f + (NextFruitColor.y - 1.0f) * GradientT,
+				1.0f + (NextFruitColor.z - 1.0f) * GradientT,
+				1.0f);
+			PreviewDrawList->AddLine(
+				ImVec2(PreviewCenter.x - HalfWidth, PreviewCenter.y + VerticalOffset),
+				ImVec2(PreviewCenter.x + HalfWidth, PreviewCenter.y + VerticalOffset),
+				ImGui::ColorConvertFloat4ToU32(GradientColor), 1.0f);
+		}
+		PreviewDrawList->AddCircle(PreviewCenter, PreviewRadius, IM_COL32(255, 255, 255, 255));
+		ImGui::Dummy(PreviewSize);
 
 		ImGui::Text("Angle: %.3f, Angular Velocity: %.3f",
 			DebugBall->RotationAngle, DebugBall->AngularVelocity);
