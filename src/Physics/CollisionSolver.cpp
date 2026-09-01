@@ -5,10 +5,11 @@
 #include <cmath>
 
 void CollisionSolver::ResolveBallCollision(
-	UBall& BallA,
-	UBall& BallB,
-	float Restitution,
-	float FrictionCoefficient)
+	UBall&	BallA,
+	UBall&	BallB,
+	float	Restitution,
+	float	FrictionCoefficient,
+	bool	bHasMerged)
 {
 	const FVector Delta = BallB.Location - BallA.Location;
 	const float RadiusSum = BallA.Radius + BallB.Radius;
@@ -52,6 +53,18 @@ void CollisionSolver::ResolveBallCollision(
 		CollisionNormal * (CorrectedPenetration * CorrectionPercent / InverseMassSum);
 	BallA.Location -= Correction * InverseMassA;
 	BallB.Location += Correction * InverseMassB;
+
+	if (bHasMerged)
+	{
+		const float PenetrationVelocityScale = 500.0f;
+		const float MaxPenetrationVelocity = 10.0f;
+
+		float PenetrationImpulseMagnitude =
+			CorrectedPenetration * PenetrationVelocityScale > MaxPenetrationVelocity ? MaxPenetrationVelocity : CorrectedPenetration * PenetrationVelocityScale;
+		const FVector PenetrationImpulse = CollisionNormal * (PenetrationImpulseMagnitude / InverseMassSum);
+		BallA.Velocity -= PenetrationImpulse * InverseMassA;
+		BallB.Velocity += PenetrationImpulse * InverseMassB;
+	}
 
 	const FVector ContactOffsetA = CollisionNormal * BallA.Radius;
 	const FVector ContactOffsetB = CollisionNormal * -BallB.Radius;

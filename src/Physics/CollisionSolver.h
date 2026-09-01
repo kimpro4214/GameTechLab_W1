@@ -7,10 +7,11 @@ class CollisionSolver
 {
 public:
 	static void ResolveBallCollision(
-		UBall& BallA,
-		UBall& BallB,
-		float Restitution,
-		float FrictionCoefficient);
+		UBall&	BallA,
+		UBall&	BallB,
+		float	Restitution,
+		float	FrictionCoefficient,
+		bool	bHasMerged);
 	static void ResolveBorderContact(
 		UBall& Ball,
 		const FVector& CollisionNormal,

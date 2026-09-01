@@ -3,6 +3,8 @@
 #include "Physics/CollisionSolver.h"
 #include "Physics/UBall.h"
 
+#include "Game/FruitCatalog.h"
+
 PhysicsWorld::PhysicsWorld(const FPhysicsWorldSettings& InitialSettings)
 	: Settings(InitialSettings)
 {
@@ -48,14 +50,25 @@ void PhysicsWorld::ResolveBallCollisions(
 	std::vector<std::unique_ptr<UBall>>& Balls,
 	const FBallMergeHandler& TryMerge) const
 {
+	int bHasMerged = false;
+	int bCheckMerged = false;
+
 	for (std::size_t i = 0; i < Balls.size(); ++i)
 	{
+		if (bCheckMerged)
+		{
+			bHasMerged = true;
+			bCheckMerged = false;
+		}
+		else
+		{
+			bHasMerged = false;
+		}
 		UBall* BallA = Balls[i].get();
 		if (!BallA->bHasBeenDropped)
 		{
 			continue;
 		}
-
 		for (std::size_t j = i + 1; j < Balls.size(); ++j)
 		{
 			UBall* BallB = Balls[j].get();
@@ -72,6 +85,12 @@ void PhysicsWorld::ResolveBallCollisions(
 			if (TryMerge && TryMerge(*BallA, *BallB))
 			{
 				Balls.erase(Balls.begin() + static_cast<std::ptrdiff_t>(j));
+				if (BallA->Level == static_cast<int>(FruitCatalog::LevelCount))
+				{
+					Balls.erase(Balls.begin() + static_cast<std::ptrdiff_t>(i));
+				}
+				bCheckMerged = true;
+				i--;
 				break;
 			}
 
@@ -79,7 +98,8 @@ void PhysicsWorld::ResolveBallCollisions(
 				*BallA,
 				*BallB,
 				Settings.Restitution,
-				Settings.FrictionCoefficient);
+				Settings.FrictionCoefficient,
+				bHasMerged);
 		}
 	}
 }
