@@ -19,6 +19,24 @@
     <Filter Include="ImGui">
       <UniqueIdentifier>{5d5d5e6e-d2a5-4b6e-a231-d636dceb7707}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Game">
+      <UniqueIdentifier>{E076D17D-0425-4F3A-83A4-F8F789B88231}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Application">
+      <UniqueIdentifier>{2DB705DC-64F2-40F8-A2F0-D71D815C1B53}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI">
+      <UniqueIdentifier>{F681DCFB-E256-4DA5-B4A4-E0896D01B4D1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Physics">
+      <UniqueIdentifier>{50F28761-73AF-44BB-9822-E973D51095E0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rendering">
+      <UniqueIdentifier>{64029306-7FCA-4617-8A93-CC22D60E85CD}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platform">
+      <UniqueIdentifier>{10AA3862-0865-476F-83A0-A8A7D83D3608}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\URenderer.cpp">
@@ -59,6 +77,39 @@
     </ClCompile>
     <ClCompile Include="src\RenderPipeline.cpp">
       <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Game\FruitCatalog.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Game\GameController.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Game\GameSession.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="src\App\GameApplication.cpp">
+      <Filter>Application</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Physics\CollisionSolver.cpp">
+      <Filter>Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Physics\PhysicsWorld.cpp">
+      <Filter>Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Physics\UBall.cpp">
+      <Filter>Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\Win32Window.cpp">
+      <Filter>Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Rendering\FruitRenderer.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Rendering\FruitVisuals.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\UI\GameUI.cpp">
+      <Filter>UI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -103,6 +154,48 @@
     </ClInclude>
     <ClInclude Include="src\Mesh.h">
       <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\FruitCatalog.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\GameConfig.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\GameController.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\GameInput.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\GameSession.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="src\App\GameApplication.h">
+      <Filter>Application</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Physics\CollisionSolver.h">
+      <Filter>Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Physics\PhysicsWorld.h">
+      <Filter>Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Physics\UBall.h">
+      <Filter>Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Physics\UPrimitive.h">
+      <Filter>Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\Win32Window.h">
+      <Filter>Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Rendering\FruitRenderer.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Rendering\FruitVisuals.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\UI\GameUI.h">
+      <Filter>UI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
