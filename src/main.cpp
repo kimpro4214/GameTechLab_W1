@@ -883,6 +883,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			renderer.Draw(FruitMaterial, *FruitMesh, FruitObjectConstantBuffer.Get());
 		}
 
+		// 아직 놓지 않은 과일이 바닥까지 수직으로 떨어질 경로를 표시합니다.
+		if (!bIsGameOver)
+		{
+			UBall* CurrentBall = static_cast<UBall*>(PrimitiveList[UBall::CurrentIndex]);
+			if (!CurrentBall->bHasBeenDropped)
+			{
+				const FVector GuideStart(CurrentBall->Location.x, CurrentBall->Location.y - CurrentBall->Radius, 0.0f);
+				const FVector GuideEnd(CurrentBall->Location.x, topBorder + CurrentBall->Radius, 0.0f);
+				ImGui::GetForegroundDrawList()->AddLine(
+					ConvertWorldToScreenLocation(GuideStart, renderer.ViewportInfo),
+					ConvertWorldToScreenLocation(GuideEnd, renderer.ViewportInfo),
+					IM_COL32(255, 255, 255, 90), 2.0f);
+			}
+		}
+
 		const ImVec2 GameTopLeft = ConvertWorldToScreenLocation(
 			FVector(leftBorder, topBorder, 0.0f), renderer.ViewportInfo);
 		const ImVec2 GameBottomRight = ConvertWorldToScreenLocation(
