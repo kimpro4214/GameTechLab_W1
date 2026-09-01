@@ -671,7 +671,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	float Restitution = 0.2f;
 	float FrictionCoefficient = 0.5f;
 	float AngularDamping = 0.1f;
-	bool bShowCollisionDebug = true;
 	const int PhysicsSubsteps = 2;
 	const int CollisionSolverIterations = 8;
 
@@ -884,26 +883,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			renderer.Draw(FruitMaterial, *FruitMesh, FruitObjectConstantBuffer.Get());
 		}
 
-		UBall* DebugBall = static_cast<UBall*>(PrimitiveList[0]);
-		if (bShowCollisionDebug && DebugBall->bHasCollisionDebug)
-		{
-			const float DebugVectorLength = 0.15f;
-			const ImVec2 ContactScreen = ConvertWorldToScreenLocation(
-				DebugBall->LastCollisionPoint, renderer.ViewportInfo);
-			const ImVec2 NormalScreen = ConvertWorldToScreenLocation(
-				DebugBall->LastCollisionPoint +
-				DebugBall->LastCollisionNormal * DebugVectorLength,
-				renderer.ViewportInfo);
-			const ImVec2 TangentScreen = ConvertWorldToScreenLocation(
-				DebugBall->LastCollisionPoint +
-				DebugBall->LastCollisionTangent * DebugVectorLength,
-				renderer.ViewportInfo);
-			ImDrawList* DebugDrawList = ImGui::GetForegroundDrawList();
-			DebugDrawList->AddCircleFilled(ContactScreen, 4.0f, IM_COL32(255, 80, 80, 255));
-			DebugDrawList->AddLine(ContactScreen, NormalScreen, IM_COL32(80, 255, 80, 255), 2.0f);
-			DebugDrawList->AddLine(ContactScreen, TangentScreen, IM_COL32(255, 220, 80, 255), 2.0f);
-		}
-
 		const ImVec2 GameTopLeft = ConvertWorldToScreenLocation(
 			FVector(leftBorder, topBorder, 0.0f), renderer.ViewportInfo);
 		const ImVec2 GameBottomRight = ConvertWorldToScreenLocation(
@@ -945,21 +924,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			const FVector StorageFruitColor = GetFruitColor(UBall::BallSizes[UBall::StorageLevel]);
 			DrawFruitPreview(StorageFruitColor);
 		}
-		ImGui::Text("Angle: %.3f, Angular Velocity: %.3f",
-			DebugBall->RotationAngle, DebugBall->AngularVelocity);
-		ImGui::Checkbox("Enable Test Torque", &bEnableTestTorque);
-		ImGui::DragFloat("Test Torque", &TestTorque, 0.0001f, -0.01f, 0.01f, "%.4f");
-		ImGui::SliderFloat("Restitution", &Restitution, 0.0f, 1.0f, "%.2f");
-		ImGui::SliderFloat("Friction", &FrictionCoefficient, 0.0f, 1.0f, "%.2f");
-		ImGui::SliderFloat("Angular Damping", &AngularDamping, 0.0f, 5.0f, "%.2f");
-		ImGui::Text("Physics Substeps: %d", PhysicsSubsteps);
-		ImGui::Text("Collision Solver Iterations: %d", CollisionSolverIterations);
-		ImGui::Checkbox("Show Collision Debug", &bShowCollisionDebug);
-		if (ImGui::Button("Reset Rotation"))
-		{
-			DebugBall->RotationAngle = 0.0f;
-			DebugBall->AngularVelocity = 0.0f;
-		}
+		//ImGui::Text("Angle: %.3f, Angular Velocity: %.3f",
+		//	DebugBall->RotationAngle, DebugBall->AngularVelocity);
+		//ImGui::Checkbox("Enable Test Torque", &bEnableTestTorque);
+		//ImGui::DragFloat("Test Torque", &TestTorque, 0.0001f, -0.01f, 0.01f, "%.4f");
+		//ImGui::SliderFloat("Restitution", &Restitution, 0.0f, 1.0f, "%.2f");
+		//ImGui::SliderFloat("Friction", &FrictionCoefficient, 0.0f, 1.0f, "%.2f");
+		//ImGui::SliderFloat("Angular Damping", &AngularDamping, 0.0f, 5.0f, "%.2f");
+		//ImGui::Text("Physics Substeps: %d", PhysicsSubsteps);
+		//ImGui::Text("Collision Solver Iterations: %d", CollisionSolverIterations);
+		//if (ImGui::Button("Reset Rotation"))
+		//{
+		//	DebugBall->RotationAngle = 0.0f;
+		//	DebugBall->AngularVelocity = 0.0f;
+		//}
 		ImGui::Text("Fruit Sequence");
 		const int FruitCount = sizeof(UBall::BallSizes) / sizeof(UBall::BallSizes[0]);
 		for (int i = 0; i < FruitCount; ++i)
