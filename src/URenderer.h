@@ -59,7 +59,7 @@ private:
 	const Material* BoundMaterial = nullptr;
 };
 
-template<typename T>
+template <typename T>
 inline void URenderer::UpdateDynamicConstantBuffer(const Microsoft::WRL::ComPtr<ID3D11Buffer>& ConstantBuffer, const T& Constants)
 {
 	static_assert(std::is_trivially_copyable_v<T>);
