@@ -48,7 +48,7 @@
     <ClCompile Include="src\main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="src\FVertexSimple.h">
+    <ClCompile Include="src\SpriteVertex.h">
       <Filter>헤더 파일</Filter>
     </ClCompile>
     <ClCompile Include="src\Material.cpp">
@@ -87,9 +87,6 @@
       <Filter>ImGui</Filter>
     </ClInclude>
     <ClInclude Include="src\FVector.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Sphere.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="src\URenderer.h">

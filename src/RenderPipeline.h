@@ -19,6 +19,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> InputLayout;
 
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState> RasterizerState;
+	Microsoft::WRL::ComPtr<ID3D11BlendState> BlendState;
 };
 
 struct RenderPipelineDesc
@@ -29,4 +30,6 @@ struct RenderPipelineDesc
 
 	const D3D11_INPUT_ELEMENT_DESC* InputElements = nullptr;
 	UINT InputElementCount = 0;
+
+	D3D11_BLEND_DESC BlendDesc{};
 };
