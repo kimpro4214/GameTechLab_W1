@@ -497,7 +497,7 @@ UBall* CreateRandomBall()
 	int CurrentLevel = UBall::NextLevel;
 	UBall::NextLevel = rand() % 5;
 	const FVector Location(
-		0.0f - (UBall::BallSizes[CurrentLevel] * 0.5f),
+		-0.25f,
 		0.9f,
 		0.0f);
 	FVector Velocity(
@@ -680,6 +680,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	ResizePrimitiveList(PrimitiveList, 1);
 	bool bIsDraggingBall = false;
 	bool bIsGameOver = false;
+	bool bIsMainMenu = true;
+
+	auto ResetGame = [&]()
+	{
+		ReleasePrimitiveList(PrimitiveList);
+		UBall::TotalScore = 0;
+		UBall::CurrentIndex = 0;
+		UBall::NextLevel = rand() % 5;
+		UBall::StorageLevel = -1;
+		UBall::bCanDropBall = true;
+		ResizePrimitiveList(PrimitiveList, 1);
+		bIsDraggingBall = false;
+		bIsGameOver = false;
+	};
 
 	// FPS 제한을 위한 설정
 	const int	 targetFPS = 30;
@@ -735,7 +749,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		int DesiredNumBalls = UBall::TotalNumBalls;
 
 		const bool bCanMoveDraggedBall =
-			!bIsGameOver && ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
+			!bIsMainMenu && !bIsGameOver && ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
 			(bCanUseSceneMouse || bIsDraggingBall);
 		if (bCanMoveDraggedBall && renderer.ViewportInfo.Width > 0.0f)
 		{
@@ -758,7 +772,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 
 		// 게임 영역에서 잡은 공은 경계 밖에서 마우스를 놓아도 떨어집니다.
-		if (!bIsGameOver && UBall::bCanDropBall && bIsDraggingBall && ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+		if (!bIsMainMenu && !bIsGameOver && UBall::bCanDropBall && bIsDraggingBall && ImGui::IsMouseReleased(ImGuiMouseButton_Left))
 		{
 			// 마우스를 놓은 뒤부터만 이 공을 물리/충돌/게임 오버 판정에 포함합니다.
 			static_cast<UBall*>(PrimitiveList[UBall::CurrentIndex])->bHasBeenDropped = true;
@@ -770,7 +784,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			QueryPerformanceCounter(&dropTime);
 		}
 
-		if (bCanUseSceneMouse && ImGui::IsMouseReleased(ImGuiMouseButton_Right))
+		if (!bIsMainMenu && bCanUseSceneMouse && ImGui::IsMouseReleased(ImGuiMouseButton_Right))
 		{
 			UBall::Swap(PrimitiveList);
 		}
@@ -788,7 +802,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 
 		// substep 단위로 물리 시뮬레이션을 반복 수행
-		for (int Substep = 0; !bIsGameOver && Substep < PhysicsSubsteps; ++Substep)
+		for (int Substep = 0; !bIsMainMenu && !bIsGameOver && Substep < PhysicsSubsteps; ++Substep)
 		{
 			for (int i = 0; i < UBall::TotalNumBalls; ++i)
 			{
@@ -861,7 +875,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 		}
 		// 준비 작업
-		for (int i = 0; i < UBall::TotalNumBalls; ++i)
+		for (int i = 0; !bIsMainMenu && i < UBall::TotalNumBalls; ++i)
 		{
 			UBall* Ball = static_cast<UBall*>(PrimitiveList[i]);
 			if (Ball->bHasBeenDropped && Ball->bHasTouchedSomething &&
@@ -884,7 +898,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 
 		// 아직 놓지 않은 과일이 바닥까지 수직으로 떨어질 경로를 표시합니다.
-		if (!bIsGameOver)
+		if (!bIsMainMenu && !bIsGameOver)
 		{
 			UBall* CurrentBall = static_cast<UBall*>(PrimitiveList[UBall::CurrentIndex]);
 			if (!CurrentBall->bHasBeenDropped)
@@ -912,17 +926,50 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			GameOverLineStart, GameOverLineEnd, IM_COL32(255, 80, 80, 255), 2.0f);
 
 		// 이후 ImGui UI 컨트롤 추가는 ImGui::NewFrame()과 ImGui::Render() 사이인 여기에 위치합니다.
-		ImGui::SetNextWindowPos(
-			ImVec2(renderer.ViewportInfo.Width * 0.75f, 0.0f), ImGuiCond_Always);
-		ImGui::SetNextWindowSize(
-			ImVec2(renderer.ViewportInfo.Width * 0.25f, renderer.ViewportInfo.Height),
-			ImGuiCond_Always);
-		ImGui::Begin("Jungle Property Window");
+		if (bIsMainMenu)
+		{
+			ImGui::SetNextWindowPos(
+				ImVec2(renderer.ViewportInfo.Width * 0.5f, renderer.ViewportInfo.Height * 0.5f),
+				ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+			ImGui::SetNextWindowSize(ImVec2(360.0f, 220.0f), ImGuiCond_Always);
+			ImGui::Begin("Main Menu", nullptr,
+				ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+
+			ImGui::SetCursorPosX(105.0f);
+			ImGui::Spacing();
+			ImGui::Spacing();
+			ImGui::SetCursorPosX(100.0f);
+			if (ImGui::Button("Start Game", ImVec2(160.0f, 38.0f)))
+			{
+				ResetGame();
+				bIsMainMenu = false;
+			}
+			ImGui::End();
+		}
+		else
+		{
+			ImGui::SetNextWindowPos(
+				ImVec2(renderer.ViewportInfo.Width * 0.75f, 0.0f), ImGuiCond_Always);
+			ImGui::SetNextWindowSize(
+				ImVec2(renderer.ViewportInfo.Width * 0.25f, renderer.ViewportInfo.Height),
+				ImGuiCond_Always);
+			ImGui::Begin("UI", nullptr,
+				ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
 		ImGui::Text("Total Score : %d", UBall::TotalScore);
+		ImGui::SameLine();
+		if (ImGui::Button("Restart"))
+		{
+			ResetGame();
+		}
 		if (bIsGameOver)
 		{
 			ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), "GAME OVER");
+			if (ImGui::Button("Main Menu"))
+			{
+				ResetGame();
+				bIsMainMenu = true;
+			}
 		}
 
 		const FVector NextFruitColor = GetFruitColor(UBall::BallSizes[UBall::NextLevel]);
@@ -977,6 +1024,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				}
 			}
 		}
+			ImGui::End();
+		}
+
+		ImGui::SetNextWindowPos(
+			ImVec2(renderer.ViewportInfo.Width - 12.0f, renderer.ViewportInfo.Height - 12.0f),
+			ImGuiCond_Always, ImVec2(1.0f, 1.0f));
+		ImGui::SetNextWindowBgAlpha(0.0f);
+		ImGui::Begin("Creator Credit", nullptr,
+			ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize |
+			ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
+		ImGui::TextDisabled("Jaeho, Minkyu, Hyeongyu");
 		ImGui::End();
 
 		// 이후 ImGui UI 컨트롤 추가는 ImGui::NewFrame()과 ImGui::Render() 사이인 여기에 위치합니다.
