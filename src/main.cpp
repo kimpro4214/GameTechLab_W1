@@ -369,6 +369,41 @@ FVector GetFruitColor(float Radius)
 	return FVector(0.08f, 0.61f, 0.04f);
 }
 
+constexpr float FruitPreviewSize = 40.0f;
+constexpr float FruitPreviewRadius = 18.0f;
+
+void DrawFruitPreview(const FVector& FruitColor)
+{
+	const ImVec2 PreviewSize(FruitPreviewSize, FruitPreviewSize);
+	const ImVec2 PreviewPosition = ImGui::GetCursorScreenPos();
+	const ImVec2 PreviewCenter(
+		PreviewPosition.x + PreviewSize.x * 0.5f,
+		PreviewPosition.y + PreviewSize.y * 0.5f);
+	ImDrawList* PreviewDrawList = ImGui::GetWindowDrawList();
+
+	for (int PixelY = -18; PixelY <= 18; ++PixelY)
+	{
+		const float VerticalOffset = static_cast<float>(PixelY);
+		const float HalfWidth = sqrtf(
+			FruitPreviewRadius * FruitPreviewRadius - VerticalOffset * VerticalOffset);
+		const float GradientT = 0.7f - VerticalOffset / (2.0f * FruitPreviewRadius);
+		const ImVec4 GradientColor(
+			1.0f + (FruitColor.x - 1.0f) * GradientT,
+			1.0f + (FruitColor.y - 1.0f) * GradientT,
+			1.0f + (FruitColor.z - 1.0f) * GradientT,
+			1.0f);
+
+		PreviewDrawList->AddLine(
+			ImVec2(PreviewCenter.x - HalfWidth, PreviewCenter.y + VerticalOffset),
+			ImVec2(PreviewCenter.x + HalfWidth, PreviewCenter.y + VerticalOffset),
+			ImGui::ColorConvertFloat4ToU32(GradientColor), 1.0f);
+	}
+
+	PreviewDrawList->AddCircle(
+		PreviewCenter, FruitPreviewRadius, IM_COL32(255, 255, 255, 255));
+	ImGui::Dummy(PreviewSize);
+}
+
 int UBall::TotalNumBalls = 0;
 
 float RandomFloat(float Min, float Max) // 나중에 과일 뽑을 때 사용예정
@@ -731,30 +766,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		ImGui::SliderFloat("Spawn Radius", &spawnRadius, 0.01f, 0.4f);
 		const FVector NextFruitColor = GetFruitColor(spawnRadius);
 		ImGui::Text("Next Fruit Color");
-		const ImVec2 PreviewSize(40.0f, 40.0f);
-		const ImVec2 PreviewPosition = ImGui::GetCursorScreenPos();
-		const ImVec2 PreviewCenter(
-			PreviewPosition.x + PreviewSize.x * 0.5f,
-			PreviewPosition.y + PreviewSize.y * 0.5f);
-		ImDrawList* PreviewDrawList = ImGui::GetWindowDrawList();
-		constexpr float PreviewRadius = 18.0f;
-		for (int PixelY = -18; PixelY <= 18; ++PixelY)
-		{
-			const float VerticalOffset = static_cast<float>(PixelY);
-			const float HalfWidth = sqrtf(PreviewRadius * PreviewRadius - VerticalOffset * VerticalOffset);
-			const float GradientT = 0.7f - VerticalOffset / (2.0f * PreviewRadius);
-			const ImVec4 GradientColor(
-				1.0f + (NextFruitColor.x - 1.0f) * GradientT,
-				1.0f + (NextFruitColor.y - 1.0f) * GradientT,
-				1.0f + (NextFruitColor.z - 1.0f) * GradientT,
-				1.0f);
-			PreviewDrawList->AddLine(
-				ImVec2(PreviewCenter.x - HalfWidth, PreviewCenter.y + VerticalOffset),
-				ImVec2(PreviewCenter.x + HalfWidth, PreviewCenter.y + VerticalOffset),
-				ImGui::ColorConvertFloat4ToU32(GradientColor), 1.0f);
-		}
-		PreviewDrawList->AddCircle(PreviewCenter, PreviewRadius, IM_COL32(255, 255, 255, 255));
-		ImGui::Dummy(PreviewSize);
+		DrawFruitPreview(NextFruitColor);
 
 		ImGui::Text("Angle: %.3f, Angular Velocity: %.3f",
 			DebugBall->RotationAngle, DebugBall->AngularVelocity);
@@ -776,37 +788,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		for (int i = 0; i < FruitCount; ++i)
 		{
 			const FVector FruitColor = GetFruitColor(FruitRad[i]);
-			const ImVec2 PreviewSize(40.0f, 40.0f);
-			const ImVec2 PreviewPosition = ImGui::GetCursorScreenPos();
-			const ImVec2 PreviewCenter(
-				PreviewPosition.x + PreviewSize.x * 0.5f,
-				PreviewPosition.y + PreviewSize.y * 0.5f);
-			ImDrawList* PreviewDrawList = ImGui::GetWindowDrawList();
-			constexpr float PreviewRadius = 18.0f;
-			for (int PixelY = -18; PixelY <= 18; ++PixelY)
-			{
-				const float VerticalOffset = static_cast<float>(PixelY);
-				const float HalfWidth = sqrtf(PreviewRadius * PreviewRadius - VerticalOffset * VerticalOffset);
-				const float GradientT = 0.7f - VerticalOffset / (2.0f * PreviewRadius);
-				const ImVec4 GradientColor(
-					1.0f + (FruitColor.x - 1.0f) * GradientT,
-					1.0f + (FruitColor.y - 1.0f) * GradientT,
-					1.0f + (FruitColor.z - 1.0f) * GradientT,
-					1.0f);
-				PreviewDrawList->AddLine(
-					ImVec2(PreviewCenter.x - HalfWidth, PreviewCenter.y + VerticalOffset),
-					ImVec2(PreviewCenter.x + HalfWidth, PreviewCenter.y + VerticalOffset),
-					ImGui::ColorConvertFloat4ToU32(GradientColor), 1.0f);
-			}
-			PreviewDrawList->AddCircle(PreviewCenter, PreviewRadius, IM_COL32(255, 255, 255, 255));
-			ImGui::Dummy(PreviewSize);
+			DrawFruitPreview(FruitColor);
 			const bool bHasNextFruit = i < FruitCount - 1;
 			const bool bIsEndOfRow = (i + 1) % 3 == 0;
 			if (bHasNextFruit)
 			{
 				ImGui::SameLine();
 				const float ArrowOffsetY =
-					(PreviewSize.y - ImGui::GetFrameHeight()) * 0.5f;
+					(FruitPreviewSize - ImGui::GetFrameHeight()) * 0.5f;
 				ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ArrowOffsetY);
 
 				ImGui::PushID(i);
