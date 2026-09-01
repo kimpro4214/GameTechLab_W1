@@ -8,9 +8,9 @@
 #include "ImGui/imgui_impl_dx11.h"
 #include "ImGui/imgui_impl_win32.h"
 #include "Platform/Win32Window.h"
+#include "Rendering/URenderer.h"
 #include "Rendering/FruitRenderer.h"
 #include "UI/GameUI.h"
-#include "URenderer.h"
 
 namespace
 {
@@ -173,7 +173,7 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 
 		Renderer.Prepare();
 		FruitSceneRenderer.Draw(Renderer, Session.GetBalls());
-		ApplyUICommand(UI.Draw(Session, Renderer.ViewportInfo), Session, Controller);
+		ApplyUICommand(UI.Draw(Session, Renderer.ViewportInfo, FruitSceneRenderer), Session, Controller);
 
 		ImGui::Render();
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
