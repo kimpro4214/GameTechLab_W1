@@ -1,13 +1,17 @@
-#pragma once
+﻿#pragma once
 
-// D3D 사용에 필요한 라이브러리들을 링크합니다.
-#pragma comment(lib, "d3d11")
-
-// D3D 사용에 필요한 헤더파일들을 포함합니다.
+#include <wrl/client.h>
 #include <d3d11.h>
 
-#include "FVector.h"
-#include "FVertexSimple.h"
+#include <memory>
+
+class RenderPipeline;
+struct RenderPipelineDesc;
+
+class Material;
+
+class Mesh;
+struct MeshDesc;
 
 class URenderer
 {
@@ -18,30 +22,26 @@ public:
 	void Prepare();
 	void SwapBuffer();
 
-	void CreateShader();
-	void ReleaseShader();
-	void PrepareShader();
+	std::shared_ptr<RenderPipeline> CreateRenderPipeline(const RenderPipelineDesc& Desc);
+	std::shared_ptr<Mesh> CreateMesh(const MeshDesc& Desc);
+	Microsoft::WRL::ComPtr<ID3D11Buffer> CreateDynamicConstantBuffer(UINT ByteWidth);
 
-	ID3D11Buffer* CreateVertexBuffer(FVertexSimple* vertices, UINT byteWidth);
-	void ReleaseVertexBuffer(ID3D11Buffer* vertexBuffer);
+	template <typename T>
+	void UpdateDynamicConstantBuffer(const Microsoft::WRL::ComPtr<ID3D11Buffer>& ConstantBuffer, const T& Constants);
 
-	void CreateConstantBuffer();
-	void ReleaseConstantBuffer();
-	void UpdateConstant(const FVector& Offset, float Scale, float RotationAngle,
-		const FVector& FruitColor);
-
-	void RenderPrimitive(ID3D11Buffer* pBuffer, UINT numVertices);
+	void Draw(const Material& Material, const Mesh& Mesh, ID3D11Buffer* ObjectConstantBuffer);
 
 	D3D11_VIEWPORT ViewportInfo;									 // 렌더링 영역을 정의하는 뷰포트 정보
 
 private:
 	void CreateDeviceAndSwapChain(HWND hWindow);
 	void CreateFrameBuffer();
-	void CreateRasterizerState();
 
 	void ReleaseDeviceAndSwapChain();
 	void ReleaseFrameBuffer();
-	void ReleaseRasterizerState();
+
+	void BindMaterial(const Material& Material);
+	void InvalidateStateCache();
 
 private:
 	// Direct3D 11 장치(Device)와 장치 컨텍스트(Device Context) 및 스왑 체인(Swap Chain)을 관리하기 위한 포인터들
@@ -52,21 +52,22 @@ private:
 	// 렌더링에 필요한 리소스 및 상태를 관리하기 위한 변수들
 	ID3D11Texture2D* FrameBuffer = nullptr;	   // 화면 출력용 텍스처
 	ID3D11RenderTargetView* FrameBufferRTV = nullptr;  // 텍스처를 렌더 타겟으로 사용하는 뷰
-	ID3D11RasterizerState* RasterizerState = nullptr; // 래스터라이저 상태(컬링, 채우기 모드 등 정의)
-	ID3D11Buffer* ConstantBuffer = nullptr;  // 쉐이더에 데이터를 전달하기 위한 상수 버퍼
 
 	FLOAT		   ClearColor[4] = { 0.025f, 0.025f, 0.025f, 1.0f }; // 화면을 초기화(clear)할 때 사용할 색상 (RGBA)
 
-	ID3D11VertexShader* SimpleVertexShader;
-	ID3D11PixelShader* SimplePixelShader;
-	ID3D11InputLayout* SimpleInputLayout;
-	unsigned int		Stride;
-
-	struct FConstants
-	{
-		FVector Offset;
-		float Scale;
-		float RotationAngle;
-		FVector FruitColor;
-	};
+	const RenderPipeline* BoundRenderPipeline = nullptr;
+	const Material* BoundMaterial = nullptr;
 };
+
+template <typename T>
+inline void URenderer::UpdateDynamicConstantBuffer(const Microsoft::WRL::ComPtr<ID3D11Buffer>& ConstantBuffer, const T& Constants)
+{
+	static_assert(std::is_trivially_copyable_v<T>);
+	static_assert(sizeof(T) % 16 == 0);
+
+	D3D11_MAPPED_SUBRESOURCE constantBufferMSR{};
+
+	DeviceContext->Map(ConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &constantBufferMSR); // update constant buffer every frame
+	std::memcpy(constantBufferMSR.pData, &Constants, sizeof(T));
+	DeviceContext->Unmap(ConstantBuffer.Get(), 0);
+}

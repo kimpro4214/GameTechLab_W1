@@ -51,6 +51,15 @@
     <ClCompile Include="src\FVertexSimple.h">
       <Filter>헤더 파일</Filter>
     </ClCompile>
+    <ClCompile Include="src\Material.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Mesh.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RenderPipeline.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ImGui\imconfig.h">
@@ -86,9 +95,18 @@
     <ClInclude Include="src\URenderer.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="src\Material.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="src\RenderPipeline.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Mesh.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="shaders\ShaderW0.hlsl">
+    <FxCompile Include="shaders\FruitShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
