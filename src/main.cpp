@@ -637,9 +637,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	const FVector GravityAcceleration(0.0f, -9.81f, 0.0f);
 	bool bEnableTestTorque = false;
 	float TestTorque = 0.001f;
-	float Restitution = 1.0f;
-	float FrictionCoefficient = 0.0f;
-	float AngularDamping = 0.0f;
+	float Restitution = 0.2f;
+	float FrictionCoefficient = 0.5f;
+	float AngularDamping = 0.1f;
 	bool bShowCollisionDebug = true;
 	const int PhysicsSubsteps = 2;
 	const int CollisionSolverIterations = 8;
@@ -704,10 +704,26 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		const bool bCanUseSceneMouse = bIsMouseInGameBounds && !FrameIO.WantCaptureMouse;
 		int DesiredNumBalls = UBall::TotalNumBalls;
 
-		if (!bIsGameOver && bCanUseSceneMouse && ImGui::IsMouseDown(ImGuiMouseButton_Left))
+		const bool bCanMoveDraggedBall =
+			!bIsGameOver && ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
+			(bCanUseSceneMouse || bIsDraggingBall);
+		if (bCanMoveDraggedBall && renderer.ViewportInfo.Width > 0.0f)
 		{
 			UBall* CurrentBall = static_cast<UBall*>(PrimitiveList[UBall::CurrentIndex]);
-			CurrentBall->Location.x = MouseWorldLocation.x;
+			const float MinBallX = leftBorder + CurrentBall->Radius;
+			const float MaxBallX = rightBorder - CurrentBall->Radius;
+			float ClampedMouseX =
+				((MousePosition.x - renderer.ViewportInfo.TopLeftX) / renderer.ViewportInfo.Width) * 2.0f - 1.0f;
+			if (ClampedMouseX < MinBallX)
+			{
+				ClampedMouseX = MinBallX;
+			}
+			else if (ClampedMouseX > MaxBallX)
+			{
+				ClampedMouseX = MaxBallX;
+			}
+
+			CurrentBall->Location.x = ClampedMouseX;
 			bIsDraggingBall = true;
 		}
 
