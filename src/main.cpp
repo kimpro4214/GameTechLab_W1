@@ -41,6 +41,7 @@ public:
 	bool				bHasCollisionDebug;
 	bool				bHasCollisionThisFrame;
 	bool				bHasTouchedSomething;
+	bool				bHasBeenDropped;
 	static const float	DropTime;
 	static bool			bCanDropBall;
 	static int			NextLevel;
@@ -56,7 +57,7 @@ public:
 	UBall(const FVector& InitialLocation = FVector(), const FVector& InitialVelocity = FVector(), int InitialLevel = 0)
 		: Location(InitialLocation), Velocity(InitialVelocity), Level(InitialLevel), Radius(0.0f), Mass(0.0f),
 		RotationAngle(0.0f), AngularVelocity(0.0f), bHasCollisionDebug(false),
-		bHasCollisionThisFrame(false), bHasTouchedSomething(false)
+		bHasCollisionThisFrame(false), bHasTouchedSomething(false), bHasBeenDropped(false)
 	{
 		SetRadius(BallSizes[Level]);
 		CurrentIndex = TotalNumBalls;
@@ -290,7 +291,6 @@ public:
 		float FrictionCoefficient)
 	{
 		bHasCollisionThisFrame = true;
-		bHasTouchedSomething = true;
 		const float Epsilon = 0.000001f;
 		const float InverseMass = 1.0f / Mass;
 		const float InverseMomentOfInertia = 1.0f / GetMomentOfInertia();
@@ -371,6 +371,8 @@ public:
 		if (Location.y - Radius < Top)
 		{
 			Location.y = Top + Radius;
+			// 중력이 -Y 방향이므로 Top 경계가 실제 바닥입니다.
+			bHasTouchedSomething = true;
 			ResolveBorderContact(FVector(0.0f, 1.0f, 0.0f), Restitution, FrictionCoefficient);
 		}
 		else if (Location.y + Radius > Bottom)
@@ -436,6 +438,7 @@ FVector GetFruitColor(float Radius)
 
 bool IsTouchingGameOverLine(const UBall& Ball, float GameOverLineY)
 {
+	// 쌓인 공의 위쪽 끝이 게임 오버 선 위로 올라왔는지 검사합니다.
 	return Ball.Location.y + Ball.Radius >= GameOverLineY;
 }
 
@@ -665,10 +668,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	const FVector GravityAcceleration(0.0f, -9.81f, 0.0f);
 	bool bEnableTestTorque = false;
 	float TestTorque = 0.001f;
-	float Restitution = 1.0f;
-	float FrictionCoefficient = 0.0f;
-	float AngularDamping = 0.0f;
-	bool bShowCollisionDebug = true;
+	float Restitution = 0.2f;
+	float FrictionCoefficient = 0.5f;
+	float AngularDamping = 0.1f;
 	const int PhysicsSubsteps = 2;
 	const int CollisionSolverIterations = 8;
 
@@ -732,16 +734,34 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		const bool bCanUseSceneMouse = bIsMouseInGameBounds && !FrameIO.WantCaptureMouse;
 		int DesiredNumBalls = UBall::TotalNumBalls;
 
-		if (!bIsGameOver && bCanUseSceneMouse && ImGui::IsMouseDown(ImGuiMouseButton_Left))
+		const bool bCanMoveDraggedBall =
+			!bIsGameOver && ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
+			(bCanUseSceneMouse || bIsDraggingBall);
+		if (bCanMoveDraggedBall && renderer.ViewportInfo.Width > 0.0f)
 		{
 			UBall* CurrentBall = static_cast<UBall*>(PrimitiveList[UBall::CurrentIndex]);
-			CurrentBall->Location.x = MouseWorldLocation.x;
+			const float MinBallX = leftBorder + CurrentBall->Radius;
+			const float MaxBallX = rightBorder - CurrentBall->Radius;
+			float ClampedMouseX =
+				((MousePosition.x - renderer.ViewportInfo.TopLeftX) / renderer.ViewportInfo.Width) * 2.0f - 1.0f;
+			if (ClampedMouseX < MinBallX)
+			{
+				ClampedMouseX = MinBallX;
+			}
+			else if (ClampedMouseX > MaxBallX)
+			{
+				ClampedMouseX = MaxBallX;
+			}
+
+			CurrentBall->Location.x = ClampedMouseX;
 			bIsDraggingBall = true;
 		}
 
 		// 게임 영역에서 잡은 공은 경계 밖에서 마우스를 놓아도 떨어집니다.
 		if (!bIsGameOver && UBall::bCanDropBall && bIsDraggingBall && ImGui::IsMouseReleased(ImGuiMouseButton_Left))
 		{
+			// 마우스를 놓은 뒤부터만 이 공을 물리/충돌/게임 오버 판정에 포함합니다.
+			static_cast<UBall*>(PrimitiveList[UBall::CurrentIndex])->bHasBeenDropped = true;
 			++DesiredNumBalls;
 			ResizePrimitiveList(PrimitiveList, DesiredNumBalls);
 			DesiredNumBalls = UBall::TotalNumBalls;
@@ -772,11 +792,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		{
 			for (int i = 0; i < UBall::TotalNumBalls; ++i)
 			{
-				if (i == UBall::CurrentIndex) // 대기중인 볼 제외
+				UBall* Ball = static_cast<UBall*>(PrimitiveList[i]);
+				if (!Ball->bHasBeenDropped) // 마우스를 아직 놓지 않은 대기 공 제외
 				{
 					continue;
 				}
-				UBall* Ball = static_cast<UBall*>(PrimitiveList[i]);
 
 				Ball->AddVelocity(GravityVelocityChange);
 				if (bEnableTestTorque)
@@ -795,21 +815,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				int TotalBall = UBall::TotalNumBalls;
 				for (int i = 0; i < TotalBall; ++i)
 				{
-					if (i == UBall::CurrentIndex) // 대기중인 볼 제외
+					UBall* BallA = static_cast<UBall*>(PrimitiveList[i]);
+					if (!BallA->bHasBeenDropped) // 마우스를 아직 놓지 않은 대기 공 제외
 					{
 						continue;
 					}
 					for (int j = i + 1; j < TotalBall; ++j)
 					{
-						if (j == UBall::CurrentIndex) // 대기중인 볼 제외
+						UBall* BallB = static_cast<UBall*>(PrimitiveList[j]);
+						if (!BallB->bHasBeenDropped) // 마우스를 아직 놓지 않은 대기 공 제외
 						{
 							continue;
 						}
 						if (PrimitiveList[i]->IsColliding(PrimitiveList[j]))
 						{
 
-							UBall* BallA = static_cast<UBall*>(PrimitiveList[i]);
-							UBall* BallB = static_cast<UBall*>(PrimitiveList[j]);
 							BallA->bHasCollisionThisFrame = true;
 							BallB->bHasCollisionThisFrame = true;
 							BallA->bHasTouchedSomething = true;
@@ -830,6 +850,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				for (int i = 0; i < UBall::TotalNumBalls; ++i)
 				{
 					UBall* Ball = static_cast<UBall*>(PrimitiveList[i]);
+					if (!Ball->bHasBeenDropped)
+					{
+						continue;
+					}
 					Ball->CheckBorderCollision(
 						leftBorder, rightBorder, topBorder, bottomBorder,
 						Restitution, FrictionCoefficient);
@@ -839,13 +863,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		// 준비 작업
 		for (int i = 0; i < UBall::TotalNumBalls; ++i)
 		{
-			if (i == UBall::CurrentIndex)
-			{
-				continue;
-			}
-
 			UBall* Ball = static_cast<UBall*>(PrimitiveList[i]);
-			if (Ball->bHasTouchedSomething && IsTouchingGameOverLine(*Ball, GameOverLineY))
+			if (Ball->bHasBeenDropped && Ball->bHasTouchedSomething &&
+				IsTouchingGameOverLine(*Ball, GameOverLineY))
 			{
 				bIsGameOver = true;
 				break;
@@ -863,24 +883,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			renderer.Draw(FruitMaterial, *FruitMesh, FruitObjectConstantBuffer.Get());
 		}
 
-		UBall* DebugBall = static_cast<UBall*>(PrimitiveList[0]);
-		if (bShowCollisionDebug && DebugBall->bHasCollisionDebug)
+		// 아직 놓지 않은 과일이 바닥까지 수직으로 떨어질 경로를 표시합니다.
+		if (!bIsGameOver)
 		{
-			const float DebugVectorLength = 0.15f;
-			const ImVec2 ContactScreen = ConvertWorldToScreenLocation(
-				DebugBall->LastCollisionPoint, renderer.ViewportInfo);
-			const ImVec2 NormalScreen = ConvertWorldToScreenLocation(
-				DebugBall->LastCollisionPoint +
-				DebugBall->LastCollisionNormal * DebugVectorLength,
-				renderer.ViewportInfo);
-			const ImVec2 TangentScreen = ConvertWorldToScreenLocation(
-				DebugBall->LastCollisionPoint +
-				DebugBall->LastCollisionTangent * DebugVectorLength,
-				renderer.ViewportInfo);
-			ImDrawList* DebugDrawList = ImGui::GetForegroundDrawList();
-			DebugDrawList->AddCircleFilled(ContactScreen, 4.0f, IM_COL32(255, 80, 80, 255));
-			DebugDrawList->AddLine(ContactScreen, NormalScreen, IM_COL32(80, 255, 80, 255), 2.0f);
-			DebugDrawList->AddLine(ContactScreen, TangentScreen, IM_COL32(255, 220, 80, 255), 2.0f);
+			UBall* CurrentBall = static_cast<UBall*>(PrimitiveList[UBall::CurrentIndex]);
+			if (!CurrentBall->bHasBeenDropped)
+			{
+				const FVector GuideStart(CurrentBall->Location.x, CurrentBall->Location.y - CurrentBall->Radius, 0.0f);
+				const FVector GuideEnd(CurrentBall->Location.x, topBorder + CurrentBall->Radius, 0.0f);
+				ImGui::GetForegroundDrawList()->AddLine(
+					ConvertWorldToScreenLocation(GuideStart, renderer.ViewportInfo),
+					ConvertWorldToScreenLocation(GuideEnd, renderer.ViewportInfo),
+					IM_COL32(255, 255, 255, 90), 2.0f);
+			}
 		}
 
 		const ImVec2 GameTopLeft = ConvertWorldToScreenLocation(
@@ -924,21 +939,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			const FVector StorageFruitColor = GetFruitColor(UBall::BallSizes[UBall::StorageLevel]);
 			DrawFruitPreview(StorageFruitColor);
 		}
-		ImGui::Text("Angle: %.3f, Angular Velocity: %.3f",
-			DebugBall->RotationAngle, DebugBall->AngularVelocity);
-		ImGui::Checkbox("Enable Test Torque", &bEnableTestTorque);
-		ImGui::DragFloat("Test Torque", &TestTorque, 0.0001f, -0.01f, 0.01f, "%.4f");
-		ImGui::SliderFloat("Restitution", &Restitution, 0.0f, 1.0f, "%.2f");
-		ImGui::SliderFloat("Friction", &FrictionCoefficient, 0.0f, 1.0f, "%.2f");
-		ImGui::SliderFloat("Angular Damping", &AngularDamping, 0.0f, 5.0f, "%.2f");
-		ImGui::Text("Physics Substeps: %d", PhysicsSubsteps);
-		ImGui::Text("Collision Solver Iterations: %d", CollisionSolverIterations);
-		ImGui::Checkbox("Show Collision Debug", &bShowCollisionDebug);
-		if (ImGui::Button("Reset Rotation"))
-		{
-			DebugBall->RotationAngle = 0.0f;
-			DebugBall->AngularVelocity = 0.0f;
-		}
+		//ImGui::Text("Angle: %.3f, Angular Velocity: %.3f",
+		//	DebugBall->RotationAngle, DebugBall->AngularVelocity);
+		//ImGui::Checkbox("Enable Test Torque", &bEnableTestTorque);
+		//ImGui::DragFloat("Test Torque", &TestTorque, 0.0001f, -0.01f, 0.01f, "%.4f");
+		//ImGui::SliderFloat("Restitution", &Restitution, 0.0f, 1.0f, "%.2f");
+		//ImGui::SliderFloat("Friction", &FrictionCoefficient, 0.0f, 1.0f, "%.2f");
+		//ImGui::SliderFloat("Angular Damping", &AngularDamping, 0.0f, 5.0f, "%.2f");
+		//ImGui::Text("Physics Substeps: %d", PhysicsSubsteps);
+		//ImGui::Text("Collision Solver Iterations: %d", CollisionSolverIterations);
+		//if (ImGui::Button("Reset Rotation"))
+		//{
+		//	DebugBall->RotationAngle = 0.0f;
+		//	DebugBall->AngularVelocity = 0.0f;
+		//}
 		ImGui::Text("Fruit Sequence");
 		const int FruitCount = sizeof(UBall::BallSizes) / sizeof(UBall::BallSizes[0]);
 		for (int i = 0; i < FruitCount; ++i)
