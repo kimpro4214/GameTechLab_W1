@@ -15,7 +15,7 @@ UBall::UBall(
 
 bool UBall::IsColliding(const UPrimitive* Other) const
 {
-	const UBall* OtherBall = dynamic_cast<const UBall*>(Other);
+	const UBall* OtherBall = static_cast<const UBall*>(Other);
 	if (OtherBall == nullptr || OtherBall == this)
 	{
 		return false;
