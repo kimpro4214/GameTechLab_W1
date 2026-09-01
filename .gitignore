@@ -70,3 +70,7 @@ Testing/
 
 # Visual Studio
 .vs/
+
+# ImGui
+imgui.ini
+
