@@ -10,7 +10,8 @@ public:
 		UBall& BallA,
 		UBall& BallB,
 		float Restitution,
-		float FrictionCoefficient);
+		float FrictionCoefficient,
+		bool  bHasMerged);
 	static void ResolveBorderContact(
 		UBall& Ball,
 		const FVector& CollisionNormal,
