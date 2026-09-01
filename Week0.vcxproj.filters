@@ -75,9 +75,6 @@
     <ClCompile Include="src\Rendering\FruitRenderer.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="src\Rendering\FruitVisuals.cpp">
-      <Filter>Rendering</Filter>
-    </ClCompile>
     <ClCompile Include="src\UI\GameUI.cpp">
       <Filter>UI</Filter>
     </ClCompile>
@@ -102,22 +99,19 @@
     <ClCompile Include="src\External\ImGui\imgui_widgets.cpp">
       <Filter>External\ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="src\Material.cpp">
-      <Filter>Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Mesh.cpp">
-      <Filter>Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="src\RenderPipeline.cpp">
-      <Filter>Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="src\URenderer.cpp">
-      <Filter>Rendering</Filter>
-    </ClCompile>
     <ClCompile Include="src\External\WICTextureLoader\WICTextureLoader11.cpp">
       <Filter>External\WICTextureLoader11</Filter>
     </ClCompile>
-    <ClCompile Include="src\SpriteVertex.h">
+    <ClCompile Include="src\Rendering\Material.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Rendering\Mesh.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Rendering\RenderPipeline.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Rendering\URenderer.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
   </ItemGroup>
@@ -161,9 +155,6 @@
     <ClInclude Include="src\Rendering\FruitRenderer.h">
       <Filter>Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="src\Rendering\FruitVisuals.h">
-      <Filter>Rendering</Filter>
-    </ClInclude>
     <ClInclude Include="src\UI\GameUI.h">
       <Filter>UI</Filter>
     </ClInclude>
@@ -191,20 +182,23 @@
     <ClInclude Include="src\External\ImGui\imstb_truetype.h">
       <Filter>External\ImGui</Filter>
     </ClInclude>
-    <ClInclude Include="src\Material.h">
-      <Filter>Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Mesh.h">
-      <Filter>Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="src\RenderPipeline.h">
-      <Filter>Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="src\URenderer.h">
-      <Filter>Rendering</Filter>
-    </ClInclude>
     <ClInclude Include="src\External\WICTextureLoader\WICTextureLoader11.h">
       <Filter>External\WICTextureLoader11</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Rendering\Material.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Rendering\Mesh.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Rendering\RenderPipeline.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Rendering\SpriteVertex.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Rendering\URenderer.h">
+      <Filter>Rendering</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -27,6 +27,8 @@ public:
 		URenderer& Renderer,
 		const std::vector<std::unique_ptr<UBall>>& Balls) const;
 
+	ID3D11ShaderResourceView* GetFruitTextureSRV(int Level) const;
+
 private:
 	std::vector<Material> FruitMaterials;
 	std::shared_ptr<Mesh> FruitMesh;

@@ -171,22 +171,20 @@
     <ClCompile Include="src\External\ImGui\imgui_tables.cpp" />
     <ClCompile Include="src\External\ImGui\imgui_widgets.cpp" />
     <ClCompile Include="src\External\WICTextureLoader\WICTextureLoader11.cpp" />
-    <ClCompile Include="src\SpriteVertex.h" />
     <ClCompile Include="src\App\GameApplication.cpp" />
     <ClCompile Include="src\Game\FruitCatalog.cpp" />
     <ClCompile Include="src\Game\GameController.cpp" />
     <ClCompile Include="src\Game\GameSession.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\Material.cpp" />
-    <ClCompile Include="src\Mesh.cpp" />
-    <ClCompile Include="src\RenderPipeline.cpp" />
-    <ClCompile Include="src\URenderer.cpp" />
     <ClCompile Include="src\Physics\CollisionSolver.cpp" />
     <ClCompile Include="src\Physics\PhysicsWorld.cpp" />
     <ClCompile Include="src\Physics\UBall.cpp" />
     <ClCompile Include="src\Platform\Win32Window.cpp" />
     <ClCompile Include="src\Rendering\FruitRenderer.cpp" />
-    <ClCompile Include="src\Rendering\FruitVisuals.cpp" />
+    <ClCompile Include="src\Rendering\Material.cpp" />
+    <ClCompile Include="src\Rendering\Mesh.cpp" />
+    <ClCompile Include="src\Rendering\RenderPipeline.cpp" />
+    <ClCompile Include="src\Rendering\URenderer.cpp" />
     <ClCompile Include="src\UI\GameUI.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -206,17 +204,17 @@
     <ClInclude Include="src\Game\GameController.h" />
     <ClInclude Include="src\Game\GameInput.h" />
     <ClInclude Include="src\Game\GameSession.h" />
-    <ClInclude Include="src\Material.h" />
-    <ClInclude Include="src\RenderPipeline.h" />
-    <ClInclude Include="src\Mesh.h" />
-    <ClInclude Include="src\URenderer.h" />
     <ClInclude Include="src\Physics\CollisionSolver.h" />
     <ClInclude Include="src\Physics\PhysicsWorld.h" />
     <ClInclude Include="src\Physics\UBall.h" />
     <ClInclude Include="src\Physics\UPrimitive.h" />
     <ClInclude Include="src\Platform\Win32Window.h" />
     <ClInclude Include="src\Rendering\FruitRenderer.h" />
-    <ClInclude Include="src\Rendering\FruitVisuals.h" />
+    <ClInclude Include="src\Rendering\Material.h" />
+    <ClInclude Include="src\Rendering\Mesh.h" />
+    <ClInclude Include="src\Rendering\RenderPipeline.h" />
+    <ClInclude Include="src\Rendering\SpriteVertex.h" />
+    <ClInclude Include="src\Rendering\URenderer.h" />
     <ClInclude Include="src\UI\GameUI.h" />
   </ItemGroup>
   <ItemGroup>

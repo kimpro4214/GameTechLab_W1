@@ -154,3 +154,13 @@ void FruitRenderer::Draw(
 			FruitConstantBuffer.Get());
 	}
 }
+
+ID3D11ShaderResourceView* FruitRenderer::GetFruitTextureSRV(int Level) const
+{
+	if (!FruitCatalog::IsValidLevel(Level))
+	{
+		return nullptr;
+	}
+
+	return FruitMaterials[Level].GetTextureSRV();
+}
