@@ -142,7 +142,7 @@ EGameUICommand GameUI::DrawGamePanel(
 	ImGui::Text("Fruit Sequence");
 	for (std::size_t i = 0; i < FruitCatalog::LevelCount; ++i)
 	{
-		DrawFruitPreview(InFruitRenderer.GetFruitTextureSRV(i));
+		DrawFruitPreview(InFruitRenderer.GetFruitTextureSRV(static_cast<int>(i)));
 		const bool bHasNextFruit = i + 1 < FruitCatalog::LevelCount;
 		const bool bIsEndOfRow = (i + 1) % 3 == 0;
 		if (bHasNextFruit)
