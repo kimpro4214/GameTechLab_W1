@@ -164,7 +164,7 @@ bool GameSession::TryMergeBalls(UBall& BallA, const UBall& BallB)
 {
 	const bool bCanMerge =
 		BallA.Level == BallB.Level &&
-		BallA.Level < static_cast<int>(FruitCatalog::LevelCount) - 1;
+		BallA.Level < static_cast<int>(FruitCatalog::LevelCount);
 	if (!bCanMerge)
 	{
 		return false;
