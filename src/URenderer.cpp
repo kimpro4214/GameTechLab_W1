@@ -1,10 +1,6 @@
-#include "URenderer.h"
+﻿#include "URenderer.h"
 
-// D3D 사용에 필요한 라이브러리들을 링크합니다.
-#pragma comment(lib, "d3d11")
-#pragma comment(lib, "d3dcompiler")
-
-// D3D 사용에 필요한 헤더파일들을 포함합니다.
+#include <wrl/client.h>
 #include <d3d11.h>
 #include <d3dcompiler.h>
 
@@ -13,8 +9,9 @@
 #include "ImGui/imgui_impl_dx11.h"
 #include "ImGui/imgui_impl_win32.h"
 
-#include "FVector.h"
-#include "FVertexSimple.h"
+#include "Material.h"
+#include "RenderPipeline.h"
+#include "Mesh.h"
 
 void URenderer::Create(HWND hWindow)
 {
@@ -24,17 +21,12 @@ void URenderer::Create(HWND hWindow)
 	// 프레임 버퍼 생성
 	CreateFrameBuffer();
 
-	// 래스터라이저 상태 생성
-	CreateRasterizerState();
-
 	// 깊이 스텐실 버퍼 및 블렌드 상태는 이 코드에서는 다루지 않음
 }
 
 // 렌더러에 사용된 모든 리소스를 해제하는 함수
 void URenderer::Release()
 {
-	RasterizerState->Release();
-
 	// 렌더 타겟을 초기화
 	DeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
 
@@ -57,15 +49,12 @@ void URenderer::Prepare()
 {
 	DeviceContext->ClearRenderTargetView(FrameBufferRTV, ClearColor);
 
-	DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
 	DeviceContext->RSSetViewports(1, &ViewportInfo);
-	DeviceContext->RSSetState(RasterizerState);
 
 	DeviceContext->OMSetRenderTargets(1, &FrameBufferRTV, nullptr);
 	DeviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
 
-	PrepareShader();
+	InvalidateStateCache();
 }
 
 // 스왑 체인의 백 버퍼와 프론트 버퍼를 교체하여 화면에 출력
@@ -74,133 +63,151 @@ void URenderer::SwapBuffer()
 	SwapChain->Present(1, 0); // 1: VSync 활성화
 }
 
-// 두 종류의 셰이더(VS, PS)를 컴파일해서 준비하고, 들어올 데이터의 규격(Layout)을 정의하는 함수
-void URenderer::CreateShader()
+std::shared_ptr<RenderPipeline> URenderer::CreateRenderPipeline(const RenderPipelineDesc& Desc)
 {
-	ID3DBlob* vertexshaderCSO;
-	ID3DBlob* pixelshaderCSO;
-
-	// vs 컴파일
-	D3DCompileFromFile(L"shaders/ShaderW0.hlsl", nullptr, nullptr, "mainVS", "vs_5_0", 0, 0, &vertexshaderCSO, nullptr);
-
-	Device->CreateVertexShader(vertexshaderCSO->GetBufferPointer(), vertexshaderCSO->GetBufferSize(), nullptr, &SimpleVertexShader);
-	// ps 컴파일
-	D3DCompileFromFile(L"shaders/ShaderW0.hlsl", nullptr, nullptr, "mainPS", "ps_5_0", 0, 0, &pixelshaderCSO, nullptr);
-
-	Device->CreatePixelShader(pixelshaderCSO->GetBufferPointer(), pixelshaderCSO->GetBufferSize(), nullptr, &SimplePixelShader);
-	// layout 정의
-	D3D11_INPUT_ELEMENT_DESC layout[] = {
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	};
-
-	Device->CreateInputLayout(layout, ARRAYSIZE(layout), vertexshaderCSO->GetBufferPointer(), vertexshaderCSO->GetBufferSize(), &SimpleInputLayout);
-
-	Stride = sizeof(FVertexSimple);
-
-	vertexshaderCSO->Release();
-	pixelshaderCSO->Release();
-}
-
-void URenderer::ReleaseShader()
-{
-	if (SimpleInputLayout)
+	if (!Desc.InputElements ||
+		Desc.InputElementCount == 0)
 	{
-		SimpleInputLayout->Release();
-		SimpleInputLayout = nullptr;
+		return nullptr;
 	}
 
-	if (SimplePixelShader)
+	auto Result = std::make_shared<RenderPipeline>();
+
+	Microsoft::WRL::ComPtr<ID3DBlob> VertexShaderBlob;
+	HRESULT hr = D3DCompileFromFile(Desc.ShaderFileName, nullptr, nullptr, Desc.VertexEntryPoint, "vs_5_0", 0, 0, VertexShaderBlob.GetAddressOf(), nullptr);
+	if (FAILED(hr))
 	{
-		SimplePixelShader->Release();
-		SimplePixelShader = nullptr;
+		return nullptr;
+	}
+	hr = Device->CreateVertexShader(VertexShaderBlob->GetBufferPointer(), VertexShaderBlob->GetBufferSize(), nullptr, Result->VertexShader.GetAddressOf());
+	if (FAILED(hr))
+	{
+		return nullptr;
 	}
 
-	if (SimpleVertexShader)
+	Microsoft::WRL::ComPtr<ID3DBlob> PixelShaderBlob;
+	hr = D3DCompileFromFile(Desc.ShaderFileName, nullptr, nullptr, Desc.PixelEntryPoint, "ps_5_0", 0, 0, PixelShaderBlob.GetAddressOf(), nullptr);
+	if (FAILED(hr))
 	{
-		SimpleVertexShader->Release();
-		SimpleVertexShader = nullptr;
+		return nullptr;
 	}
-}
-
-void URenderer::PrepareShader()
-{
-	DeviceContext->VSSetShader(SimpleVertexShader, nullptr, 0);
-	DeviceContext->PSSetShader(SimplePixelShader, nullptr, 0);
-	DeviceContext->IASetInputLayout(SimpleInputLayout);
-
-	// 버텍스 쉐이더에 상수 버퍼를 설정합니다.
-	if (ConstantBuffer)
+	hr = Device->CreatePixelShader(PixelShaderBlob->GetBufferPointer(), PixelShaderBlob->GetBufferSize(), nullptr, Result->PixelShader.GetAddressOf());
+	if (FAILED(hr))
 	{
-		DeviceContext->VSSetConstantBuffers(0, 1, &ConstantBuffer);
+		return nullptr;
 	}
-}
 
-ID3D11Buffer* URenderer::CreateVertexBuffer(FVertexSimple* vertices, UINT byteWidth)
-{
-	// 2. Create a vertex buffer
-	D3D11_BUFFER_DESC vertexbufferdesc = {};
-	vertexbufferdesc.ByteWidth = byteWidth;
-	vertexbufferdesc.Usage = D3D11_USAGE_IMMUTABLE; // will never be updated
-	vertexbufferdesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-
-	D3D11_SUBRESOURCE_DATA vertexbufferSRD = { vertices };
-
-	ID3D11Buffer* vertexBuffer;
-
-	Device->CreateBuffer(&vertexbufferdesc, &vertexbufferSRD, &vertexBuffer);
-
-	return vertexBuffer;
-}
-
-void URenderer::ReleaseVertexBuffer(ID3D11Buffer* vertexBuffer)
-{
-	vertexBuffer->Release();
-}
-
-void URenderer::CreateConstantBuffer()
-{
-	D3D11_BUFFER_DESC constantbufferdesc = {};
-	constantbufferdesc.ByteWidth = sizeof(FConstants) + 0xf & 0xfffffff0; // ensure constant buffer size is multiple of 16 bytes
-	constantbufferdesc.Usage = D3D11_USAGE_DYNAMIC;						  // will be updated from CPU every frame
-	constantbufferdesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	constantbufferdesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-
-	Device->CreateBuffer(&constantbufferdesc, nullptr, &ConstantBuffer);
-}
-
-void URenderer::ReleaseConstantBuffer()
-{
-	if (ConstantBuffer)
+	hr = Device->CreateInputLayout(Desc.InputElements, Desc.InputElementCount, VertexShaderBlob->GetBufferPointer(), VertexShaderBlob->GetBufferSize(), Result->InputLayout.GetAddressOf());
+	if (FAILED(hr))
 	{
-		ConstantBuffer->Release();
-		ConstantBuffer = nullptr;
+		return nullptr;
 	}
+
+	D3D11_RASTERIZER_DESC Rasterizerdesc = {};
+	Rasterizerdesc.FillMode = D3D11_FILL_SOLID;
+	Rasterizerdesc.CullMode = D3D11_CULL_BACK;
+
+	hr = Device->CreateRasterizerState(&Rasterizerdesc, Result->RasterizerState.GetAddressOf());
+	if (FAILED(hr))
+	{
+		return nullptr;
+	}
+
+	return Result;
 }
 
-void URenderer::UpdateConstant(const FVector& Offset, float Scale, float RotationAngle)
+std::shared_ptr<Mesh> URenderer::CreateMesh(const MeshDesc& Desc)
 {
-	if (ConstantBuffer)
+	if (!Desc.VertexData ||
+		Desc.VertexDataSize == 0 ||
+		Desc.VertexStride == 0 ||
+		Desc.VertexCount == 0)
 	{
-		D3D11_MAPPED_SUBRESOURCE constantbufferMSR;
+		return nullptr;
+	}
 
-		DeviceContext->Map(ConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &constantbufferMSR); // update constant buffer every frame
-		FConstants* constants = (FConstants*)constantbufferMSR.pData;
+	if (Desc.IndexData && Desc.IndexCount > 0 && Desc.IndexDataSize == 0)
+	{
+		return nullptr;
+	}
+
+	auto ResultMesh = std::make_shared<Mesh>();
+
+	D3D11_BUFFER_DESC VertexBufferDesc = {};
+	VertexBufferDesc.ByteWidth = Desc.VertexDataSize;
+	VertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	VertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+
+	D3D11_SUBRESOURCE_DATA VertexInitialData = {};
+	VertexInitialData.pSysMem = Desc.VertexData;
+
+	HRESULT hr = Device->CreateBuffer(&VertexBufferDesc, &VertexInitialData, ResultMesh->VertexBuffer.GetAddressOf());
+	if (FAILED(hr))
+	{
+		return nullptr;
+	}
+
+	if (Desc.IndexData && Desc.IndexCount > 0)
+	{
+		D3D11_BUFFER_DESC IndexBufferDesc = {};
+		IndexBufferDesc.ByteWidth = Desc.IndexDataSize;
+		IndexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+		IndexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+
+		D3D11_SUBRESOURCE_DATA IndexInitialData = {};
+		IndexInitialData.pSysMem = Desc.IndexData;
+
+		hr = Device->CreateBuffer(&IndexBufferDesc, &IndexInitialData, ResultMesh->IndexBuffer.GetAddressOf());
+		if (FAILED(hr))
 		{
-			constants->Offset = Offset;
-			constants->Scale = Scale;
-			constants->RotationAngle = RotationAngle;
+			return nullptr;
 		}
-		DeviceContext->Unmap(ConstantBuffer, 0);
 	}
+
+	ResultMesh->VertexStride = Desc.VertexStride;
+	ResultMesh->VertexCount = Desc.VertexCount;
+	ResultMesh->IndexCount = Desc.IndexCount;
+	ResultMesh->IndexFormat = Desc.IndexFormat;
+	ResultMesh->Topology = Desc.Topology;
+
+	return ResultMesh;
 }
 
-void URenderer::RenderPrimitive(ID3D11Buffer* pBuffer, UINT numVertices)
+Microsoft::WRL::ComPtr<ID3D11Buffer> URenderer::CreateDynamicConstantBuffer(UINT ByteWidth)
 {
-	UINT offset = 0;
-	DeviceContext->IASetVertexBuffers(0, 1, &pBuffer, &Stride, &offset);
+	if (ByteWidth == 0 || ByteWidth % 16 != 0)
+	{
+		return nullptr;
+	}
 
-	DeviceContext->Draw(numVertices, 0);
+	D3D11_BUFFER_DESC Desc{};
+	Desc.ByteWidth = ByteWidth;
+	Desc.Usage = D3D11_USAGE_DYNAMIC;
+	Desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	Desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	Microsoft::WRL::ComPtr<ID3D11Buffer> Result;
+
+	HRESULT hr = Device->CreateBuffer(&Desc, nullptr, Result.GetAddressOf());
+
+	return SUCCEEDED(hr) ? Result : nullptr;
+}
+
+void URenderer::Draw(const Material& Material, const Mesh& Mesh, ID3D11Buffer* ObjectConstantBuffer)
+{
+	BindMaterial(Material);
+	Mesh.Bind(DeviceContext);
+
+	DeviceContext->VSSetConstantBuffers(0, 1, &ObjectConstantBuffer);
+	
+	if (Mesh.HasIndices())
+	{
+		DeviceContext->DrawIndexed(Mesh.GetIndexCount(), 0, 0);
+	}
+	else
+	{
+		DeviceContext->Draw(Mesh.GetVertexCount(), 0);
+	}
 }
 
 // Direct3D 장치 및 스왑 체인을 생성하는 함수
@@ -248,16 +255,6 @@ void URenderer::CreateFrameBuffer()
 	Device->CreateRenderTargetView(FrameBuffer, &framebufferRTVdesc, &FrameBufferRTV);
 }
 
-// 래스터라이저 상태를 생성하는 함수
-void URenderer::CreateRasterizerState()
-{
-	D3D11_RASTERIZER_DESC rasterizerdesc = {};
-	rasterizerdesc.FillMode = D3D11_FILL_SOLID; // 채우기 모드
-	rasterizerdesc.CullMode = D3D11_CULL_BACK;	// 백 페이스 컬링
-
-	Device->CreateRasterizerState(&rasterizerdesc, &RasterizerState);
-}
-
 // Direct3D 장치 및 스왑 체인을 해제하는 함수
 void URenderer::ReleaseDeviceAndSwapChain()
 {
@@ -301,12 +298,27 @@ void URenderer::ReleaseFrameBuffer()
 	}
 }
 
-// 래스터라이저 상태를 해제하는 함수
-void URenderer::ReleaseRasterizerState()
+void URenderer::BindMaterial(const Material& Material)
 {
-	if (RasterizerState)
+	const RenderPipeline& Pipeline = Material.GetRendererPipeline();
+
+	if (BoundRenderPipeline != &Pipeline)
 	{
-		RasterizerState->Release();
-		RasterizerState = nullptr;
+		Pipeline.Bind(DeviceContext);
+		BoundRenderPipeline = &Pipeline;
+
+		BoundMaterial = nullptr;
 	}
+
+	if (BoundMaterial != &Material)
+	{
+		Material.BindResources(DeviceContext);
+		BoundMaterial = &Material;
+	}
+}
+
+void URenderer::InvalidateStateCache()
+{
+	BoundRenderPipeline = nullptr;
+	BoundMaterial = nullptr;
 }

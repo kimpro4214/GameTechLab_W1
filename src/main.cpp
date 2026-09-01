@@ -1,10 +1,5 @@
-#include <windows.h>
+﻿#include <Windows.h>
 
-// D3D 사용에 필요한 라이브러리들을 링크합니다.
-#pragma comment(lib, "d3d11")
-#pragma comment(lib, "user32")
-
-// D3D 사용에 필요한 헤더파일들을 포함합니다.
 #include <d3d11.h>
 
 #include "ImGui/imgui.h"
@@ -16,6 +11,11 @@
 #include "FVertexSimple.h"
 #include "Sphere.h"
 #include "URenderer.h"
+#include "RenderPipeline.h"
+#include "Material.h"
+#include "Mesh.h"
+
+#include <memory>
 
 class UPrimitive
 {
@@ -477,6 +477,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
+struct FruitObjectConstants
+{
+	FVector Offset;
+	float Scale;
+	float RotationAngle;
+	float Padding[3];
+};
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
 	// 윈도우 클래스 이름
@@ -502,17 +510,32 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// D3D11 생성하는 함수를 호출합니다.
 	renderer.Create(hWnd);
 
-	// 렌더러 생성 직후에 쉐이더를 생성하는 함수를 호출합니다.
-	renderer.CreateShader();
+	// 과일 렌더링용 렌더 파이프라인, 머티리얼, 메시 생성
+	D3D11_INPUT_ELEMENT_DESC FruitInputLayout[] = {
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	};
 
-	renderer.CreateConstantBuffer();
+	RenderPipelineDesc FruitPipelineDesc{};
+	FruitPipelineDesc.ShaderFileName = L"shaders/FruitShader.hlsl";
+	FruitPipelineDesc.VertexEntryPoint = "mainVS";
+	FruitPipelineDesc.PixelEntryPoint = "mainPS";
+	FruitPipelineDesc.InputElements = FruitInputLayout;
+	FruitPipelineDesc.InputElementCount = 2;
+
+	Material FruitMaterial = Material{ renderer.CreateRenderPipeline(FruitPipelineDesc) };
+
+	MeshDesc FruitMeshDesc{};
+	FruitMeshDesc.VertexData = sphere_vertices;
+	FruitMeshDesc.VertexDataSize = sizeof(sphere_vertices);
+	FruitMeshDesc.VertexStride = sizeof(FVertexSimple);
+	FruitMeshDesc.VertexCount = sizeof(sphere_vertices) / sizeof(FVertexSimple);
+
+	std::shared_ptr<Mesh> FruitMesh = renderer.CreateMesh(FruitMeshDesc);
+
+	auto FruitObjectConstantBuffer = renderer.CreateDynamicConstantBuffer(sizeof(FruitObjectConstants) + 0xf & 0xfffffff0);
 
 	renderer.InitImGui(hWnd);
-
-	UINT numVerticesSphere = sizeof(sphere_vertices) / sizeof(FVertexSimple);
-
-	// 버텍스 버퍼 하나만 생성
-	ID3D11Buffer* vertexBufferSphere = renderer.CreateVertexBuffer(sphere_vertices, sizeof(sphere_vertices));
 
 	// 화면의 경계 위치를 나타내는 상수 변수 설정(NDC 좌표계)
 	const float leftBorder = -1.0f;
@@ -663,14 +686,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 		// 준비 작업
 		renderer.Prepare();
-		renderer.PrepareShader();
 
 		// 하나의 버텍스 버퍼를 모든 공이 공유합니다.
 		for (int i = 0; i < UBall::TotalNumBalls; ++i)
 		{
 			UBall* Ball = static_cast<UBall*>(PrimitiveList[i]);
-			renderer.UpdateConstant(Ball->Location, Ball->Radius, Ball->RotationAngle);
-			renderer.RenderPrimitive(vertexBufferSphere, numVerticesSphere);
+			FruitObjectConstants Constants{ Ball->Location, Ball->Radius, Ball->RotationAngle };
+			renderer.UpdateDynamicConstantBuffer(FruitObjectConstantBuffer, Constants);
+			renderer.Draw(FruitMaterial, *FruitMesh, FruitObjectConstantBuffer.Get());
 		}
 
 		UBall* DebugBall = static_cast<UBall*>(PrimitiveList[0]);
@@ -743,9 +766,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	// 소멸하는 코드를 여기에 추가합니다.
 	ReleasePrimitiveList(PrimitiveList);
-	renderer.ReleaseVertexBuffer(vertexBufferSphere);
-	renderer.ReleaseConstantBuffer();
-	renderer.ReleaseShader();
 	renderer.Release();
 
 	return 0;
