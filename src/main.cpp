@@ -497,7 +497,7 @@ UBall* CreateRandomBall()
 	int CurrentLevel = UBall::NextLevel;
 	UBall::NextLevel = rand() % 5;
 	const FVector Location(
-		0.0f - (UBall::BallSizes[CurrentLevel] * 0.5f),
+		-0.25f,
 		0.9f,
 		0.0f);
 	FVector Velocity(
