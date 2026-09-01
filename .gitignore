@@ -70,6 +70,7 @@ Testing/
 
 # Visual Studio
 .vs/
+*.vcxproj.user
 
 # ImGui
 imgui.ini
