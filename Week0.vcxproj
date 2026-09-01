@@ -163,7 +163,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\FVertexSimple.h" />
+    <ClCompile Include="src\SpriteVertex.h" />
     <ClCompile Include="src\ImGui\imgui.cpp" />
     <ClCompile Include="src\ImGui\imgui_demo.cpp" />
     <ClCompile Include="src\ImGui\imgui_draw.cpp" />
@@ -187,6 +187,7 @@
     <ClCompile Include="src\Rendering\FruitRenderer.cpp" />
     <ClCompile Include="src\Rendering\FruitVisuals.cpp" />
     <ClCompile Include="src\UI\GameUI.cpp" />
+    <ClCompile Include="src\WICTextureLoader\WICTextureLoader11.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\FVector.h" />
@@ -207,7 +208,6 @@
     <ClInclude Include="src\Material.h" />
     <ClInclude Include="src\RenderPipeline.h" />
     <ClInclude Include="src\Mesh.h" />
-    <ClInclude Include="src\Sphere.h" />
     <ClInclude Include="src\URenderer.h" />
     <ClInclude Include="src\Physics\CollisionSolver.h" />
     <ClInclude Include="src\Physics\PhysicsWorld.h" />
@@ -217,6 +217,7 @@
     <ClInclude Include="src\Rendering\FruitRenderer.h" />
     <ClInclude Include="src\Rendering\FruitVisuals.h" />
     <ClInclude Include="src\UI\GameUI.h" />
+    <ClInclude Include="src\WICTextureLoader\WICTextureLoader11.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\FruitShader.hlsl">

@@ -66,7 +66,7 @@
     <ClCompile Include="src\main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="src\FVertexSimple.h">
+    <ClCompile Include="src\SpriteVertex.h">
       <Filter>헤더 파일</Filter>
     </ClCompile>
     <ClCompile Include="src\Material.cpp">
@@ -111,6 +111,9 @@
     <ClCompile Include="src\UI\GameUI.cpp">
       <Filter>UI</Filter>
     </ClCompile>
+    <ClCompile Include="src\WICTextureLoader\WICTextureLoader11.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ImGui\imconfig.h">
@@ -138,9 +141,6 @@
       <Filter>ImGui</Filter>
     </ClInclude>
     <ClInclude Include="src\FVector.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Sphere.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="src\URenderer.h">
@@ -196,6 +196,9 @@
     </ClInclude>
     <ClInclude Include="src\UI\GameUI.h">
       <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WICTextureLoader\WICTextureLoader11.h">
+      <Filter>Rendering</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

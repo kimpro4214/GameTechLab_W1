@@ -9,6 +9,8 @@
 #include "ImGui/imgui_impl_dx11.h"
 #include "ImGui/imgui_impl_win32.h"
 
+#include "WICTextureLoader/WICTextureLoader11.h"
+
 #include "Material.h"
 #include "RenderPipeline.h"
 #include "Mesh.h"
@@ -52,7 +54,6 @@ void URenderer::Prepare()
 	DeviceContext->RSSetViewports(1, &ViewportInfo);
 
 	DeviceContext->OMSetRenderTargets(1, &FrameBufferRTV, nullptr);
-	DeviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
 
 	InvalidateStateCache();
 }
@@ -108,6 +109,12 @@ std::shared_ptr<RenderPipeline> URenderer::CreateRenderPipeline(const RenderPipe
 	Rasterizerdesc.CullMode = D3D11_CULL_BACK;
 
 	hr = Device->CreateRasterizerState(&Rasterizerdesc, Result->RasterizerState.GetAddressOf());
+	if (FAILED(hr))
+	{
+		return nullptr;
+	}
+
+	hr = Device->CreateBlendState(&Desc.BlendDesc, Result->BlendState.GetAddressOf());
 	if (FAILED(hr))
 	{
 		return nullptr;
@@ -191,6 +198,24 @@ Microsoft::WRL::ComPtr<ID3D11Buffer> URenderer::CreateDynamicConstantBuffer(UINT
 	HRESULT hr = Device->CreateBuffer(&Desc, nullptr, Result.GetAddressOf());
 
 	return SUCCEEDED(hr) ? Result : nullptr;
+}
+
+Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> URenderer::LoadTexture(LPCWSTR FilePath)
+{
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Result;
+
+	const HRESULT hr = DirectX::CreateWICTextureFromFile(Device, FilePath, nullptr, Result.GetAddressOf());
+
+	return SUCCEEDED(hr) ? Result : Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>{};
+}
+
+Microsoft::WRL::ComPtr<ID3D11SamplerState> URenderer::CreateSamplerState(const D3D11_SAMPLER_DESC& Desc)
+{
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> Result;
+
+	const HRESULT hr = Device->CreateSamplerState(&Desc, Result.GetAddressOf());
+
+	return SUCCEEDED(hr) ? Result : Microsoft::WRL::ComPtr<ID3D11SamplerState>{};
 }
 
 void URenderer::Draw(const Material& Material, const Mesh& Mesh, ID3D11Buffer* ObjectConstantBuffer)

@@ -25,6 +25,8 @@ public:
 	std::shared_ptr<RenderPipeline> CreateRenderPipeline(const RenderPipelineDesc& Desc);
 	std::shared_ptr<Mesh> CreateMesh(const MeshDesc& Desc);
 	Microsoft::WRL::ComPtr<ID3D11Buffer> CreateDynamicConstantBuffer(UINT ByteWidth);
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> LoadTexture(LPCWSTR FilePath);
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> CreateSamplerState(const D3D11_SAMPLER_DESC& Desc);
 
 	template <typename T>
 	void UpdateDynamicConstantBuffer(const Microsoft::WRL::ComPtr<ID3D11Buffer>& ConstantBuffer, const T& Constants);

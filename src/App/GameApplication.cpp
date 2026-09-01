@@ -14,6 +14,31 @@
 
 namespace
 {
+	class ScopedComInitialization
+	{
+	public:
+		ScopedComInitialization()
+			: Result(CoInitializeEx(nullptr, COINIT_MULTITHREADED))
+		{
+		}
+
+		~ScopedComInitialization()
+		{
+			if (SUCCEEDED(Result))
+			{
+				CoUninitialize();
+			}
+		}
+
+		bool IsAvailable() const
+		{
+			return SUCCEEDED(Result) || Result == RPC_E_CHANGED_MODE;
+		}
+
+	private:
+		HRESULT Result;
+	};
+
 	FGameInput BuildGameInput(
 		const ImGuiIO& FrameIO,
 		const D3D11_VIEWPORT& Viewport)
@@ -77,10 +102,16 @@ namespace
 
 int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 {
+	ScopedComInitialization ComInitialization;
+	if (!ComInitialization.IsAvailable())
+	{
+		return 1;
+	}
+
 	Win32Window Window;
 	if (!Window.Create(Instance, ShowCommand))
 	{
-		return 1;
+		return 2;
 	}
 
 	URenderer Renderer;
@@ -90,11 +121,12 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 	FruitRenderer FruitSceneRenderer;
 	if (!FruitSceneRenderer.Initialize(Renderer))
 	{
+		FruitSceneRenderer.Release();
 		ImGui_ImplDX11_Shutdown();
 		ImGui_ImplWin32_Shutdown();
 		ImGui::DestroyContext();
 		Renderer.Release();
-		return 2;
+		return 3;
 	}
 
 	GameSession Session;
@@ -162,6 +194,7 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 	ImGui_ImplDX11_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
+	FruitSceneRenderer.Release();
 	Renderer.Release();
 	return 0;
 }
