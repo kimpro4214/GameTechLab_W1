@@ -40,12 +40,17 @@ public:
 	FVector    LastCollisionTangent;
 	bool       bHasCollisionDebug;
 	static int TotalNumBalls;
+	static int TotalScore;
+	static const float	BallSizes[11];
+	static const int	ScoreList[11];
+	int			Level;
 
-	UBall(const FVector& InitialLocation = FVector(), const FVector& InitialVelocity = FVector(), float InitialRadius = 0.1f)
-		: Location(InitialLocation), Velocity(InitialVelocity), Radius(0.0f), Mass(0.0f),
-		  RotationAngle(0.0f), AngularVelocity(0.0f), bHasCollisionDebug(false)
+
+	UBall(const FVector& InitialLocation = FVector(), const FVector& InitialVelocity = FVector(), int InitialLevel = 0)
+		: Location(InitialLocation), Velocity(InitialVelocity), Level(InitialLevel), Radius(0.0f), Mass(0.0f),
+		RotationAngle(0.0f), AngularVelocity(0.0f), bHasCollisionDebug(false)
 	{
-		SetRadius(InitialRadius);
+		SetRadius(BallSizes[Level]);
 		++TotalNumBalls;
 	}
 
@@ -69,6 +74,22 @@ public:
 		const float	  RadiusSum = Radius + OtherBall->Radius;
 
 		return FVector::DotProduct(Delta, Delta) <= RadiusSum * RadiusSum;
+	}
+
+	bool IsMergeable(const UBall* OtherBall)
+	{
+		return (this->Level < 11 && this->Radius == OtherBall->Radius);
+	}
+
+	void Merge(UPrimitive**& PrimitiveList, int OtherBall)
+	{
+		UBall::TotalScore += UBall::ScoreList[this->Level];
+		this->Level++;
+		SetRadius(UBall::BallSizes[Level]);
+
+		delete PrimitiveList[OtherBall];
+		PrimitiveList[OtherBall] = PrimitiveList[UBall::TotalNumBalls];
+		PrimitiveList[UBall::TotalNumBalls] = nullptr;
 	}
 
 	void ResolveCollision(UPrimitive* Other, float Restitution, float FrictionCoefficient) override
@@ -351,19 +372,24 @@ public:
 };
 
 int UBall::TotalNumBalls = 0;
+int UBall::TotalScore = 0;
+const float UBall::BallSizes[11] = { 0.05f, 0.07f, 0.09f, 0.11f, 0.13f, 0.16f, 0.19f, 0.22f, 0.25f, 0.3f, 0.4f };
+const int UBall::ScoreList[11] = { 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66 };
 
-float RandomFloat(float Min, float Max) // 나중에 과일 뽑을 때 사용예정
+
+float RandomFloat(float Min, float Max)
 {
 	return Min + ((float)rand() / (float)RAND_MAX) * (Max - Min);
 }
+
 
 float spawnRadius = 0.05f;
 
 UBall* CreateRandomBall()
 {
-	const float	  Radius = spawnRadius; // 나중에 과일 랜덤 생성으로 수정
+	int Level = rand() % 5;
 	const FVector Location(
-		0.0f - (Radius * 0.5f),
+		0.0f - (UBall::BallSizes[Level] * 0.5f),
 		0.9f,
 		0.0f);
 	FVector Velocity(
@@ -371,7 +397,7 @@ UBall* CreateRandomBall()
 		0.0f,
 		0.0f);
 
-	return new UBall(Location, Velocity, Radius);
+	return new UBall(Location, Velocity, Level);
 }
 
 
@@ -387,17 +413,6 @@ void ResizePrimitiveList(UPrimitive**& PrimitiveList, int TargetNumBalls)
 	if (TargetNumBalls == CurrentNumBalls)
 	{
 		return;
-	}
-
-	if (TargetNumBalls < CurrentNumBalls) // 나중에 과일 합친 처리로 수정해야됨
-	{
-		while (CurrentNumBalls > TargetNumBalls)
-		{
-			const int RemoveIndex = rand() % CurrentNumBalls;
-			delete PrimitiveList[RemoveIndex];
-			PrimitiveList[RemoveIndex] = PrimitiveList[CurrentNumBalls - 1];
-			--CurrentNumBalls;
-		}
 	}
 
 	UPrimitive** TempPrimitiveList = new UPrimitive * [TargetNumBalls];
@@ -534,7 +549,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	srand(static_cast<unsigned int>(GetTickCount()));
 	UPrimitive** PrimitiveList = nullptr;
 	ResizePrimitiveList(PrimitiveList, 1);
-	int DesiredNumBalls = UBall::TotalNumBalls;
 
 	// FPS 제한을 위한 설정
 	const int	 targetFPS = 30;
@@ -586,6 +600,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 		if (bCanUseSceneMouse)
 		{
+			int DesiredNumBalls = UBall::TotalNumBalls;
 			if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
 			{
 				if (DesiredNumBalls < 1)
@@ -638,13 +653,24 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				SolverIteration < CollisionSolverIterations;
 				++SolverIteration)
 			{
-				// 같은 공 쌍을 중복 처리하지 않도록 j는 i + 1부터 검사
-				for (int i = 0; i < UBall::TotalNumBalls; ++i)
+
+				int TotalBall = UBall::TotalNumBalls;
+				for (int i = 0; i < TotalBall - 1; ++i) // 마지막 볼은 아직 낙하 안했기 때문에 검사에서 제외
 				{
-					for (int j = i + 1; j < UBall::TotalNumBalls; ++j)
+					for (int j = i + 1; j < TotalBall - 1; ++j)
 					{
 						if (PrimitiveList[i]->IsColliding(PrimitiveList[j]))
 						{
+
+							UBall* BallA = static_cast<UBall*>(PrimitiveList[i]);
+							UBall* BallB = static_cast<UBall*>(PrimitiveList[j]);
+							if (BallA->IsMergeable(BallB))
+							{
+								BallA->Merge(PrimitiveList, j);
+								//j--;
+								TotalBall--;
+								break;
+							}
 							PrimitiveList[i]->ResolveCollision(
 								PrimitiveList[j], Restitution, FrictionCoefficient);
 						}
@@ -695,6 +721,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 		// 이후 ImGui UI 컨트롤 추가는 ImGui::NewFrame()과 ImGui::Render() 사이인 여기에 위치합니다.
 		ImGui::Begin("Jungle Property Window");
+
+		ImGui::Text("Total Score : %d", UBall::TotalScore);
 
 		ImGui::SliderFloat("Spawn Radius", &spawnRadius, 0.01f, 0.4f);
 

@@ -51,7 +51,7 @@ PS_INPUT mainVS(VS_INPUT input)
     {
         fruitColor = float3(0.63, 0.42, 1.0);
     }
-    else if (StandardizedScale <= 34.5)
+    else if (StandardizedScale <= 36.5) // 34.5
     {
         fruitColor = float3(1.0, 0.72, 0.0);
     }
