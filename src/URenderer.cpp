@@ -22,8 +22,6 @@ void URenderer::Create(HWND hWindow)
 
 	// 프레임 버퍼 생성
 	CreateFrameBuffer();
-
-	// 깊이 스텐실 버퍼 및 블렌드 상태는 이 코드에서는 다루지 않음
 }
 
 // 렌더러에 사용된 모든 리소스를 해제하는 함수
@@ -44,16 +42,17 @@ void URenderer::InitImGui(HWND hWindow)
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
 	ImGui_ImplWin32_Init((void*)hWindow);
-	ImGui_ImplDX11_Init(Device, DeviceContext);
+	ImGui_ImplDX11_Init(Device.Get(), DeviceContext.Get());
 }
 
 void URenderer::Prepare()
 {
-	DeviceContext->ClearRenderTargetView(FrameBufferRTV, ClearColor);
+	DeviceContext->ClearRenderTargetView(FrameBufferRTV.Get(), ClearColor);
 
 	DeviceContext->RSSetViewports(1, &ViewportInfo);
 
-	DeviceContext->OMSetRenderTargets(1, &FrameBufferRTV, nullptr);
+	ID3D11RenderTargetView* RenderTarget = FrameBufferRTV.Get();
+	DeviceContext->OMSetRenderTargets(1, &RenderTarget, nullptr);
 
 	InvalidateStateCache();
 }
@@ -204,7 +203,7 @@ Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> URenderer::LoadTexture(LPCWSTR 
 {
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Result;
 
-	const HRESULT hr = DirectX::CreateWICTextureFromFile(Device, FilePath, nullptr, Result.GetAddressOf());
+	const HRESULT hr = DirectX::CreateWICTextureFromFile(Device.Get(), FilePath, nullptr, Result.GetAddressOf());
 
 	return SUCCEEDED(hr) ? Result : Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>{};
 }
@@ -221,7 +220,7 @@ Microsoft::WRL::ComPtr<ID3D11SamplerState> URenderer::CreateSamplerState(const D
 void URenderer::Draw(const Material& Material, const Mesh& Mesh, ID3D11Buffer* ObjectConstantBuffer)
 {
 	BindMaterial(Material);
-	Mesh.Bind(DeviceContext);
+	Mesh.Bind(DeviceContext.Get());
 
 	DeviceContext->VSSetConstantBuffers(0, 1, &ObjectConstantBuffer);
 	
@@ -277,7 +276,7 @@ void URenderer::CreateFrameBuffer()
 	framebufferRTVdesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;	  // 색상 포맷
 	framebufferRTVdesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D; // 2D 텍스처
 
-	Device->CreateRenderTargetView(FrameBuffer, &framebufferRTVdesc, &FrameBufferRTV);
+	Device->CreateRenderTargetView(FrameBuffer.Get(), &framebufferRTVdesc, FrameBufferRTV.GetAddressOf());
 }
 
 // Direct3D 장치 및 스왑 체인을 해제하는 함수
@@ -288,39 +287,16 @@ void URenderer::ReleaseDeviceAndSwapChain()
 		DeviceContext->Flush(); // 남아있는 GPU 명령 실행
 	}
 
-	if (SwapChain)
-	{
-		SwapChain->Release();
-		SwapChain = nullptr;
-	}
-
-	if (DeviceContext)
-	{
-		DeviceContext->Release();
-		DeviceContext = nullptr;
-	}
-
-	if (Device)
-	{
-		Device->Release();
-		Device = nullptr;
-	}
+	SwapChain.Reset();
+	DeviceContext.Reset();
+	Device.Reset();
 }
 
 // 프레임 버퍼를 해제하는 함수
 void URenderer::ReleaseFrameBuffer()
 {
-	if (FrameBufferRTV)
-	{
-		FrameBufferRTV->Release();
-		FrameBufferRTV = nullptr;
-	}
-
-	if (FrameBuffer)
-	{
-		FrameBuffer->Release();
-		FrameBuffer = nullptr;
-	}
+	FrameBufferRTV.Reset();
+	FrameBuffer.Reset();
 }
 
 void URenderer::BindMaterial(const Material& Material)
@@ -329,7 +305,7 @@ void URenderer::BindMaterial(const Material& Material)
 
 	if (BoundRenderPipeline != &Pipeline)
 	{
-		Pipeline.Bind(DeviceContext);
+		Pipeline.Bind(DeviceContext.Get());
 		BoundRenderPipeline = &Pipeline;
 
 		BoundMaterial = nullptr;
@@ -337,7 +313,7 @@ void URenderer::BindMaterial(const Material& Material)
 
 	if (BoundMaterial != &Material)
 	{
-		Material.BindResources(DeviceContext);
+		Material.BindResources(DeviceContext.Get());
 		BoundMaterial = &Material;
 	}
 }
