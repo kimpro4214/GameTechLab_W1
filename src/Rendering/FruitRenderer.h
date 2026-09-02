@@ -25,6 +25,7 @@ public:
 
 private:
 	std::optional <Material> FruitMaterial;
+	std::optional<Material> GlowMaterial;
 	std::shared_ptr<Mesh> FruitMesh;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> ConstantBuffer;
 };

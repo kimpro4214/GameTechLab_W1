@@ -256,6 +256,9 @@
     <FxCompile Include="shaders\FruitShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="shaders\GlowShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
     <FxCompile Include="shaders\DropletShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
