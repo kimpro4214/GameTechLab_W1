@@ -5,6 +5,12 @@
 
 #include <algorithm>
 
+namespace
+{
+	// Temporary test setting: set to false to restore normal random fruit spawns.
+	constexpr bool bSpawnLargestFruitForTesting = true;
+}
+
 GameSession::GameSession()
 	: Physics(FPhysicsWorldSettings{
 		GameConfig::GravityAcceleration,
@@ -173,7 +179,7 @@ bool GameSession::TryMergeBalls(UBall& BallA, const UBall& BallB)
 {
 	const bool bCanMerge =
 		BallA.Level == BallB.Level &&
-		BallA.Level < static_cast<int>(FruitCatalog::LevelCount);
+		BallA.Level < static_cast<int>(FruitCatalog::LevelCount) - 1;
 	if (!bCanMerge)
 	{
 		return false;
@@ -205,6 +211,11 @@ void GameSession::ResetFrameDebugState()
 
 int GameSession::RandomSpawnLevel()
 {
+	if (bSpawnLargestFruitForTesting)
+	{
+		return static_cast<int>(FruitCatalog::LevelCount) - 1;
+	}
+
 	std::uniform_int_distribution<int> Distribution(0, FruitCatalog::HighestSpawnLevel);
 	return Distribution(RandomEngine);
 }

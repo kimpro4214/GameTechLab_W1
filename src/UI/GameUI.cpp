@@ -77,6 +77,8 @@ void GameUI::DrawSceneOverlay(
 
 EGameUICommand GameUI::DrawMainMenu(const D3D11_VIEWPORT& Viewport) const
 {
+	constexpr ImVec2 StartButtonSize(240.0f, 60.0f);
+
 	ImGui::SetNextWindowPos(
 		ImVec2(Viewport.Width * 0.5f, Viewport.Height * 0.5f),
 		ImGuiCond_Always,
@@ -89,10 +91,9 @@ EGameUICommand GameUI::DrawMainMenu(const D3D11_VIEWPORT& Viewport) const
 		ImGuiWindowFlags_NoResize |
 		ImGuiWindowFlags_NoMove);
 
-	ImGui::Spacing();
-	ImGui::Spacing();
-	ImGui::SetCursorPosX(100.0f);
-	const bool bStartGame = ImGui::Button("Start Game", ImVec2(160.0f, 38.0f));
+	ImGui::SetCursorPosY(90.0f);
+	ImGui::SetCursorPosX((360.0f - StartButtonSize.x) * 0.5f);
+	const bool bStartGame = ImGui::Button("Start Game", StartButtonSize);
 	ImGui::End();
 	return bStartGame ? EGameUICommand::StartGame : EGameUICommand::None;
 }
@@ -200,9 +201,18 @@ EGameUICommand GameUI::DrawGameOverPanel(
 	ImGui::Spacing();
 	ImGui::SetCursorPosX((PanelSize.x - RestartButtonSize.x) * 0.5f);
 	const bool bRestart = ImGui::Button("Restart", RestartButtonSize);
+	ImGui::Spacing();
+	ImGui::SetCursorPosX((PanelSize.x - RestartButtonSize.x) * 0.5f);
+	const bool bReturnToMainMenu = ImGui::Button("Main Menu", RestartButtonSize);
 	ImGui::End();
 
-	return bRestart ? EGameUICommand::RestartGame : EGameUICommand::None;
+	if (bRestart)
+	{
+		return EGameUICommand::RestartGame;
+	}
+	return bReturnToMainMenu
+		? EGameUICommand::ReturnToMainMenu
+		: EGameUICommand::None;
 }
 
 void GameUI::DrawCreatorCredit(const D3D11_VIEWPORT& Viewport) const
