@@ -73,6 +73,19 @@ void GameSession::ReturnToMainMenu()
 	bIsMainMenu = true;
 }
 
+void GameSession::GamepadMoveCurrentBall(float CurrentMoveValueX)
+{
+	UBall* CurrentBall = GetCurrentBall();
+	if (CurrentBall == nullptr || CurrentBall->bHasBeenDropped)
+	{
+		return;
+	}
+
+	const float MinBallX = GameConfig::LeftBorder + CurrentBall->Radius;
+	const float MaxBallX = GameConfig::RightBorder - CurrentBall->Radius;
+	CurrentBall->Location.x = std::clamp(CurrentBall->Location.x + CurrentMoveValueX, MinBallX, MaxBallX);
+}
+
 void GameSession::MoveCurrentBall(float MouseWorldX)
 {
 	UBall* CurrentBall = GetCurrentBall();

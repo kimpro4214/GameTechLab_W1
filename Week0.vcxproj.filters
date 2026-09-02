@@ -49,6 +49,9 @@
     <Filter Include="Audio">
       <UniqueIdentifier>{7c17f71c-ec45-49c5-9b40-b7dabd95f29a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Input">
+      <UniqueIdentifier>{f109f28e-79c3-4ce7-99ac-9959da9e62b9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\pch.cpp">
@@ -134,6 +137,9 @@
     </ClCompile>
     <ClCompile Include="src\Audio\Audio.cpp">
       <Filter>Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Input\GamepadInputManager.cpp">
+      <Filter>Input</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -238,6 +244,9 @@
     </ClInclude>
     <ClInclude Include="src\Audio\Audio.h">
       <Filter>Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Input\GamepadInputManager.h">
+      <Filter>Input</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -21,6 +21,7 @@ public:
 	void ReturnToMainMenu();
 
 	void MoveCurrentBall(float MouseWorldX);
+	void GamepadMoveCurrentBall(float CurrentMoveValueX);
 	bool DropCurrentBall();
 	void SwapCurrentBall();
 

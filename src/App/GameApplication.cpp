@@ -14,8 +14,9 @@
 #include "Rendering/FruitRenderer.h"
 #include "Rendering/ParticleRenderer.h"
 #include "UI/GameUI.h"
-
 #include "Audio/Audio.h"
+
+#include "Input/GamepadInputManager.h"
 
 namespace
 {
@@ -159,6 +160,8 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 	{
 		return 4;
 	}
+
+	GamepadInputManager::GetInstance().Initialize();
 
 	GameSession Session;
 	GameController Controller;
