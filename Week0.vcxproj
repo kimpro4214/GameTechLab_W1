@@ -183,6 +183,8 @@
     <ClCompile Include="src\pch.cpp"><PrecompiledHeader>Create</PrecompiledHeader></ClCompile>
     <ClCompile Include="src\Game\FruitCatalog.cpp" />
     <ClCompile Include="src\Game\GameController.cpp" />
+
+    <ClCompile Include="src\Game\Leaderboard.cpp" />
     <ClCompile Include="src\Game\GameSession.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Physics\CollisionSolver.cpp" />
@@ -213,6 +215,7 @@
     <ClInclude Include="src\Game\GameConfig.h" />
     <ClInclude Include="src\Game\GameController.h" />
     <ClInclude Include="src\Game\GameInput.h" />
+    <ClInclude Include="src\Game\Leaderboard.h" />
     <ClInclude Include="src\Game\GameSession.h" />
     <ClInclude Include="src\Physics\CollisionSolver.h" />
     <ClInclude Include="src\Physics\PhysicsWorld.h" />

@@ -4,6 +4,7 @@
 #include "Game/FruitCatalog.h"
 #include "Game/GameConfig.h"
 #include "Game/GameSession.h"
+#include "Game/Leaderboard.h"
 #include "ImGui/imgui.h"
 #include "Rendering/FruitRenderer.h"
 #include <d3d11.h>
@@ -19,8 +20,20 @@ namespace
 EGameUICommand GameUI::Draw(
 	const GameSession& Session,
 	const D3D11_VIEWPORT& Viewport,
-	const FruitRenderer& InFruitRenderer) const
+	const FruitRenderer& InFruitRenderer,
+	Leaderboard& InLeaderboard,
+	bool bShowLeaderboard)
 {
+	if (!Session.IsGameOver())
+	{
+		bHasSubmittedGameOverScore = false;
+	}
+
+	if (bShowLeaderboard)
+	{
+		return DrawLeaderboard(Viewport, InLeaderboard);
+	}
+
 	if (Session.IsMainMenu())
 	{
 		return DrawMainMenu(Viewport);
@@ -30,7 +43,7 @@ EGameUICommand GameUI::Draw(
 	EGameUICommand Command = DrawGamePanel(Session, Viewport, InFruitRenderer);
 	if (Session.IsGameOver())
 	{
-		Command = DrawGameOverPanel(Session, Viewport);
+		Command = DrawGameOverPanel(Session, Viewport, InLeaderboard);
 	}
 	DrawCreatorCredit(Viewport);
 	return Command;
@@ -82,7 +95,7 @@ void GameUI::DrawSceneOverlay(
 
 EGameUICommand GameUI::DrawMainMenu(const D3D11_VIEWPORT& Viewport) const
 {
-	constexpr ImVec2 PanelSize(440.0f, 310.0f);
+	constexpr ImVec2 PanelSize(440.0f, 380.0f);
 	constexpr ImVec2 ButtonSize(260.0f, 52.0f);
 	constexpr char GameTitle[] = "WATERMELON GAME";
 
@@ -126,6 +139,8 @@ EGameUICommand GameUI::DrawMainMenu(const D3D11_VIEWPORT& Viewport) const
 	ImGui::SetCursorPosX((PanelSize.x - ButtonSize.x) * 0.5f);
 	const bool bStartGame = ImGui::Button("START", ButtonSize);
 	ImGui::SetCursorPosX((PanelSize.x - ButtonSize.x) * 0.5f);
+	const bool bOpenLeaderboard = ImGui::Button("LEADERBOARD", ButtonSize);
+	ImGui::SetCursorPosX((PanelSize.x - ButtonSize.x) * 0.5f);
 	const bool bExitGame = ImGui::Button("EXIT", ButtonSize);
 	ImGui::End();
 
@@ -134,7 +149,57 @@ EGameUICommand GameUI::DrawMainMenu(const D3D11_VIEWPORT& Viewport) const
 	{
 		return EGameUICommand::StartGame;
 	}
+	if (bOpenLeaderboard)
+	{
+		return EGameUICommand::OpenLeaderboard;
+	}
 	return bExitGame ? EGameUICommand::ExitGame : EGameUICommand::None;
+}
+
+EGameUICommand GameUI::DrawLeaderboard(
+	const D3D11_VIEWPORT& Viewport,
+	const Leaderboard& InLeaderboard) const
+{
+	constexpr ImVec2 PanelSize(460.0f, 440.0f);
+	ImGui::SetNextWindowPos(
+		ImVec2(Viewport.Width * 0.5f, Viewport.Height * 0.5f),
+		ImGuiCond_Always,
+		ImVec2(0.5f, 0.5f));
+	ImGui::SetNextWindowSize(PanelSize, ImGuiCond_Always);
+	ImGui::Begin("Leaderboard", nullptr,
+		ImGuiWindowFlags_NoCollapse |
+		ImGuiWindowFlags_NoResize |
+		ImGuiWindowFlags_NoMove |
+		ImGuiWindowFlags_NoSavedSettings);
+
+	ImGui::SetWindowFontScale(1.8f);
+	ImGui::Text("LEADERBOARD");
+	ImGui::SetWindowFontScale(1.0f);
+	ImGui::Separator();
+	if (ImGui::BeginTable("LeaderboardTable", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+	{
+		ImGui::TableSetupColumn("Rank", ImGuiTableColumnFlags_WidthFixed, 60.0f);
+		ImGui::TableSetupColumn("Name");
+		ImGui::TableSetupColumn("Score", ImGuiTableColumnFlags_WidthFixed, 90.0f);
+		ImGui::TableHeadersRow();
+		const std::vector<LeaderboardEntry>& Entries = InLeaderboard.GetEntries();
+		for (std::size_t Index = 0; Index < Entries.size(); ++Index)
+		{
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			ImGui::Text("%zu", Index + 1);
+			ImGui::TableSetColumnIndex(1);
+			ImGui::TextUnformatted(Entries[Index].Name.c_str());
+			ImGui::TableSetColumnIndex(2);
+			ImGui::Text("%d", Entries[Index].Score);
+		}
+		ImGui::EndTable();
+	}
+
+	ImGui::SetCursorPosY(PanelSize.y - 65.0f);
+	const bool bBack = ImGui::Button("Back", ImVec2(120.0f, 40.0f));
+	ImGui::End();
+	return bBack ? EGameUICommand::CloseLeaderboard : EGameUICommand::None;
 }
 
 EGameUICommand GameUI::DrawGamePanel(
@@ -202,9 +267,10 @@ EGameUICommand GameUI::DrawGamePanel(
 
 EGameUICommand GameUI::DrawGameOverPanel(
 	const GameSession& Session,
-	const D3D11_VIEWPORT& Viewport) const
+	const D3D11_VIEWPORT& Viewport,
+	Leaderboard& InLeaderboard)
 {
-	constexpr ImVec2 PanelSize(420.0f, 280.0f);
+	constexpr ImVec2 PanelSize(420.0f, 360.0f);
 	constexpr ImVec2 RestartButtonSize(240.0f, 48.0f);
 
 	ImGui::SetNextWindowPos(
@@ -235,6 +301,21 @@ EGameUICommand GameUI::DrawGameOverPanel(
 	const ImVec2 ScoreSize = ImGui::CalcTextSize("Final Score : 000000");
 	ImGui::SetCursorPosX((PanelSize.x - ScoreSize.x) * 0.5f);
 	ImGui::Text(ScoreText, Session.GetTotalScore());
+
+	ImGui::Spacing();
+	ImGui::InputText("Name", PlayerName, IM_ARRAYSIZE(PlayerName));
+	ImGui::SameLine();
+	ImGui::BeginDisabled(bHasSubmittedGameOverScore || PlayerName[0] == '\0');
+	if (ImGui::Button("Submit Score"))
+	{
+		InLeaderboard.Add(PlayerName, Session.GetTotalScore());
+		bHasSubmittedGameOverScore = true;
+	}
+	ImGui::EndDisabled();
+	if (bHasSubmittedGameOverScore)
+	{
+		ImGui::TextDisabled("Score saved.");
+	}
 
 	ImGui::Spacing();
 	ImGui::Spacing();
