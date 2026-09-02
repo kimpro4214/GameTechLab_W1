@@ -7,6 +7,7 @@
 class Mesh;
 class UBall;
 class URenderer;
+class FruitAnimationSystem;
 
 class FruitRenderer
 {
@@ -21,7 +22,8 @@ public:
 	void Release();
 	void Draw(
 		URenderer& Renderer,
-		const std::vector<std::unique_ptr<UBall>>& Balls) const;
+		const std::vector<std::unique_ptr<UBall>>& Balls,
+		const FruitAnimationSystem& AnimationSystem) const;
 
 private:
 	std::optional <Material> FruitMaterial;

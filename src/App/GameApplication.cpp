@@ -203,7 +203,7 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 		if (!Session.IsMainMenu())
 		{
 			SceneBackgroundRenderer.Draw(Renderer, FrameDeltaTime);
-			FruitSceneRenderer.Draw(Renderer, Session.GetBalls());
+			FruitSceneRenderer.Draw(Renderer, Session.GetBalls(), Session.GetFruitAnimationSystem());
 			MergeParticleRenderer.Draw(Renderer, Session.GetParticles());
 		}
 		ApplyUICommand(

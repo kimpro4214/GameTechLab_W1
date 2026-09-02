@@ -49,6 +49,9 @@
     <Filter Include="Audio">
       <UniqueIdentifier>{7c17f71c-ec45-49c5-9b40-b7dabd95f29a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Animation">
+      <UniqueIdentifier>{51b69b03-e0fa-4ea6-be89-c285634c1621}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\pch.cpp">
@@ -140,6 +143,9 @@
     </ClCompile>
     <ClCompile Include="src\Audio\Audio.cpp">
       <Filter>Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Animation\FruitAnimationSystem.cpp">
+      <Filter>Animation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -250,6 +256,9 @@
     </ClInclude>
     <ClInclude Include="src\Audio\Audio.h">
       <Filter>Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Animation\FruitAnimationSystem.h">
+      <Filter>Animation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

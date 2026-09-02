@@ -7,6 +7,7 @@
 #include "RenderPipeline.h"
 #include "SpriteVertex.h"
 #include "URenderer.h"
+#include "Animation/FruitAnimationSystem.h"
 
 #include <array>
 
@@ -129,14 +130,14 @@ void FruitRenderer::Release()
 
 void FruitRenderer::Draw(
 	URenderer& Renderer,
-	const std::vector<std::unique_ptr<UBall>>& Balls) const
+	const std::vector<std::unique_ptr<UBall>>& Balls,
+	const FruitAnimationSystem& AnimationSystem) const
 {
 	if (!FruitMaterial.has_value() || !GlowMaterial.has_value() || !FruitMesh || !ConstantBuffer)
 	{
 		return;
 	}
 
-	// 모든 글로우를 먼저 그려 다른 젤리 본체 위로 번지지 않게 한다.
 	for (const std::unique_ptr<UBall>& Ball : Balls)
 	{
 		if (!FruitCatalog::IsValidLevel(Ball->Level))
@@ -164,10 +165,12 @@ void FruitRenderer::Draw(
 			continue;
 		}
 
+		const float VisualScale = AnimationSystem.GetScale(Ball.get());
+
 		const ObjectConstants Constants{
 			Ball->Location.x,
 			Ball->Location.y,
-			Ball->Radius,
+			Ball->Radius * VisualScale,
 			Ball->RotationAngle,
 
 			FruitCatalog::GetColor(Ball->Level),
