@@ -11,6 +11,7 @@ enum class EGameUICommand
 {
 	None,
 	StartGame,
+	ExitGame,
 	RestartGame,
 	ReturnToMainMenu
 };
@@ -32,6 +33,9 @@ private:
 		const GameSession& Session,
 		const D3D11_VIEWPORT& Viewport,
 		const FruitRenderer& InFruitRenderer) const;
+	EGameUICommand DrawGameOverPanel(
+		const GameSession& Session,
+		const D3D11_VIEWPORT& Viewport) const;
 	void DrawCreatorCredit(const D3D11_VIEWPORT& Viewport) const;
 	void DrawFruitPreview(ID3D11ShaderResourceView* TextureSRV) const;
 	ImVec2 ConvertWorldToScreen(

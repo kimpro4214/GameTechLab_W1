@@ -19,10 +19,17 @@ EGameUICommand GameUI::Draw(
 	const D3D11_VIEWPORT& Viewport,
 	const FruitRenderer& InFruitRenderer) const
 {
+	if (Session.IsMainMenu())
+	{
+		return DrawMainMenu(Viewport);
+	}
+
 	DrawSceneOverlay(Session, Viewport);
-	const EGameUICommand Command = Session.IsMainMenu()
-		? DrawMainMenu(Viewport)
-		: DrawGamePanel(Session, Viewport, InFruitRenderer);
+	EGameUICommand Command = DrawGamePanel(Session, Viewport, InFruitRenderer);
+	if (Session.IsGameOver())
+	{
+		Command = DrawGameOverPanel(Session, Viewport);
+	}
 	DrawCreatorCredit(Viewport);
 	return Command;
 }
@@ -73,24 +80,59 @@ void GameUI::DrawSceneOverlay(
 
 EGameUICommand GameUI::DrawMainMenu(const D3D11_VIEWPORT& Viewport) const
 {
+	constexpr ImVec2 PanelSize(440.0f, 310.0f);
+	constexpr ImVec2 ButtonSize(260.0f, 52.0f);
+	constexpr char GameTitle[] = "WATERMELON GAME";
+
+	ImDrawList* Background = ImGui::GetBackgroundDrawList();
+	const ImVec2 ScreenMin(Viewport.TopLeftX, Viewport.TopLeftY);
+	const ImVec2 ScreenMax(
+		Viewport.TopLeftX + Viewport.Width,
+		Viewport.TopLeftY + Viewport.Height);
+	Background->AddRectFilled(ScreenMin, ScreenMax, IM_COL32(20, 28, 45, 255));
+	Background->AddCircleFilled(
+		ImVec2(Viewport.Width * 0.14f, Viewport.Height * 0.18f),
+		Viewport.Height * 0.22f,
+		IM_COL32(42, 72, 92, 120));
+	Background->AddCircleFilled(
+		ImVec2(Viewport.Width * 0.88f, Viewport.Height * 0.84f),
+		Viewport.Height * 0.28f,
+		IM_COL32(72, 48, 86, 100));
+
 	ImGui::SetNextWindowPos(
-		ImVec2(Viewport.Width * 0.5f, Viewport.Height * 0.5f),
+		ImVec2(Viewport.Width * 0.5f, Viewport.Height * 0.44f),
 		ImGuiCond_Always,
 		ImVec2(0.5f, 0.5f));
-	ImGui::SetNextWindowSize(ImVec2(360.0f, 220.0f), ImGuiCond_Always);
+	ImGui::SetNextWindowSize(PanelSize, ImGuiCond_Always);
+	ImGui::SetNextWindowBgAlpha(0.0f);
 	ImGui::Begin(
-		"Main Menu",
+		"Title Screen",
 		nullptr,
-		ImGuiWindowFlags_NoCollapse |
+		ImGuiWindowFlags_NoDecoration |
 		ImGuiWindowFlags_NoResize |
-		ImGuiWindowFlags_NoMove);
+		ImGuiWindowFlags_NoMove |
+		ImGuiWindowFlags_NoSavedSettings);
 
-	ImGui::Spacing();
-	ImGui::Spacing();
-	ImGui::SetCursorPosX(100.0f);
-	const bool bStartGame = ImGui::Button("Start Game", ImVec2(160.0f, 38.0f));
+	ImGui::SetWindowFontScale(3.0f);
+	const float TitleWidth = ImGui::CalcTextSize(GameTitle).x;
+	ImGui::SetCursorPosX((PanelSize.x - TitleWidth) * 0.5f);
+	ImGui::SetCursorPosY(18.0f);
+	ImGui::TextColored(ImVec4(1.0f, 0.78f, 0.24f, 1.0f), "%s", GameTitle);
+	ImGui::SetWindowFontScale(1.0f);
+
+	ImGui::SetCursorPosY(145.0f);
+	ImGui::SetCursorPosX((PanelSize.x - ButtonSize.x) * 0.5f);
+	const bool bStartGame = ImGui::Button("START", ButtonSize);
+	ImGui::SetCursorPosX((PanelSize.x - ButtonSize.x) * 0.5f);
+	const bool bExitGame = ImGui::Button("EXIT", ButtonSize);
 	ImGui::End();
-	return bStartGame ? EGameUICommand::StartGame : EGameUICommand::None;
+
+	DrawCreatorCredit(Viewport);
+	if (bStartGame)
+	{
+		return EGameUICommand::StartGame;
+	}
+	return bExitGame ? EGameUICommand::ExitGame : EGameUICommand::None;
 }
 
 EGameUICommand GameUI::DrawGamePanel(
@@ -115,15 +157,6 @@ EGameUICommand GameUI::DrawGamePanel(
 	if (ImGui::Button("Restart"))
 	{
 		Command = EGameUICommand::RestartGame;
-	}
-
-	if (Session.IsGameOver())
-	{
-		ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), "GAME OVER");
-		if (ImGui::Button("Main Menu"))
-		{
-			Command = EGameUICommand::ReturnToMainMenu;
-		}
 	}
 
 	ImGui::Text("Next Fruit Color");
@@ -163,6 +196,60 @@ EGameUICommand GameUI::DrawGamePanel(
 
 	ImGui::End();
 	return Command;
+}
+
+EGameUICommand GameUI::DrawGameOverPanel(
+	const GameSession& Session,
+	const D3D11_VIEWPORT& Viewport) const
+{
+	constexpr ImVec2 PanelSize(420.0f, 280.0f);
+	constexpr ImVec2 RestartButtonSize(240.0f, 48.0f);
+
+	ImGui::SetNextWindowPos(
+		ImVec2(
+			Viewport.TopLeftX + Viewport.Width * 0.5f,
+			Viewport.TopLeftY + Viewport.Height * 0.5f),
+		ImGuiCond_Always,
+		ImVec2(0.5f, 0.5f));
+	ImGui::SetNextWindowSize(PanelSize, ImGuiCond_Always);
+	ImGui::SetNextWindowBgAlpha(0.92f);
+	ImGui::Begin(
+		"Game Over",
+		nullptr,
+		ImGuiWindowFlags_NoCollapse |
+		ImGuiWindowFlags_NoResize |
+		ImGuiWindowFlags_NoMove |
+		ImGuiWindowFlags_NoSavedSettings);
+
+	ImGui::SetWindowFontScale(2.5f);
+	const char* GameOverText = "GAME OVER";
+	const float TitleWidth = ImGui::CalcTextSize(GameOverText).x;
+	ImGui::SetCursorPosX((PanelSize.x - TitleWidth) * 0.5f);
+	ImGui::TextColored(ImVec4(1.0f, 0.08f, 0.08f, 1.0f), "%s", GameOverText);
+	ImGui::SetWindowFontScale(1.0f);
+
+	ImGui::Spacing();
+	const char* ScoreText = "Final Score : %d";
+	const ImVec2 ScoreSize = ImGui::CalcTextSize("Final Score : 000000");
+	ImGui::SetCursorPosX((PanelSize.x - ScoreSize.x) * 0.5f);
+	ImGui::Text(ScoreText, Session.GetTotalScore());
+
+	ImGui::Spacing();
+	ImGui::Spacing();
+	ImGui::SetCursorPosX((PanelSize.x - RestartButtonSize.x) * 0.5f);
+	const bool bRestart = ImGui::Button("Restart", RestartButtonSize);
+	ImGui::Spacing();
+	ImGui::SetCursorPosX((PanelSize.x - RestartButtonSize.x) * 0.5f);
+	const bool bReturnToMainMenu = ImGui::Button("Main Menu", RestartButtonSize);
+	ImGui::End();
+
+	if (bRestart)
+	{
+		return EGameUICommand::RestartGame;
+	}
+	return bReturnToMainMenu
+		? EGameUICommand::ReturnToMainMenu
+		: EGameUICommand::None;
 }
 
 void GameUI::DrawCreatorCredit(const D3D11_VIEWPORT& Viewport) const
