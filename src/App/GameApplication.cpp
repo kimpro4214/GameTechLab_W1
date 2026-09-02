@@ -11,6 +11,7 @@
 #include "ImGui/imgui_impl_win32.h"
 #include "Platform/Win32Window.h"
 #include "Rendering/URenderer.h"
+#include "Rendering/BackgroundRenderer.h"
 #include "Rendering/FruitRenderer.h"
 #include "Rendering/ParticleRenderer.h"
 #include "UI/GameUI.h"
@@ -136,19 +137,12 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 	Renderer.Create(Window.GetHandle());
 	Renderer.InitImGui(Window.GetHandle());
 
+	BackgroundRenderer SceneBackgroundRenderer;
 	FruitRenderer FruitSceneRenderer;
-	if (!FruitSceneRenderer.Initialize(Renderer))
-	{
-		FruitSceneRenderer.Release();
-		ImGui_ImplDX11_Shutdown();
-		ImGui_ImplWin32_Shutdown();
-		ImGui::DestroyContext();
-		Renderer.Release();
-		return 3;
-	}
-
 	ParticleRenderer MergeParticleRenderer;
-	if (!MergeParticleRenderer.Initialize(Renderer))
+	if (!SceneBackgroundRenderer.Initialize(Renderer) ||
+		!FruitSceneRenderer.Initialize(Renderer) ||
+		!MergeParticleRenderer.Initialize(Renderer))
 	{
 		FruitSceneRenderer.Release();
 		ImGui_ImplDX11_Shutdown();
@@ -208,6 +202,7 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 		Renderer.Prepare();
 		if (!Session.IsMainMenu())
 		{
+			SceneBackgroundRenderer.Draw(Renderer, FrameDeltaTime);
 			FruitSceneRenderer.Draw(Renderer, Session.GetBalls());
 			MergeParticleRenderer.Draw(Renderer, Session.GetParticles());
 		}
@@ -240,6 +235,7 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 	ImGui::DestroyContext();
 	MergeParticleRenderer.Release();
 	FruitSceneRenderer.Release();
+	SceneBackgroundRenderer.Release();
 	Renderer.Release();
 	return 0;
 }

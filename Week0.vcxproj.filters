@@ -132,6 +132,12 @@
     <ClCompile Include="src\Game\Leaderboard.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="src\Rendering\BackgroundRenderer.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Game\Leaderboard.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
     <ClCompile Include="src\Audio\Audio.cpp">
       <Filter>Audio</Filter>
     </ClCompile>
@@ -236,6 +242,12 @@
     <ClInclude Include="src\Game\Leaderboard.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="src\Rendering\BackgroundRenderer.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\Leaderboard.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
     <ClInclude Include="src\Audio\Audio.h">
       <Filter>Audio</Filter>
     </ClInclude>
@@ -245,6 +257,9 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaders\DropletShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\BackgroundShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

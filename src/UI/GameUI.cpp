@@ -136,13 +136,28 @@ void GameUI::DrawSceneOverlay(
 		0.0f,
 		0,
 		2.0f);
-	DrawList->AddLine(
+	
+	const ImVec2 LineStart =
 		ConvertWorldToScreen(
-			FVector(GameConfig::LeftBorder, GameConfig::GameOverLineY, 0.0f), Viewport),
+			FVector(GameConfig::LeftBorder, GameConfig::GameOverLineY, 0.0f),
+			Viewport);
+
+	const ImVec2 LineEnd =
 		ConvertWorldToScreen(
-			FVector(GameConfig::RightBorder, GameConfig::GameOverLineY, 0.0f), Viewport),
-		IM_COL32(255, 80, 80, 255),
-		2.0f);
+			FVector(GameConfig::RightBorder, GameConfig::GameOverLineY, 0.0f),
+			Viewport);
+
+	const float DashWidth = 40.0f;
+	const float GapWidth = 20.0f;
+
+	for (float x = LineStart.x; x < LineEnd.x; x += DashWidth + GapWidth)
+	{
+		DrawList->AddLine(
+			ImVec2(x, LineStart.y),
+			ImVec2(std::min(x + DashWidth, LineEnd.x), LineStart.y),
+			IM_COL32(255, 80, 100, 190),
+			8.0f);
+	}
 }
 
 EGameUICommand GameUI::DrawMainMenu(const D3D11_VIEWPORT& Viewport) const

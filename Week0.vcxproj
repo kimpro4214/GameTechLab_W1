@@ -210,6 +210,7 @@
     <ClCompile Include="src\Physics\PhysicsWorld.cpp" />
     <ClCompile Include="src\Physics\UBall.cpp" />
     <ClCompile Include="src\Platform\Win32Window.cpp" />
+    <ClCompile Include="src\Rendering\BackgroundRenderer.cpp" />
     <ClCompile Include="src\Rendering\FruitRenderer.cpp" />
     <ClCompile Include="src\Rendering\Material.cpp" />
     <ClCompile Include="src\Rendering\Mesh.cpp" />
@@ -250,6 +251,7 @@
     <ClInclude Include="src\Physics\PhysicsWorld.h" />
     <ClInclude Include="src\Physics\UBall.h" />
     <ClInclude Include="src\Platform\Win32Window.h" />
+    <ClInclude Include="src\Rendering\BackgroundRenderer.h" />
     <ClInclude Include="src\Rendering\FruitRenderer.h" />
     <ClInclude Include="src\Rendering\Material.h" />
     <ClInclude Include="src\Rendering\Mesh.h" />
@@ -260,6 +262,12 @@
     <ClInclude Include="src\UI\GameUI.h" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="shaders\BackgroundShader.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="shaders\FruitShader.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
