@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "ParticleRenderer.h"
 
+#include "Game/GameConfig.h"
 #include "Particle/FMergeParticle.h"
 #include "RenderPipeline.h"
 #include "SpriteVertex.h"
@@ -19,9 +20,9 @@ namespace
 		FVector Color;
 		float Alpha;
 
-		float Padding1;
-		float Padding2;
-		float Padding3;
+		float WorldToClipYScale;
+		float WorldToClipYOffset;
+		float Padding;
 	};
 	static_assert(sizeof(ObjectConstants) % 16 == 0);
 }
@@ -104,6 +105,8 @@ void ParticleRenderer::Draw(URenderer& Renderer, const std::vector<FMergeParticl
 			Particle.Rotation,
 			Particle.Color,
 			Alpha,
+			GameConfig::WorldToClipYScale,
+			GameConfig::WorldToClipYOffset,
 		};
 
 		Renderer.UpdateDynamicConstantBuffer(ConstantBuffer, Constants);

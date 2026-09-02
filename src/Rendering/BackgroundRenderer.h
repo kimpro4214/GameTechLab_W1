@@ -7,6 +7,14 @@
 class Mesh;
 class URenderer;
 
+struct FDropGuideState
+{
+	float X = 0.0f;
+	float StartY = 0.0f;
+	float EndY = 0.0f;
+	bool bVisible = false;
+};
+
 class BackgroundRenderer final
 {
 public:
@@ -18,7 +26,7 @@ public:
 
 	bool Initialize(URenderer& Renderer);
 	void Release();
-	void Draw(URenderer& Renderer, float DeltaTime);
+	void Draw(URenderer& Renderer, float DeltaTime, const FDropGuideState& GuideState);
 
 private:
 	std::optional<Material> BackgroundMaterial;

@@ -117,6 +117,25 @@ namespace
 			break;
 		}
 	}
+
+	FDropGuideState BuildDropGuideState(const GameSession& Session)
+	{
+		FDropGuideState GuideState;
+
+		const UBall* CurrentBall = Session.GetCurrentBall();
+		if (!CurrentBall ||
+			CurrentBall->bHasBeenDropped ||
+			Session.IsGameOver())
+		{
+			return GuideState;
+		}
+
+		GuideState.X = CurrentBall->Location.x;
+		GuideState.StartY = CurrentBall->Location.y - CurrentBall->Radius;
+		GuideState.EndY = GameConfig::TopBorder;
+		GuideState.bVisible = true;
+		return GuideState;
+	}
 }
 
 int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
@@ -202,7 +221,7 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 		Renderer.Prepare();
 		if (!Session.IsMainMenu())
 		{
-			SceneBackgroundRenderer.Draw(Renderer, FrameDeltaTime);
+			SceneBackgroundRenderer.Draw(Renderer, FrameDeltaTime, BuildDropGuideState(Session));
 			FruitSceneRenderer.Draw(Renderer, Session.GetBalls(), Session.GetFruitAnimationSystem());
 			MergeParticleRenderer.Draw(Renderer, Session.GetParticles());
 		}

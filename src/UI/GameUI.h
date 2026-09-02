@@ -31,9 +31,6 @@ public:
 		bool bShowLeaderboard);
 
 private:
-	void DrawSceneOverlay(
-		const GameSession& Session,
-		const D3D11_VIEWPORT& Viewport) const;
 	EGameUICommand DrawMainMenu(const D3D11_VIEWPORT& Viewport) const;
 	EGameUICommand DrawLeaderboard(const D3D11_VIEWPORT& Viewport, const Leaderboard& InLeaderboard) const;
 	EGameUICommand DrawGamePanel(

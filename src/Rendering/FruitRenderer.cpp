@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Rendering/FruitRenderer.h"
 
+#include "Game/GameConfig.h"
 #include "Game/FruitCatalog.h"
 #include "Mesh.h"
 #include "Physics/UBall.h"
@@ -22,6 +23,11 @@ namespace
 
 		FVector Color;
 		float LevelRatio;
+
+		float WorldToClipYScale;
+		float WorldToClipYOffset;
+		float Padding1;
+		float Padding2;
 	};
 	static_assert(sizeof(ObjectConstants) % 16 == 0);
 }
@@ -153,6 +159,9 @@ void FruitRenderer::Draw(
 
 			FruitCatalog::GetColor(Ball->Level),
 			static_cast<float>(Ball->Level) / static_cast<float>(FruitCatalog::LevelCount - 1),
+
+			GameConfig::WorldToClipYScale,
+			GameConfig::WorldToClipYOffset,
 		};
 		Renderer.UpdateDynamicConstantBuffer(ConstantBuffer, GlowConstants);
 		Renderer.Draw(GlowMaterial.value(), *FruitMesh, ConstantBuffer.Get());
@@ -175,6 +184,9 @@ void FruitRenderer::Draw(
 
 			FruitCatalog::GetColor(Ball->Level),
 			static_cast<float>(Ball->Level) / static_cast<float>(FruitCatalog::LevelCount - 1),
+
+			GameConfig::WorldToClipYScale,
+			GameConfig::WorldToClipYOffset,
 		};
 		Renderer.UpdateDynamicConstantBuffer(ConstantBuffer, Constants);
 		Renderer.Draw(

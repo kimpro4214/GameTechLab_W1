@@ -6,6 +6,10 @@ cbuffer constants : register(b0)
 
     float3 Color;
     float LevelRatio;
+
+    float WorldToClipYScale;
+    float WorldToClipYOffset;
+    float2 Padding;
 }
 
 struct VS_INPUT
@@ -23,7 +27,9 @@ struct PS_INPUT
 PS_INPUT mainVS(VS_INPUT input)
 {
     PS_INPUT output;
-    output.position = float4(input.position * Scale + Offset, 0.0f, 1.0f);
+    float2 worldPosition = input.position * Scale + Offset;
+    worldPosition.y = worldPosition.y * WorldToClipYScale + WorldToClipYOffset;
+    output.position = float4(worldPosition, 0.0f, 1.0f);
     output.uv = input.uv;
     return output;
 }

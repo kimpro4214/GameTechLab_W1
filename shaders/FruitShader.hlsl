@@ -7,6 +7,10 @@ cbuffer constants : register(b0)
     
     float3 Color;
     float LevelRatio;
+
+    float WorldToClipYScale;
+    float WorldToClipYOffset;
+    float2 Padding;
 }
 
 Texture2D Texture : register(t0);
@@ -38,7 +42,7 @@ PS_INPUT mainVS(VS_INPUT input)
 
     float2 worldPosition = rotatedPosition * Scale + Offset;
 
-    worldPosition.y *= 0.8f;
+    worldPosition.y = worldPosition.y * WorldToClipYScale + WorldToClipYOffset;
     output.position = float4(worldPosition, 0.0, 1.0);
     
     output.uv = input.uv;

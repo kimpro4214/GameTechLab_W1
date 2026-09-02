@@ -5,6 +5,7 @@
 #include "Mesh.h"
 #include "SpriteVertex.h"
 #include "URenderer.h"
+#include "Game/GameConfig.h"
 
 namespace
 {
@@ -13,8 +14,17 @@ namespace
 		float ResolutionX;
 		float ResolutionY;
 		float Time;
-	
-		float Padding;
+		float GuideVisible;
+
+		float GuideX;
+		float GuideStartY;
+		float GuideEndY;
+		float GameOverY;
+
+		float WorldToClipYScale;
+		float WorldToClipYOffset;
+		float Padding1;
+		float Padding2;
 	};
 	static_assert(sizeof(ObjectConstants) % 16 == 0);
 }
@@ -74,7 +84,7 @@ void BackgroundRenderer::Release()
 	ElapsedTime = 0.0f;
 }
 
-void BackgroundRenderer::Draw(URenderer& Renderer, float DeltaTime)
+void BackgroundRenderer::Draw(URenderer& Renderer, float DeltaTime, const FDropGuideState& GuideState)
 {
 	if (!BackgroundMaterial.has_value() || !BackgroundMesh || !ConstantBuffer)
 	{
@@ -87,6 +97,15 @@ void BackgroundRenderer::Draw(URenderer& Renderer, float DeltaTime)
 		Renderer.ViewportInfo.Width,
 		Renderer.ViewportInfo.Height,
 		ElapsedTime,
+		GuideState.bVisible ? 1.0f : 0.0f,
+
+		GuideState.X,
+		GuideState.StartY,
+		GuideState.EndY,
+		GameConfig::GameOverLineY,
+
+		GameConfig::WorldToClipYScale,
+		GameConfig::WorldToClipYOffset
 	};
 
 	Renderer.UpdateDynamicConstantBuffer(ConstantBuffer, Constants);

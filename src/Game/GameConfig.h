@@ -10,6 +10,9 @@ namespace GameConfig
 	inline constexpr float RightBorder = 0.5f;
 	inline constexpr float TopBorder = -1.25f;
 	inline constexpr float BottomBorder = 1.25f;
+	inline constexpr float WorldHeight = BottomBorder - TopBorder;
+	inline constexpr float WorldToClipYScale = 2.0f / WorldHeight;
+	inline constexpr float WorldToClipYOffset = -(BottomBorder + TopBorder) / WorldHeight;
 	inline constexpr float GameOverLineY = 1.0f;
 	inline constexpr float BallSpawnY = 1.125f;
 

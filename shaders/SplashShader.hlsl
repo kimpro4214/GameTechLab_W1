@@ -7,7 +7,9 @@ cbuffer constants : register(b0)
 	float3 Color;
     
 	float Alpha;
-	float3 Padding;
+	float WorldToClipYScale;
+	float WorldToClipYOffset;
+	float Padding;
 }
 
 struct VS_INPUT
@@ -35,7 +37,7 @@ PS_INPUT mainVS(VS_INPUT input)
     );
 
 	float2 worldPosition = rotatedPosition * Scale + Offset;
-	worldPosition.y *= 0.8f;
+	worldPosition.y = worldPosition.y * WorldToClipYScale + WorldToClipYOffset;
 	output.position = float4(worldPosition, 0.0f, 1.0f);
     
 	output.uv = input.uv;
