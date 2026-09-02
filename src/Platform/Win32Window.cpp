@@ -49,7 +49,7 @@ bool Win32Window::Create(HINSTANCE Instance, int ShowCommand)
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
 		1024,
-		1024,
+		1280,
 		nullptr,
 		nullptr,
 		Instance,

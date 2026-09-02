@@ -5,6 +5,7 @@
 #include "Physics/UBall.h"
 
 #include "Game/FruitCatalog.h"
+#include "Game/GameConfig.h"
 
 PhysicsWorld::PhysicsWorld(const FPhysicsWorldSettings& InitialSettings)
 	: Settings(InitialSettings)
@@ -33,7 +34,17 @@ void PhysicsWorld::Step(
 				continue;
 			}
 
-			Ball->AddVelocity(GravityVelocityChange);
+			const bool bIsUnderwater = Ball->Location.y < GameConfig::WaterSurfaceY;
+			
+			const float GravityScale = bIsUnderwater ? GameConfig::UnderwaterGravityScale : 1.0f;
+
+			Ball->AddVelocity(GravityVelocityChange * GravityScale);
+
+			if (bIsUnderwater)
+			{
+				Ball->Velocity *= GameConfig::UnderwaterVelocityDamping;
+			}
+
 			Ball->Move(SubstepDeltaTime, Settings.AngularDamping);
 		}
 

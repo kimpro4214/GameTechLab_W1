@@ -408,7 +408,9 @@ ImVec2 GameUI::ConvertWorldToScreen(
 	const FVector& WorldLocation,
 	const D3D11_VIEWPORT& Viewport) const
 {
+	const float WorldHeight = GameConfig::BottomBorder - GameConfig::TopBorder;
 	return ImVec2(
 		Viewport.TopLeftX + (WorldLocation.x + 1.0f) * 0.5f * Viewport.Width,
-		Viewport.TopLeftY + (1.0f - WorldLocation.y) * 0.5f * Viewport.Height);
+		Viewport.TopLeftY +
+			(GameConfig::BottomBorder - WorldLocation.y) / WorldHeight * Viewport.Height);
 }

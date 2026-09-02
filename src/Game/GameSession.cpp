@@ -134,7 +134,7 @@ void GameSession::SwapCurrentBall()
 
 	CurrentBall->Location = FVector(
 		-FruitCatalog::GetRadius(CurrentBall->Level) * 0.5f,
-		0.9f,
+		GameConfig::BallSpawnY,
 		0.0f);
 	Audio::GetInstance().Play("Store");
 }
@@ -166,7 +166,7 @@ void GameSession::AddWaitingBall()
 	const int CurrentLevel = NextLevel;
 	NextLevel = RandomSpawnLevel();
 	Balls.push_back(std::make_unique<UBall>(
-		FVector(-0.25f, 0.9f, 0.0f),
+		FVector(-0.25f, GameConfig::BallSpawnY, 0.0f),
 		FVector(),
 		CurrentLevel,
 		FruitCatalog::GetRadius(CurrentLevel)));

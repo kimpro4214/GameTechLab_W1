@@ -57,8 +57,11 @@ namespace
 		const ImVec2 MousePosition = FrameIO.MousePos;
 		const float MouseWorldX =
 			((MousePosition.x - Viewport.TopLeftX) / Viewport.Width) * 2.0f - 1.0f;
+		const float MouseViewportY =
+			(MousePosition.y - Viewport.TopLeftY) / Viewport.Height;
 		const float MouseWorldY =
-			1.0f - ((MousePosition.y - Viewport.TopLeftY) / Viewport.Height) * 2.0f;
+			GameConfig::BottomBorder -
+			MouseViewportY * (GameConfig::BottomBorder - GameConfig::TopBorder);
 		const bool bIsInViewport =
 			MousePosition.x >= Viewport.TopLeftX &&
 			MousePosition.x <= Viewport.TopLeftX + Viewport.Width &&
