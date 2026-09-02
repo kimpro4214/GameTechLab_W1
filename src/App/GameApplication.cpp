@@ -155,6 +155,11 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 		return 3;
 	}
 
+	if (!Audio::GetInstance().Initialize(Window.GetHandle()))
+	{
+		return 4;
+	}
+
 	GameSession Session;
 	GameController Controller;
 	GameUI UI;
@@ -169,7 +174,7 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 	LARGE_INTEGER Frequency;
 	QueryPerformanceFrequency(&Frequency);
 
-	Audio::GetInstance().Initializer(Window.GetHandle());
+	
 
 	bool bShouldExit = false;
 	while (!bShouldExit)
