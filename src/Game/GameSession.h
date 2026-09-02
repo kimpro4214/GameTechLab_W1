@@ -38,7 +38,7 @@ private:
 	void ResetGameState();
 	void AddWaitingBall();
 	void CheckGameOver();
-	bool TryMergeBalls(UBall& BallA, const UBall& BallB);
+	bool TryMergeBalls(UBall& BallA, UBall& BallB);
 	void UpdateDropCooldown();
 	void ResetFrameDebugState();
 	int RandomSpawnLevel();
@@ -57,4 +57,15 @@ private:
 	bool bCanDropBall = true;
 	bool bIsGameOver = false;
 	bool bIsMainMenu = true;
+
+	struct FPendingMerge
+	{
+		UBall* LowerBall = nullptr;
+		UBall* UpperBall = nullptr;
+		FVector UpperStartLocation;
+		float ElpasedTime = 0.0f;
+	};
+
+	void UpdateMerges(float DeltaTime);
+	std::vector<FPendingMerge> PendingMerges;
 };

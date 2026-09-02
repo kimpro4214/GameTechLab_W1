@@ -35,6 +35,7 @@ public:
 	bool bHasCollisionThisFrame = false;
 	bool bHasTouchedSomething = false;
 	bool bHasBeenDropped = false;
+	bool bIsMerging = false;
 	int Level = 0;
 
 private:

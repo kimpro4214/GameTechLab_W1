@@ -25,7 +25,7 @@ struct FPhysicsWorldSettings
 class PhysicsWorld
 {
 public:
-	using FBallMergeHandler = std::function<bool(UBall&, const UBall&)>;
+	using FBallMergeHandler = std::function<bool(UBall&, UBall&)>;
 	explicit PhysicsWorld(const FPhysicsWorldSettings& InitialSettings);
 
 	void Step(
