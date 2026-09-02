@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Rendering/FruitRenderer.h"
 
 #include "Game/FruitCatalog.h"

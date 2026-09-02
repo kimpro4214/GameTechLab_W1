@@ -3,7 +3,9 @@
 #include <wrl/client.h>
 #include <d3d11.h>
 
+#include <cstring>
 #include <memory>
+#include <type_traits>
 
 class RenderPipeline;
 struct RenderPipelineDesc;

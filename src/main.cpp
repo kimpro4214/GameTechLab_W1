@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "App/GameApplication.h"
 
 int WINAPI WinMain(

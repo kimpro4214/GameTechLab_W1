@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Game/FruitCatalog.h"
 
 #include <algorithm>
