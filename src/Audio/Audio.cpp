@@ -12,8 +12,8 @@ Audio::Audio()
     WaveDataMap.emplace("Click", std::move(Click));
 
     TCHAR MergePath[] = TEXT("sound/merge.wav");
-    FWaveData Merege(MergePath);
-    WaveDataMap.emplace("Merge", std::move(Merege));
+    FWaveData Merge(MergePath);
+    WaveDataMap.emplace("Merge", std::move(Merge));
 
     TCHAR StorePath[] = TEXT("sound/store.wav");
     FWaveData Store(StorePath);
