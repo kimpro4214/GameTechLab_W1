@@ -45,12 +45,8 @@ void CollisionSolver::ResolveBallCollision(
 	const float InverseMassSum = InverseMassA + InverseMassB;
 
 	const float Penetration = RadiusSum - Distance;
-	constexpr float PenetrationSlop = 0.001f;
-	constexpr float CorrectionPercent = 0.25f;
-	const float CorrectedPenetration =
-		Penetration > PenetrationSlop ? Penetration - PenetrationSlop : 0.0f;
 	const FVector Correction =
-		CollisionNormal * (CorrectedPenetration * CorrectionPercent / InverseMassSum);
+		CollisionNormal * (Penetration / InverseMassSum);
 	BallA.Location -= Correction * InverseMassA;
 	BallB.Location += Correction * InverseMassB;
 
@@ -60,7 +56,7 @@ void CollisionSolver::ResolveBallCollision(
 		const float MaxPenetrationVelocity = 10.0f;
 
 		float PenetrationImpulseMagnitude =
-			CorrectedPenetration * PenetrationVelocityScale > MaxPenetrationVelocity ? MaxPenetrationVelocity : CorrectedPenetration * PenetrationVelocityScale;
+			Penetration * PenetrationVelocityScale > MaxPenetrationVelocity ? MaxPenetrationVelocity : Penetration * PenetrationVelocityScale;
 		const FVector PenetrationImpulse = CollisionNormal * (PenetrationImpulseMagnitude / InverseMassSum);
 		BallA.Velocity -= PenetrationImpulse * InverseMassA;
 		BallB.Velocity += PenetrationImpulse * InverseMassB;

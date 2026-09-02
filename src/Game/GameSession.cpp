@@ -80,6 +80,15 @@ bool GameSession::DropCurrentBall()
 		return false;
 	}
 
+	const float MinBallX = GameConfig::LeftBorder + CurrentBall->Radius;
+	const float MaxBallX = GameConfig::RightBorder - CurrentBall->Radius;
+	const float MinOffset =
+		std::max(-GameConfig::DropHorizontalJitter, MinBallX - CurrentBall->Location.x);
+	const float MaxOffset =
+		std::min(GameConfig::DropHorizontalJitter, MaxBallX - CurrentBall->Location.x);
+	std::uniform_real_distribution<float> DropOffsetDistribution(MinOffset, MaxOffset);
+	CurrentBall->Location.x += DropOffsetDistribution(RandomEngine);
+
 	CurrentBall->bHasBeenDropped = true;
 	AddWaitingBall();
 	bCanDropBall = false;
