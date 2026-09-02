@@ -7,7 +7,7 @@
 
 namespace
 {
-	// Temporary test setting: set to false to restore normal random fruit spawns.
+	// test ¼¼ÆÃ
 	constexpr bool bSpawnLargestFruitForTesting = true;
 }
 

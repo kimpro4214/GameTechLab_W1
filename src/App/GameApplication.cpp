@@ -85,6 +85,9 @@ namespace
 			Session.StartGame();
 			Controller.Reset();
 			break;
+		case EGameUICommand::ExitGame:
+			PostQuitMessage(0);
+			break;
 		case EGameUICommand::RestartGame:
 			Session.RestartGame();
 			Controller.Reset();
@@ -172,7 +175,10 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 		Session.Update(FrameDeltaTime);
 
 		Renderer.Prepare();
-		FruitSceneRenderer.Draw(Renderer, Session.GetBalls());
+		if (!Session.IsMainMenu())
+		{
+			FruitSceneRenderer.Draw(Renderer, Session.GetBalls());
+		}
 		ApplyUICommand(UI.Draw(Session, Renderer.ViewportInfo, FruitSceneRenderer), Session, Controller);
 
 		ImGui::Render();

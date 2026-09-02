@@ -11,6 +11,7 @@ enum class EGameUICommand
 {
 	None,
 	StartGame,
+	ExitGame,
 	RestartGame,
 	ReturnToMainMenu
 };
