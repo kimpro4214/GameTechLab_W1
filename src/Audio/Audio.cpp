@@ -222,3 +222,9 @@ void Audio::Initializer(HWND HWindow)
 
     AllLoadWav();
 }
+
+void Audio::Shutdown()
+{
+	WaveDataMap.clear();
+	DirectSoundPtr.Reset();
+}

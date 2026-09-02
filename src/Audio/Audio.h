@@ -45,6 +45,7 @@ public:
 
 	int Play(std::string name);
 	void Initializer(HWND hWindow);
+	void Shutdown();
 
 private:
 	Audio();
