@@ -4,11 +4,12 @@
 #include "Game/FruitCatalog.h"
 #include "Game/GameConfig.h"
 
+#include "Audio/Audio.h"
+
 #include <algorithm>
 
 namespace
 {
-	// test ¼¼ÆÃ
 	constexpr bool bSpawnLargestFruitForTesting = false;
 }
 
@@ -103,6 +104,7 @@ bool GameSession::DropCurrentBall()
 
 	CurrentBall->bHasBeenDropped = true;
 	AddWaitingBall();
+	Audio::GetInstance().Play("Drop");
 	bCanDropBall = false;
 	LastDropTime = std::chrono::steady_clock::now();
 	return true;
@@ -133,6 +135,7 @@ void GameSession::SwapCurrentBall()
 		-FruitCatalog::GetRadius(CurrentBall->Level) * 0.5f,
 		0.9f,
 		0.0f);
+	Audio::GetInstance().Play("Store");
 }
 
 const UBall* GameSession::GetCurrentBall() const
@@ -196,6 +199,7 @@ bool GameSession::TryMergeBalls(UBall& BallA, const UBall& BallB)
 	const int NewLevel = CurrentLevel + 1;
 	BallA.SetLevel(NewLevel, FruitCatalog::GetRadius(NewLevel));
 
+	Audio::GetInstance().Play("Merge");
 	ParticleSystem.EmitMerge(BallA.Location, CurrentLevel);
 
 	return true;

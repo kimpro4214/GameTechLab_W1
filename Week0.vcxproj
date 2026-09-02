@@ -171,6 +171,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Audio\Audio.cpp" />
     <ClCompile Include="src\External\ImGui\imgui.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -201,7 +202,6 @@
     </ClCompile>
     <ClCompile Include="src\Game\FruitCatalog.cpp" />
     <ClCompile Include="src\Game\GameController.cpp" />
-
     <ClCompile Include="src\Game\Leaderboard.cpp" />
     <ClCompile Include="src\Game\GameSession.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -225,6 +225,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="src\Audio\Audio.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\External\ImGui\imconfig.h" />
     <ClInclude Include="src\External\ImGui\imgui.h" />
