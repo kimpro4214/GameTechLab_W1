@@ -5,6 +5,7 @@
 #include "Game/GameController.h"
 #include "Game/GameInput.h"
 #include "Game/GameSession.h"
+#include "Game/Leaderboard.h"
 #include "ImGui/imgui.h"
 #include "ImGui/imgui_impl_dx11.h"
 #include "ImGui/imgui_impl_win32.h"
@@ -79,7 +80,8 @@ namespace
 	void ApplyUICommand(
 		EGameUICommand Command,
 		GameSession& Session,
-		GameController& Controller)
+		GameController& Controller,
+		bool& bShowLeaderboard)
 	{
 		switch (Command)
 		{
@@ -97,6 +99,12 @@ namespace
 		case EGameUICommand::ReturnToMainMenu:
 			Session.ReturnToMainMenu();
 			Controller.Reset();
+			break;
+		case EGameUICommand::OpenLeaderboard:
+			bShowLeaderboard = true;
+			break;
+		case EGameUICommand::CloseLeaderboard:
+			bShowLeaderboard = false;
 			break;
 		case EGameUICommand::None:
 		default:
@@ -148,6 +156,9 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 	GameSession Session;
 	GameController Controller;
 	GameUI UI;
+	Leaderboard Scoreboard;
+	Scoreboard.Load();
+	bool bShowLeaderboard = false;
 
 	constexpr float FrameDeltaTime =
 		1.0f / static_cast<float>(GameConfig::TargetFps);
@@ -193,7 +204,11 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 			FruitSceneRenderer.Draw(Renderer, Session.GetBalls());
 			MergeParticleRenderer.Draw(Renderer, Session.GetParticles());
 		}
-		ApplyUICommand(UI.Draw(Session, Renderer.ViewportInfo, FruitSceneRenderer), Session, Controller);
+		ApplyUICommand(
+			UI.Draw(Session, Renderer.ViewportInfo, FruitSceneRenderer, Scoreboard, bShowLeaderboard),
+			Session,
+			Controller,
+			bShowLeaderboard);
 
 		ImGui::Render();
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
