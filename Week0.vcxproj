@@ -271,6 +271,14 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
   </ItemGroup>
+  <ItemDefinitionGroup>
+    <PostBuildEvent>
+      <Command>xcopy /E /I /Y "$(ProjectDir)assets" "$(OutDir)assets\"
+xcopy /E /I /Y "$(ProjectDir)shaders" "$(OutDir)shaders\"
+xcopy /E /I /Y "$(ProjectDir)sound" "$(OutDir)sound\"
+xcopy /E /I /Y "$(ProjectDir)data" "$(OutDir)data\"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
