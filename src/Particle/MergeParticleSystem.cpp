@@ -11,11 +11,11 @@ namespace
     constexpr float HalfPi = std::numbers::pi_v<float> * 0.5f;
     constexpr float TwoPi = std::numbers::pi_v<float> * 2.0f;
 
-    std::uniform_real_distribution<float> SplashRotation(0.0f, TwoPi);
+    std::uniform_real_distribution<float> AngleDistribution(0.0f, TwoPi);
     std::uniform_real_distribution<float> AngleJitter(-0.18f, 0.18f);
     std::uniform_real_distribution<float> SpeedDistribution(0.35f, 0.85f);
     std::uniform_real_distribution<float> LifetimeDistribution(0.30f, 0.55f);
-    std::uniform_real_distribution<float> SizeDistribution(0.75f, 1.25f);
+    std::uniform_real_distribution<float> SizeDistribution(1.5f, 2.5f);
     std::uniform_real_distribution<float> AspectDistribution(1.5f, 2.5f);
 }
 
@@ -31,15 +31,14 @@ void MergeParticleSystem::EmitMerge(FVector MergePosition, int MergeLevel)
 
     FMergeParticle Splash{};
     Splash.Type = EMergeParticleType::Splash;
-
     Splash.Position = MergePosition;
     Splash.Color = Color;
-    Splash.Lifetime = 0.5f;
-    Splash.StartScaleX = FruitRadius * 0.6f;
-    Splash.StartScaleY = FruitRadius * 0.6f;
-    Splash.EndScaleX = FruitRadius * 2.0f;
-    Splash.EndScaleY = FruitRadius * 2.0f;
-    Splash.Rotation = SplashRotation(RandomEngine);
+    Splash.Lifetime = 0.22f;
+    Splash.StartScaleX = FruitRadius * 0.45f;
+    Splash.StartScaleY = FruitRadius * 0.45f;
+    Splash.EndScaleX = FruitRadius * 1.75f;
+    Splash.EndScaleY = FruitRadius * 1.75f;
+    Splash.Rotation = AngleDistribution(RandomEngine);
 
     Particles.push_back(Splash);
 
@@ -57,23 +56,23 @@ void MergeParticleSystem::EmitMerge(FVector MergePosition, int MergeLevel)
 
     for (int Index = 0; Index < DropletCount; ++Index)
     {
-        const float Angle =
-            (TwoPi * static_cast<float>(Index) / DropletCount) +
-            AngleJitter(RandomEngine);
+        const float Angle = AngleDistribution(RandomEngine);
 
         const FVector Direction(cosf(Angle), sinf(Angle), 0.0f);
 
         FMergeParticle Droplet{};
         Droplet.Type = EMergeParticleType::Droplet;
 
-        Droplet.Position = MergePosition;
+        Droplet.Position = MergePosition + Direction * FruitRadius * 0.18f;
         Droplet.Velocity = Direction * SpeedDistribution(RandomEngine);
         Droplet.Color = Color;
 
         Droplet.Age = 0.0f;
         Droplet.Lifetime = LifetimeDistribution(RandomEngine);
-        Droplet.StartScaleX = Droplet.EndScaleX = BaseScale * SizeDistribution(RandomEngine);
-        Droplet.StartScaleY = Droplet.EndScaleY = Droplet.StartScaleX * AspectDistribution(RandomEngine);
+        Droplet.StartScaleX = BaseScale * SizeDistribution(RandomEngine);
+        Droplet.EndScaleX = Droplet.StartScaleX * 0.25f;
+        Droplet.StartScaleY = Droplet.StartScaleX * AspectDistribution(RandomEngine);
+		Droplet.EndScaleY = Droplet.StartScaleY * 0.25f;
 
         Droplet.Rotation = Angle - HalfPi;
 

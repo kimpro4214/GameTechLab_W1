@@ -49,7 +49,11 @@ float4 mainPS(PS_INPUT input) : SV_Target
     float2 stretched = float2(toCenter.x * 1.8f, toCenter.y);
     float distanceFromCenter = length(stretched);
     
+    float highlight = 1.0f - smoothstep(0.0f, 0.18f, length(input.uv - float2(0.38f, 0.30f)));
+
+    float3 color = Color + highlight * 0.1f;
+    
     float alpha = 1.0f - smoothstep(0.38f, 0.5f, distanceFromCenter);
     
-    return float4(Color, Alpha * alpha);
+    return float4(saturate(color), Alpha * alpha);
 }

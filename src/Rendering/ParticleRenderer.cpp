@@ -93,12 +93,8 @@ void ParticleRenderer::Draw(URenderer& Renderer, const std::vector<FMergeParticl
 	for (const auto& Particle : Particles)
 	{
 		const float Progress = Particle.Age / Particle.Lifetime;
-		const float ScaleProgress = Particle.Type == EMergeParticleType::Flash
-			? 1.0f - (1.0f - Progress) * (1.0f - Progress)
-			: Progress;
-		const float Alpha = Particle.Type == EMergeParticleType::Flash
-			? (1.0f - Progress) * (1.0f - Progress)
-			: 1.0f - Progress;
+		const float ScaleProgress = 1.0f - (1.0f - Progress) * (1.0f - Progress);
+		const float Alpha = (1.0f - Progress) * (1.0f - Progress);
 
 		const ObjectConstants Constants{
 			Particle.Position.x,
@@ -185,29 +181,6 @@ bool ParticleRenderer::CreateSplashMaterial(URenderer& Renderer)
 	}
 
 	SplashMaterial.emplace(Pipeline);
-
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Texture =
-		Renderer.LoadTexture(L"assets/splash.png");
-	if (!Texture)
-	{
-		return false;
-	}
-	SplashMaterial->SetTextureSRV(Texture);
-
-	D3D11_SAMPLER_DESC SamplerDesc{};
-	SamplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-	SamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-	SamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-	SamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-	SamplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
-	const Microsoft::WRL::ComPtr<ID3D11SamplerState> Sampler =
-		Renderer.CreateSamplerState(SamplerDesc);
-	if (!Sampler)
-	{
-		return false;
-	}
-	SplashMaterial->SetSamplerState(Sampler);
-
 	return true;
 }
 
