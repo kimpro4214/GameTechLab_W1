@@ -46,6 +46,9 @@
     <Filter Include="Particle">
       <UniqueIdentifier>{04a69e1e-67b0-4f40-8144-0e53d6b5020b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Audio">
+      <UniqueIdentifier>{7c17f71c-ec45-49c5-9b40-b7dabd95f29a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\pch.cpp">
@@ -125,6 +128,12 @@
     </ClCompile>
     <ClCompile Include="src\Rendering\ParticleRenderer.cpp">
       <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Game\Leaderboard.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Audio\Audio.cpp">
+      <Filter>Audio</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -223,6 +232,12 @@
     </ClInclude>
     <ClInclude Include="shaders\SplashShader.hlsl">
       <Filter>Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\Leaderboard.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Audio\Audio.h">
+      <Filter>Audio</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
