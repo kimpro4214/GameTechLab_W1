@@ -230,6 +230,8 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 		} while (ElapsedMilliseconds < TargetFrameTimeMilliseconds);
 	}
 
+	Audio::GetInstance().Shutdown();
+
 	ImGui_ImplDX11_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();

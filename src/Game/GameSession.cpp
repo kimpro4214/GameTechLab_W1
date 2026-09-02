@@ -41,10 +41,11 @@ void GameSession::Update(float DeltaTime)
 		return;
 	}
 
+	UpdateMerges(DeltaTime);
 	Physics.Step(
 		Balls,
 		DeltaTime,
-		[this](UBall& BallA, const UBall& BallB)
+		[this](UBall& BallA, UBall& BallB)
 		{
 			return TryMergeBalls(BallA, BallB);
 		});
@@ -150,6 +151,7 @@ UBall* GameSession::GetCurrentBall()
 
 void GameSession::ResetGameState()
 {
+	PendingMerges.clear();
 	Balls.clear();
 	TotalScore = 0;
 	StorageLevel = -1;
@@ -184,8 +186,13 @@ void GameSession::CheckGameOver()
 	}
 }
 
-bool GameSession::TryMergeBalls(UBall& BallA, const UBall& BallB)
+bool GameSession::TryMergeBalls(UBall& BallA, UBall& BallB)
 {
+	if (BallA.bIsMerging || BallB.bIsMerging)
+	{
+		return false;
+	}
+
 	const bool bCanMerge =
 		BallA.Level == BallB.Level &&
 		BallA.Level < static_cast<int>(FruitCatalog::LevelCount) - 1;
@@ -194,15 +201,15 @@ bool GameSession::TryMergeBalls(UBall& BallA, const UBall& BallB)
 		return false;
 	}
 
-	TotalScore += FruitCatalog::GetMergeScore(BallA.Level);
-	const int CurrentLevel = BallA.Level;
-	const int NewLevel = CurrentLevel + 1;
-	BallA.SetLevel(NewLevel, FruitCatalog::GetRadius(NewLevel));
+	UBall* LowerBall = BallA.Location.y < BallB.Location.y ? &BallA : &BallB;
+	UBall* UpperBall = LowerBall == &BallA ? &BallB : &BallA;
 
-	Audio::GetInstance().Play("Merge");
-	ParticleSystem.EmitMerge(BallA.Location, CurrentLevel);
+	LowerBall->bIsMerging = true;
+	UpperBall->bIsMerging = true;
 
-	return true;
+	PendingMerges.push_back({ LowerBall, UpperBall, UpperBall->Location, 0.0f });
+
+	return false;
 }
 
 void GameSession::UpdateDropCooldown()
@@ -232,4 +239,41 @@ int GameSession::RandomSpawnLevel()
 
 	std::uniform_int_distribution<int> Distribution(0, FruitCatalog::HighestSpawnLevel);
 	return Distribution(RandomEngine);
+}
+
+void GameSession::UpdateMerges(float DeltaTime)
+{
+	constexpr float MergeDuration = 0.2f;
+
+	for (auto It = PendingMerges.begin(); It != PendingMerges.end();) 
+	{
+		FPendingMerge& Merge = *It;
+		Merge.ElpasedTime += DeltaTime;
+
+		const float Alpha = std::clamp(Merge.ElpasedTime / MergeDuration, 0.0f, 1.0f);
+
+		Merge.UpperBall->Location = Merge.UpperStartLocation * (1.0f - Alpha) + Merge.LowerBall->Location * Alpha;
+
+		if (Alpha < 1.0f)
+		{
+			++It;
+			continue;
+		}
+
+		const int CurrentLevel = Merge.LowerBall->Level;
+		const int NewLevel = CurrentLevel + 1;
+
+		Merge.LowerBall->SetLevel(NewLevel, FruitCatalog::GetRadius(NewLevel));
+
+		Merge.LowerBall->bIsMerging = false;
+
+		TotalScore += FruitCatalog::GetMergeScore(CurrentLevel);
+		ParticleSystem.EmitMerge(Merge.LowerBall->Location, CurrentLevel);
+		Audio::GetInstance().Play("Merge");
+
+		UBall* UpperBall = Merge.UpperBall;
+		std::erase_if(Balls, [UpperBall](const std::unique_ptr<UBall>& Ball) { return Ball.get() == UpperBall; });
+
+		It = PendingMerges.erase(It);
+	}
 }
