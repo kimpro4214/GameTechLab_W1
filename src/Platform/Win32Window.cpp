@@ -13,7 +13,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(
 namespace
 {
 	constexpr wchar_t WindowClassName[] = L"JungleWindowClass";
-	constexpr wchar_t WindowTitle[] = L"Game Tech Lab";
+	constexpr wchar_t WindowTitle[] = L"FrogEgg Game";
 }
 
 Win32Window::~Win32Window()
@@ -45,7 +45,7 @@ bool Win32Window::Create(HINSTANCE Instance, int ShowCommand)
 		0,
 		WindowClassName,
 		WindowTitle,
-		WS_POPUP | WS_VISIBLE | WS_OVERLAPPEDWINDOW,
+		WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
 		1024,
