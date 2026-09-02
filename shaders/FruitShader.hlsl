@@ -34,6 +34,8 @@ PS_INPUT mainVS(VS_INPUT input)
     );
 
     float2 worldPosition = rotatedPosition * Scale + Offset;
+
+    worldPosition.y *= 0.8f;
     output.position = float4(worldPosition, 0.0, 1.0);
     
     output.uv = input.uv;

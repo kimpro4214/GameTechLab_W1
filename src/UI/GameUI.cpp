@@ -68,6 +68,44 @@ void GameUI::DrawSceneOverlay(
 	const D3D11_VIEWPORT& Viewport) const
 {
 	ImDrawList* DrawList = ImGui::GetForegroundDrawList();
+
+	//// 물결 선
+	//const ImVec2 WaterTopLeft = ConvertWorldToScreen(
+	//	FVector(GameConfig::LeftBorder, GameConfig::WaterSurfaceY, 0.0f),
+	//	Viewport);
+	//const ImVec2 WaterBottomRight = ConvertWorldToScreen(
+	//	FVector(GameConfig::RightBorder, GameConfig::TopBorder, 0.0f),
+	//	Viewport);
+	//DrawList->AddRectFilled(
+	//	WaterTopLeft,
+	//	WaterBottomRight,
+	//	IM_COL32(30, 130, 220, 75));
+
+	//constexpr int WaterWaveSegmentCount = 32;
+	//const float WaterWidth = WaterBottomRight.x - WaterTopLeft.x;
+	//const float WaterTime = static_cast<float>(ImGui::GetTime());
+	//for (int SegmentIndex = 0;
+	//	SegmentIndex < WaterWaveSegmentCount;
+	//	++SegmentIndex)
+	//{
+	//	const float SegmentStart =
+	//		static_cast<float>(SegmentIndex) / WaterWaveSegmentCount;
+	//	const float SegmentEnd =
+	//		static_cast<float>(SegmentIndex + 1) / WaterWaveSegmentCount;
+	//	const float X0 = WaterTopLeft.x + WaterWidth * SegmentStart;
+	//	const float X1 = WaterTopLeft.x + WaterWidth * SegmentEnd;
+	//	const float Y0 = WaterTopLeft.y +
+	//		std::sinf(WaterTime * 2.0f + SegmentIndex * 0.45f) * 4.0f;
+	//	const float Y1 = WaterTopLeft.y +
+	//		std::sinf(WaterTime * 2.0f + (SegmentIndex + 1) * 0.45f) * 4.0f;
+
+	//	DrawList->AddLine(
+	//		ImVec2(X0, Y0),
+	//		ImVec2(X1, Y1),
+	//		IM_COL32(130, 220, 255, 220),
+	//		3.0f);
+	//}
+
 	if (!Session.IsMainMenu() && !Session.IsGameOver())
 	{
 		const UBall* CurrentBall = Session.GetCurrentBall();
@@ -111,7 +149,7 @@ EGameUICommand GameUI::DrawMainMenu(const D3D11_VIEWPORT& Viewport) const
 {
 	constexpr ImVec2 PanelSize(440.0f, 380.0f);
 	constexpr ImVec2 ButtonSize(260.0f, 52.0f);
-	constexpr char GameTitle[] = "WATERMELON GAME";
+	constexpr char GameTitle[] = "FROGEGG GAME";
 
 	ImDrawList* Background = ImGui::GetBackgroundDrawList();
 	const ImVec2 ScreenMin(Viewport.TopLeftX, Viewport.TopLeftY);
@@ -252,10 +290,10 @@ EGameUICommand GameUI::DrawGamePanel(
 		Command = EGameUICommand::RestartGame;
 	}
 
-	ImGui::Text("Next Fruit Color");
+	ImGui::Text("Next FrogEgg Color");
 	DrawFruitPreview(InFruitRenderer.GetFruitTextureSRV(Session.GetNextLevel()));
 
-	ImGui::Text("Storage Fruit Color (RightClick)");
+	ImGui::Text("Storage FrogEgg Color (RightClick)");
 	if (Session.GetStorageLevel() == -1)
 	{
 		ImGui::Text("Empty");
@@ -265,7 +303,7 @@ EGameUICommand GameUI::DrawGamePanel(
 		DrawFruitPreview(InFruitRenderer.GetFruitTextureSRV(Session.GetStorageLevel()));
 	}
 
-	ImGui::Text("Fruit Sequence");
+	ImGui::Text("FrogEgg Sequence");
 	for (std::size_t i = 0; i < FruitCatalog::LevelCount; ++i)
 	{
 		DrawFruitPreview(InFruitRenderer.GetFruitTextureSRV(static_cast<int>(i)));
@@ -329,10 +367,16 @@ EGameUICommand GameUI::DrawGameOverPanel(
 	ImGui::Text(ScoreText, Session.GetTotalScore());
 
 	ImGui::Spacing();
-	ImGui::InputText("Name", PlayerName, IM_ARRAYSIZE(PlayerName));
+	ImGui::AlignTextToFramePadding();
+	ImGui::TextUnformatted("Name");
 	ImGui::SameLine();
+	ImGui::SetCursorPosX(135.0f);
+	ImGui::SetNextItemWidth(130.0f);
+	ImGui::InputText("##Name", PlayerName, IM_ARRAYSIZE(PlayerName));
+	ImGui::SameLine();
+	ImGui::SetCursorPosX(275.0f);
 	ImGui::BeginDisabled(bHasSubmittedGameOverScore || IsBlankName(PlayerName));
-	if (ImGui::Button("Submit Score"))
+	if (ImGui::Button("Submit Score", ImVec2(120.0f, 0.0f)))
 	{
 		InLeaderboard.Add(PlayerName, Session.GetTotalScore());
 		bHasSubmittedGameOverScore = true;
@@ -408,7 +452,9 @@ ImVec2 GameUI::ConvertWorldToScreen(
 	const FVector& WorldLocation,
 	const D3D11_VIEWPORT& Viewport) const
 {
+	const float WorldHeight = GameConfig::BottomBorder - GameConfig::TopBorder;
 	return ImVec2(
 		Viewport.TopLeftX + (WorldLocation.x + 1.0f) * 0.5f * Viewport.Width,
-		Viewport.TopLeftY + (1.0f - WorldLocation.y) * 0.5f * Viewport.Height);
+		Viewport.TopLeftY +
+			(GameConfig::BottomBorder - WorldLocation.y) / WorldHeight * Viewport.Height);
 }
