@@ -1,16 +1,13 @@
 #pragma once
 
-#include <d3d11.h>
-#include <wrl/client.h>
+#include "pch.h"
 
 #include "Material.h"
-
-#include <memory>
-#include <vector>
 
 class Mesh;
 class UBall;
 class URenderer;
+class FruitAnimationSystem;
 
 class FruitRenderer
 {
@@ -25,12 +22,12 @@ public:
 	void Release();
 	void Draw(
 		URenderer& Renderer,
-		const std::vector<std::unique_ptr<UBall>>& Balls) const;
-
-	ID3D11ShaderResourceView* GetFruitTextureSRV(int Level) const;
+		const std::vector<std::unique_ptr<UBall>>& Balls,
+		const FruitAnimationSystem& AnimationSystem) const;
 
 private:
-	std::vector<Material> FruitMaterials;
+	std::optional <Material> FruitMaterial;
+	std::optional<Material> GlowMaterial;
 	std::shared_ptr<Mesh> FruitMesh;
-	Microsoft::WRL::ComPtr<ID3D11Buffer> FruitConstantBuffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> ConstantBuffer;
 };

@@ -29,10 +29,12 @@ public:
 private:
 	bool CreateDropletMaterial(URenderer& Renderer);
 	bool CreateSplashMaterial(URenderer& Renderer);
+	bool CreateFlashMaterial(URenderer& Renderer);
 
 private:
 	std::optional<Material> DropletMaterial;
 	std::optional<Material> SplashMaterial;
+	std::optional<Material> FlashMaterial;
 	std::shared_ptr<Mesh> ParticleMesh;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> ConstantBuffer;
 };

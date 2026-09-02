@@ -7,7 +7,9 @@ cbuffer constants : register(b0)
     float3 Color;
     
     float Alpha;
-    float3 Padding;
+    float WorldToClipYScale;
+    float WorldToClipYOffset;
+    float Padding;
 }
 
 struct VS_INPUT
@@ -34,7 +36,9 @@ PS_INPUT mainVS(VS_INPUT input)
         input.position.x * s + input.position.y * c
     );
 
-    output.position = float4(rotatedPosition * Scale + Offset, 0.0f, 1.0f);
+    float2 worldPosition = rotatedPosition * Scale + Offset;
+    worldPosition.y = worldPosition.y * WorldToClipYScale + WorldToClipYOffset;
+    output.position = float4(worldPosition, 0.0f, 1.0f);
     
     output.uv = input.uv;
     
@@ -47,7 +51,11 @@ float4 mainPS(PS_INPUT input) : SV_Target
     float2 stretched = float2(toCenter.x * 1.8f, toCenter.y);
     float distanceFromCenter = length(stretched);
     
+    float highlight = 1.0f - smoothstep(0.0f, 0.18f, length(input.uv - float2(0.38f, 0.30f)));
+
+    float3 color = Color + highlight * 0.1f;
+    
     float alpha = 1.0f - smoothstep(0.38f, 0.5f, distanceFromCenter);
     
-    return float4(Color, Alpha * alpha);
+    return float4(saturate(color), Alpha * alpha);
 }

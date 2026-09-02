@@ -55,7 +55,6 @@ EGameUICommand GameUI::Draw(
 		return DrawMainMenu(Viewport);
 	}
 
-	DrawSceneOverlay(Session, Viewport);
 	EGameUICommand Command = DrawGamePanel(Session, Viewport, InFruitRenderer);
 	if (Session.IsGameOver())
 	{
@@ -65,55 +64,11 @@ EGameUICommand GameUI::Draw(
 	return Command;
 }
 
-void GameUI::DrawSceneOverlay(
-	const GameSession& Session,
-	const D3D11_VIEWPORT& Viewport) const
-{
-	ImDrawList* DrawList = ImGui::GetForegroundDrawList();
-	if (!Session.IsMainMenu() && !Session.IsGameOver())
-	{
-		const UBall* CurrentBall = Session.GetCurrentBall();
-		if (CurrentBall != nullptr && !CurrentBall->bHasBeenDropped)
-		{
-			const FVector GuideStart(
-				CurrentBall->Location.x,
-				CurrentBall->Location.y - CurrentBall->Radius,
-				0.0f);
-			const FVector GuideEnd(
-				CurrentBall->Location.x,
-				GameConfig::TopBorder + CurrentBall->Radius,
-				0.0f);
-			DrawList->AddLine(
-				ConvertWorldToScreen(GuideStart, Viewport),
-				ConvertWorldToScreen(GuideEnd, Viewport),
-				IM_COL32(255, 255, 255, 90),
-				2.0f);
-		}
-	}
-
-	DrawList->AddRect(
-		ConvertWorldToScreen(
-			FVector(GameConfig::LeftBorder, GameConfig::TopBorder, 0.0f), Viewport),
-		ConvertWorldToScreen(
-			FVector(GameConfig::RightBorder, GameConfig::BottomBorder, 0.0f), Viewport),
-		IM_COL32(255, 255, 255, 180),
-		0.0f,
-		0,
-		2.0f);
-	DrawList->AddLine(
-		ConvertWorldToScreen(
-			FVector(GameConfig::LeftBorder, GameConfig::GameOverLineY, 0.0f), Viewport),
-		ConvertWorldToScreen(
-			FVector(GameConfig::RightBorder, GameConfig::GameOverLineY, 0.0f), Viewport),
-		IM_COL32(255, 80, 80, 255),
-		2.0f);
-}
-
 EGameUICommand GameUI::DrawMainMenu(const D3D11_VIEWPORT& Viewport) const
 {
 	constexpr ImVec2 PanelSize(440.0f, 380.0f);
 	constexpr ImVec2 ButtonSize(260.0f, 52.0f);
-	constexpr char GameTitle[] = "WATERMELON GAME";
+	constexpr char GameTitle[] = "FROGEGG GAME";
 
 	ImDrawList* Background = ImGui::GetBackgroundDrawList();
 	const ImVec2 ScreenMin(Viewport.TopLeftX, Viewport.TopLeftY);
@@ -259,23 +214,23 @@ EGameUICommand GameUI::DrawGamePanel(
 		Command = EGameUICommand::RestartGame;
 	}
 
-	ImGui::Text("Next Fruit Color");
-	DrawFruitPreview(InFruitRenderer.GetFruitTextureSRV(Session.GetNextLevel()));
+	ImGui::Text("Next FrogEgg Color");
+	DrawFruitPreview(Session.GetNextLevel());
 
-	ImGui::Text("Storage Fruit Color (RightClick)");
+	ImGui::Text("Storage FrogEgg Color (RightClick)");
 	if (Session.GetStorageLevel() == -1)
 	{
 		ImGui::Text("Empty");
 	}
 	else
 	{
-		DrawFruitPreview(InFruitRenderer.GetFruitTextureSRV(Session.GetStorageLevel()));
+		DrawFruitPreview(Session.GetStorageLevel());
 	}
 
-	ImGui::Text("Fruit Sequence");
+	ImGui::Text("FrogEgg Sequence");
 	for (std::size_t i = 0; i < FruitCatalog::LevelCount; ++i)
 	{
-		DrawFruitPreview(InFruitRenderer.GetFruitTextureSRV(static_cast<int>(i)));
+		DrawFruitPreview(static_cast<int>(i));
 		const bool bHasNextFruit = i + 1 < FruitCatalog::LevelCount;
 		const bool bIsEndOfRow = (i + 1) % 3 == 0;
 		if (bHasNextFruit)
@@ -336,10 +291,16 @@ EGameUICommand GameUI::DrawGameOverPanel(
 	ImGui::Text(ScoreText, Session.GetTotalScore());
 
 	ImGui::Spacing();
-	ImGui::InputText("Name", PlayerName, IM_ARRAYSIZE(PlayerName));
+	ImGui::AlignTextToFramePadding();
+	ImGui::TextUnformatted("Name");
 	ImGui::SameLine();
+	ImGui::SetCursorPosX(135.0f);
+	ImGui::SetNextItemWidth(130.0f);
+	ImGui::InputText("##Name", PlayerName, IM_ARRAYSIZE(PlayerName));
+	ImGui::SameLine();
+	ImGui::SetCursorPosX(275.0f);
 	ImGui::BeginDisabled(bHasSubmittedGameOverScore || IsBlankName(PlayerName));
-	if (ImGui::Button("Submit Score"))
+	if (ImGui::Button("Submit Score", ImVec2(120.0f, 0.0f)))
 	{
 		InLeaderboard.Add(PlayerName, Session.GetTotalScore());
 		bHasSubmittedGameOverScore = true;
@@ -393,30 +354,31 @@ void GameUI::DrawCreatorCredit(const D3D11_VIEWPORT& Viewport) const
 	ImGui::End();
 }
 
-void GameUI::DrawFruitPreview(ID3D11ShaderResourceView* TextureSRV) const
+void GameUI::DrawFruitPreview(int Level) const
 {
 	const ImVec2 PreviewSize(FruitPreviewSize, FruitPreviewSize);
 
-	if (!TextureSRV)
-	{
-		ImGui::Dummy(PreviewSize);
-		return;
-	}
+	const FVector Color = FruitCatalog::GetColor(Level);
 
-	const ImVec2 PreviewPosition = ImGui::GetCursorScreenPos();
-	const ImVec2 PreviewCenter(
-		PreviewPosition.x + PreviewSize.x * 0.5f,
-		PreviewPosition.y + PreviewSize.y * 0.5f);
+	const ImVec2 Position = ImGui::GetCursorScreenPos();
+	const ImVec2 Center(
+		Position.x + PreviewSize.x * 0.5f,
+		Position.y + PreviewSize.y * 0.5f);
 	ImDrawList* DrawList = ImGui::GetWindowDrawList();
 
-	ImGui::Image(reinterpret_cast<ImTextureID>(TextureSRV), PreviewSize);
+	DrawList->AddCircleFilled(Center, 18.0f, ImColor(Color.x, Color.y, Color.z, 1.0f));
+	DrawList->AddCircle(Center, 18.0f, IM_COL32(150, 230, 255, 210), 32, 2.0f);
+
+	ImGui::Dummy(ImVec2(40.0f, 40.0f));
 }
 
 ImVec2 GameUI::ConvertWorldToScreen(
 	const FVector& WorldLocation,
 	const D3D11_VIEWPORT& Viewport) const
 {
+	const float WorldHeight = GameConfig::BottomBorder - GameConfig::TopBorder;
 	return ImVec2(
 		Viewport.TopLeftX + (WorldLocation.x + 1.0f) * 0.5f * Viewport.Width,
-		Viewport.TopLeftY + (1.0f - WorldLocation.y) * 0.5f * Viewport.Height);
+		Viewport.TopLeftY +
+			(GameConfig::BottomBorder - WorldLocation.y) / WorldHeight * Viewport.Height);
 }

@@ -3,7 +3,7 @@
 
 #include "Game/GameSession.h"
 
-#include "Input/GamepadInputManager.h"
+#include "Input/GamepadManager.h"
 
 void GameController::HandleInput(GameSession& Session, const FGameInput& Input)
 {

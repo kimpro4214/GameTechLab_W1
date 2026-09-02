@@ -49,6 +49,9 @@
     <Filter Include="Audio">
       <UniqueIdentifier>{7c17f71c-ec45-49c5-9b40-b7dabd95f29a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Animation">
+      <UniqueIdentifier>{51b69b03-e0fa-4ea6-be89-c285634c1621}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Input">
       <UniqueIdentifier>{f109f28e-79c3-4ce7-99ac-9959da9e62b9}</UniqueIdentifier>
     </Filter>
@@ -132,11 +135,17 @@
     <ClCompile Include="src\Rendering\ParticleRenderer.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="src\Rendering\BackgroundRenderer.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
     <ClCompile Include="src\Game\Leaderboard.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="src\Audio\Audio.cpp">
       <Filter>Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Animation\FruitAnimationSystem.cpp">
+      <Filter>Animation</Filter>
     </ClCompile>
     <ClCompile Include="src\Input\GamepadManager.cpp">
       <Filter>Input</Filter>
@@ -239,6 +248,15 @@
     <ClInclude Include="shaders\SplashShader.hlsl">
       <Filter>Shaders</Filter>
     </ClInclude>
+    <ClInclude Include="shaders\FlashShader.hlsl">
+      <Filter>Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\Leaderboard.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Rendering\BackgroundRenderer.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
     <ClInclude Include="src\Game\Leaderboard.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
@@ -248,12 +266,21 @@
     <ClInclude Include="src\Input\GamepadManager.h">
       <Filter>Input</Filter>
     </ClInclude>
+    <ClInclude Include="src\Animation\FruitAnimationSystem.h">
+      <Filter>Animation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\FruitShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="shaders\GlowShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
     <FxCompile Include="shaders\DropletShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\BackgroundShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

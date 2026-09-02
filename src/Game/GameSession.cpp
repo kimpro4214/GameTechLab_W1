@@ -37,6 +37,7 @@ void GameSession::Update(float DeltaTime)
 	UpdateDropCooldown();
 	UpdateStoreCooldown();
 	ParticleSystem.Update(DeltaTime);
+	AnimationSystem.Update(DeltaTime);
 
 	if (bIsMainMenu || bIsGameOver)
 	{
@@ -59,6 +60,7 @@ void GameSession::StartGame()
 {
 	ResetGameState();
 	ParticleSystem.Clear();
+	AnimationSystem.Clear();
 	bIsMainMenu = false;
 }
 
@@ -66,6 +68,7 @@ void GameSession::RestartGame()
 {
 	ResetGameState();
 	ParticleSystem.Clear();
+	AnimationSystem.Clear();
 	bIsMainMenu = false;
 }
 
@@ -73,6 +76,7 @@ void GameSession::ReturnToMainMenu()
 {
 	ResetGameState();
 	ParticleSystem.Clear();
+	AnimationSystem.Clear();
 	bIsMainMenu = true;
 }
 
@@ -148,10 +152,7 @@ void GameSession::SwapCurrentBall()
 		StorageLevel = PreviousLevel;
 	}
 
-	CurrentBall->Location = FVector(
-		-0.25f,
-		0.9f,
-		0.0f);
+	CurrentBall->Location = FVector(-0.25f, GameConfig::BallSpawnY, 0.0f),
 
 	bCanStoreBall = false;
 	LastStoreTime = std::chrono::steady_clock::now();
@@ -186,7 +187,7 @@ void GameSession::AddWaitingBall()
 	const int CurrentLevel = NextLevel;
 	NextLevel = RandomSpawnLevel();
 	Balls.push_back(std::make_unique<UBall>(
-		FVector(-0.25f, 0.9f, 0.0f),
+		FVector(-0.25f, GameConfig::BallSpawnY, 0.0f),
 		FVector(),
 		CurrentLevel,
 		FruitCatalog::GetRadius(CurrentLevel)));
@@ -293,6 +294,7 @@ void GameSession::UpdateMerges(float DeltaTime)
 		const int NewLevel = CurrentLevel + 1;
 
 		Merge.LowerBall->SetLevel(NewLevel, FruitCatalog::GetRadius(NewLevel));
+		AnimationSystem.StartPop(Merge.LowerBall);
 
 		Merge.LowerBall->bIsMerging = false;
 

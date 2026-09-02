@@ -5,6 +5,9 @@
 #include "Physics/UBall.h"
 
 #include "Game/FruitCatalog.h"
+#include "Game/GameConfig.h"
+
+#include <algorithm>
 
 #include "Input/GamepadManager.h"
 
@@ -36,6 +39,41 @@ void PhysicsWorld::Step(
 			}
 
 			Ball->AddVelocity(GravityVelocityChange);
+
+			const float BallBottomY = Ball->Location.y - Ball->Radius;
+
+			const float SubmergedRatio = std::clamp(
+				(GameConfig::WaterSurfaceY - BallBottomY) / (2.0f * Ball->Radius),
+				0.0f,
+				1.0f);
+
+			
+			const float SizeRatio = std::clamp(
+				(Ball->Radius * Ball->Radius) /
+					(GameConfig::LargestBallRadius * GameConfig::LargestBallRadius),
+				0.0f,
+				1.0f);
+
+			const float BuoyancyGravityScale =
+				std::lerp(
+					GameConfig::MinBuoyancyGravityScale,
+					GameConfig::MaxBuoyancyGravityScale,
+					SizeRatio) *
+				SubmergedRatio;
+			const float BuoyancyAcceleration =
+				-Settings.GravityAcceleration.y * BuoyancyGravityScale;
+
+			Ball->AddVelocity(FVector(0.0f, BuoyancyAcceleration * SubstepDeltaTime, 0.0f));
+
+			const float WaterDragCoefficient = std::lerp(
+				GameConfig::MinWaterDragCoefficient,
+				GameConfig::MaxWaterDragCoefficient,
+				SizeRatio) *
+				SubmergedRatio;
+			const FVector DragAcceleration = Ball->Velocity * -WaterDragCoefficient;
+
+			Ball->AddVelocity(DragAcceleration * SubstepDeltaTime);
+
 			Ball->Move(SubstepDeltaTime, Settings.AngularDamping);
 		}
 
