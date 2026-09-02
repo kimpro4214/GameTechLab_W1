@@ -45,9 +45,7 @@ void PhysicsWorld::Step(
 				0.0f,
 				1.0f);
 
-			// Radius squared is proportional to a circle's area.  Keeping the
-			// ratio in [0, 1] gives every fruit a slow sink speed, while larger
-			// fruit still receives more buoyancy and drag.
+			
 			const float SizeRatio = std::clamp(
 				(Ball->Radius * Ball->Radius) /
 					(GameConfig::LargestBallRadius * GameConfig::LargestBallRadius),

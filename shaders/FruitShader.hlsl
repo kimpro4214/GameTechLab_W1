@@ -35,8 +35,6 @@ PS_INPUT mainVS(VS_INPUT input)
 
     float2 worldPosition = rotatedPosition * Scale + Offset;
 
-    // The game world is 2.5 units tall in a 1024x1280 window.
-    // Compressing world Y by 1024 / 1280 keeps circular sprites round.
     worldPosition.y *= 0.8f;
     output.position = float4(worldPosition, 0.0, 1.0);
     
