@@ -15,7 +15,7 @@ namespace
     std::uniform_real_distribution<float> AngleJitter(-0.18f, 0.18f);
     std::uniform_real_distribution<float> SpeedDistribution(0.35f, 0.85f);
     std::uniform_real_distribution<float> LifetimeDistribution(0.30f, 0.55f);
-    std::uniform_real_distribution<float> SizeDistribution(1.5f, 2.5f);
+    std::uniform_real_distribution<float> SizeDistribution(2.0f, 3.5f);
     std::uniform_real_distribution<float> AspectDistribution(1.5f, 2.5f);
 }
 
@@ -34,10 +34,10 @@ void MergeParticleSystem::EmitMerge(FVector MergePosition, int MergeLevel)
     Splash.Position = MergePosition;
     Splash.Color = Color;
     Splash.Lifetime = 0.22f;
-    Splash.StartScaleX = FruitRadius * 0.45f;
-    Splash.StartScaleY = FruitRadius * 0.45f;
-    Splash.EndScaleX = FruitRadius * 1.75f;
-    Splash.EndScaleY = FruitRadius * 1.75f;
+    Splash.StartScaleX = FruitRadius * 1.2f;
+    Splash.StartScaleY = FruitRadius * 1.2f;
+    Splash.EndScaleX = FruitRadius * 3.0f;
+    Splash.EndScaleY = FruitRadius * 3.0f;
     Splash.Rotation = AngleDistribution(RandomEngine);
 
     Particles.push_back(Splash);
