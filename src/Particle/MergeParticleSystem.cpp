@@ -43,6 +43,18 @@ void MergeParticleSystem::EmitMerge(FVector MergePosition, int MergeLevel)
 
     Particles.push_back(Splash);
 
+    FMergeParticle Flash{};
+    Flash.Type = EMergeParticleType::Flash;
+    Flash.Position = MergePosition;
+    Flash.Color = FVector(1.0f, 1.0f, 1.0f);
+    Flash.Lifetime = 0.12f;
+    Flash.StartScaleX = FruitRadius * 0.35f;
+    Flash.StartScaleY = FruitRadius * 0.35f;
+    Flash.EndScaleX = FruitRadius * 1.35f;
+    Flash.EndScaleY = FruitRadius * 1.35f;
+
+    Particles.push_back(Flash);
+
     for (int Index = 0; Index < DropletCount; ++Index)
     {
         const float Angle =

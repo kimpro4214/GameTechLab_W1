@@ -43,6 +43,12 @@ bool ParticleRenderer::Initialize(URenderer& Renderer)
 		return false;
 	}
 
+	if (!CreateFlashMaterial(Renderer))
+	{
+		Release();
+		return false;
+	}
+
 	MeshDesc MeshDescription{};
 	MeshDescription.VertexData = SpriteQuadVertices;
 	MeshDescription.VertexDataSize = sizeof(SpriteQuadVertices);
@@ -68,6 +74,7 @@ void ParticleRenderer::Release()
 {
 	DropletMaterial.reset();
 	SplashMaterial.reset();
+	FlashMaterial.reset();
 	ParticleMesh.reset();
 	ConstantBuffer.Reset();
 }
@@ -76,6 +83,7 @@ void ParticleRenderer::Draw(URenderer& Renderer, const std::vector<FMergeParticl
 {
 	if (!DropletMaterial.has_value() ||
 		!SplashMaterial.has_value() ||
+		!FlashMaterial.has_value() ||
 		!ParticleMesh ||
 		!ConstantBuffer)
 	{
@@ -85,15 +93,21 @@ void ParticleRenderer::Draw(URenderer& Renderer, const std::vector<FMergeParticl
 	for (const auto& Particle : Particles)
 	{
 		const float Progress = Particle.Age / Particle.Lifetime;
+		const float ScaleProgress = Particle.Type == EMergeParticleType::Flash
+			? 1.0f - (1.0f - Progress) * (1.0f - Progress)
+			: Progress;
+		const float Alpha = Particle.Type == EMergeParticleType::Flash
+			? (1.0f - Progress) * (1.0f - Progress)
+			: 1.0f - Progress;
 
 		const ObjectConstants Constants{
 			Particle.Position.x,
 			Particle.Position.y,
-			std::lerp(Particle.StartScaleX, Particle.EndScaleX, Progress),
-			std::lerp(Particle.StartScaleY, Particle.EndScaleY, Progress),
+			std::lerp(Particle.StartScaleX, Particle.EndScaleX, ScaleProgress),
+			std::lerp(Particle.StartScaleY, Particle.EndScaleY, ScaleProgress),
 			Particle.Rotation,
 			Particle.Color,
-			1.0f - Progress,
+			Alpha,
 		};
 
 		Renderer.UpdateDynamicConstantBuffer(ConstantBuffer, Constants);
@@ -105,6 +119,9 @@ void ParticleRenderer::Draw(URenderer& Renderer, const std::vector<FMergeParticl
 				break;
 			case EMergeParticleType::Splash:
 				Renderer.Draw(SplashMaterial.value(), *ParticleMesh, ConstantBuffer.Get());
+				break;
+			case EMergeParticleType::Flash:
+				Renderer.Draw(FlashMaterial.value(), *ParticleMesh, ConstantBuffer.Get());
 				break;
 		}
 	}
@@ -191,5 +208,35 @@ bool ParticleRenderer::CreateSplashMaterial(URenderer& Renderer)
 	}
 	SplashMaterial->SetSamplerState(Sampler);
 
+	return true;
+}
+
+bool ParticleRenderer::CreateFlashMaterial(URenderer& Renderer)
+{
+	RenderPipelineDesc PipelineDesc{};
+	PipelineDesc.ShaderFileName = L"shaders/FlashShader.hlsl";
+	PipelineDesc.VertexEntryPoint = "mainVS";
+	PipelineDesc.PixelEntryPoint = "mainPS";
+	PipelineDesc.InputElements = SpriteInputLayout;
+	PipelineDesc.InputElementCount = SpriteInputElementCount;
+
+	D3D11_RENDER_TARGET_BLEND_DESC& Target = PipelineDesc.BlendDesc.RenderTarget[0];
+	Target.BlendEnable = TRUE;
+	Target.SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	Target.DestBlend = D3D11_BLEND_ONE;
+	Target.BlendOp = D3D11_BLEND_OP_ADD;
+	Target.SrcBlendAlpha = D3D11_BLEND_ZERO;
+	Target.DestBlendAlpha = D3D11_BLEND_ONE;
+	Target.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	Target.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+	const std::shared_ptr<RenderPipeline> Pipeline =
+		Renderer.CreateRenderPipeline(PipelineDesc);
+	if (!Pipeline)
+	{
+		return false;
+	}
+
+	FlashMaterial.emplace(Pipeline);
 	return true;
 }

@@ -245,6 +245,9 @@
     <ClInclude Include="shaders\SplashShader.hlsl">
       <Filter>Shaders</Filter>
     </ClInclude>
+    <ClInclude Include="shaders\FlashShader.hlsl">
+      <Filter>Shaders</Filter>
+    </ClInclude>
     <ClInclude Include="src\Game\Leaderboard.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>

@@ -6,6 +6,7 @@ enum class EMergeParticleType : std::uint8_t
 {
 	Droplet,
 	Splash,
+	Flash,
 };
 
 struct FMergeParticle
