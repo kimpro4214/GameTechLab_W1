@@ -25,20 +25,28 @@ void GameController::HandleInput(GameSession& Session, const FGameInput& Input)
 		}
 	}
 
-	const bool bCanMoveDraggedBall =
-		Input.bIsLeftMouseDown && (Input.bCanUseSceneMouse || bIsDraggingBall);
-	if (bCanMoveDraggedBall)
+	if (GamepadInputManager::GetInstance().IsButtonAPush())
 	{
-		Session.MoveCurrentBall(Input.MouseWorldX);
-		bIsDraggingBall = true;
+		Session.DropCurrentBall();
+	}
+	else
+	{
+		const bool bCanMoveDraggedBall =
+			Input.bIsLeftMouseDown && (Input.bCanUseSceneMouse || bIsDraggingBall);
+		if (bCanMoveDraggedBall)
+		{
+			Session.MoveCurrentBall(Input.MouseWorldX);
+			bIsDraggingBall = true;
+		}
+
+		if (bIsDraggingBall && Input.bIsLeftMouseReleased && Session.DropCurrentBall())
+		{
+			bIsDraggingBall = false;
+		}
 	}
 
-	if (bIsDraggingBall && Input.bIsLeftMouseReleased && Session.DropCurrentBall())
-	{
-		bIsDraggingBall = false;
-	}
-
-	if (Input.bCanUseSceneMouse && Input.bIsRightMouseReleased)
+	if (GamepadInputManager::GetInstance().IsButtonBPush() || 
+		Input.bCanUseSceneMouse && Input.bIsRightMouseReleased)
 	{
 		Session.SwapCurrentBall();
 	}

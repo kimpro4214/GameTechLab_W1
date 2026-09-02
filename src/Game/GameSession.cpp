@@ -33,6 +33,7 @@ GameSession::GameSession()
 void GameSession::Update(float DeltaTime)
 {
 	UpdateDropCooldown();
+	UpdateStoreCooldown();
 	ParticleSystem.Update(DeltaTime);
 
 	if (bIsMainMenu || bIsGameOver)
@@ -127,7 +128,7 @@ bool GameSession::DropCurrentBall()
 void GameSession::SwapCurrentBall()
 {
 	UBall* CurrentBall = GetCurrentBall();
-	if (CurrentBall == nullptr || CurrentBall->bHasBeenDropped)
+	if (!bCanStoreBall || CurrentBall == nullptr || CurrentBall->bHasBeenDropped)
 	{
 		return;
 	}
@@ -149,6 +150,8 @@ void GameSession::SwapCurrentBall()
 		-FruitCatalog::GetRadius(CurrentBall->Level) * 0.5f,
 		0.9f,
 		0.0f);
+	bCanStoreBall = false;
+	LastStoreTime = std::chrono::steady_clock::now();
 	Audio::GetInstance().Play("Store");
 }
 
@@ -170,6 +173,7 @@ void GameSession::ResetGameState()
 	StorageLevel = -1;
 	NextLevel = RandomSpawnLevel();
 	bCanDropBall = true;
+	bCanStoreBall = true;
 	bIsGameOver = false;
 	AddWaitingBall();
 }
@@ -231,6 +235,15 @@ void GameSession::UpdateDropCooldown()
 		std::chrono::steady_clock::now() - LastDropTime >= GameConfig::DropCooldown)
 	{
 		bCanDropBall = true;
+	}
+}
+
+void GameSession::UpdateStoreCooldown()
+{
+	if (!bCanStoreBall &&
+		std::chrono::steady_clock::now() - LastStoreTime >= GameConfig::StoreCooldown)
+	{
+		bCanStoreBall = true;
 	}
 }
 

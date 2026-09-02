@@ -23,14 +23,16 @@ public:
 
 	static GamepadInputManager& GetInstance();
 
-	void Initialize();
-	void Shutdown();
-	bool Update();
-	bool IsPushLeftStick();
-	bool IsPushRightStick();
-	void SetVibration(bool status);
-	float GetMoveValueLX();
-	float GetMoveValueRX();
+	void	Initialize();
+	void	Shutdown();
+	bool	Update();
+	bool	IsPushLeftStick();
+	bool	IsPushRightStick();
+	void	SetVibration(bool status);
+	float	GetMoveValueLX();
+	float	GetMoveValueRX();
+	bool	IsButtonAPush();
+	bool	IsButtonBPush();
 
 private:
 	GamepadInputManager();

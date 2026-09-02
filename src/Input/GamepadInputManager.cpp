@@ -98,6 +98,26 @@ bool GamepadInputManager::IsPushRightStick()
     return (true);
 }
 
+bool GamepadInputManager::IsButtonAPush()
+{
+    if (ActiveControllerIndex == -1)
+    {
+        return (false);
+    }
+
+    return (FControllers[ActiveControllerIndex].State.Gamepad.wButtons & XINPUT_GAMEPAD_A);
+}
+
+bool GamepadInputManager::IsButtonBPush()
+{
+    if (ActiveControllerIndex == -1)
+    {
+        return (false);
+    }
+
+    return (FControllers[ActiveControllerIndex].State.Gamepad.wButtons & XINPUT_GAMEPAD_B);
+}
+
 void GamepadInputManager::SetVibration(bool status)
 {
     if (ActiveControllerIndex == -1)
