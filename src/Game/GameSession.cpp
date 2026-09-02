@@ -4,11 +4,12 @@
 #include "Game/FruitCatalog.h"
 #include "Game/GameConfig.h"
 
+#include "Audio/Audio.h"
+
 #include <algorithm>
 
 namespace
 {
-	// test ¼¼ÆÃ
 	constexpr bool bSpawnLargestFruitForTesting = false;
 }
 
@@ -104,6 +105,7 @@ bool GameSession::DropCurrentBall()
 
 	CurrentBall->bHasBeenDropped = true;
 	AddWaitingBall();
+	Audio::GetInstance().Play("Drop");
 	bCanDropBall = false;
 	LastDropTime = std::chrono::steady_clock::now();
 	return true;
@@ -134,6 +136,7 @@ void GameSession::SwapCurrentBall()
 		-FruitCatalog::GetRadius(CurrentBall->Level) * 0.5f,
 		0.9f,
 		0.0f);
+	Audio::GetInstance().Play("Store");
 }
 
 const UBall* GameSession::GetCurrentBall() const
@@ -148,6 +151,7 @@ UBall* GameSession::GetCurrentBall()
 
 void GameSession::ResetGameState()
 {
+	PendingMerges.clear();
 	Balls.clear();
 	TotalScore = 0;
 	StorageLevel = -1;
@@ -155,8 +159,6 @@ void GameSession::ResetGameState()
 	bCanDropBall = true;
 	bIsGameOver = false;
 	AddWaitingBall();
-	PendingMerges.clear();
-	Balls.clear();
 }
 
 void GameSession::AddWaitingBall()
@@ -186,6 +188,11 @@ void GameSession::CheckGameOver()
 
 bool GameSession::TryMergeBalls(UBall& BallA, UBall& BallB)
 {
+	if (BallA.bIsMerging || BallB.bIsMerging)
+	{
+		return false;
+	}
+
 	const bool bCanMerge =
 		BallA.Level == BallB.Level &&
 		BallA.Level < static_cast<int>(FruitCatalog::LevelCount) - 1;
@@ -262,6 +269,7 @@ void GameSession::UpdateMerges(float DeltaTime)
 
 		TotalScore += FruitCatalog::GetMergeScore(CurrentLevel);
 		ParticleSystem.EmitMerge(Merge.LowerBall->Location, CurrentLevel);
+		Audio::GetInstance().Play("Merge");
 
 		UBall* UpperBall = Merge.UpperBall;
 		std::erase_if(Balls, [UpperBall](const std::unique_ptr<UBall>& Ball) { return Ball.get() == UpperBall; });

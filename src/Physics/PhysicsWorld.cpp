@@ -28,7 +28,7 @@ void PhysicsWorld::Step(
 	{
 		for (const std::unique_ptr<UBall>& Ball : Balls)
 		{
-			if (!Ball->bHasBeenDropped)
+			if (!Ball->bHasBeenDropped || Ball->bIsMerging)
 			{
 				continue;
 			}
@@ -57,7 +57,7 @@ void PhysicsWorld::ResolveBallCollisions(
 	for (std::size_t i = 0; i < Balls.size(); ++i)
 	{
 		UBall* BallA = Balls[i].get();
-		if (!BallA->bHasBeenDropped)
+		if (!BallA->bHasBeenDropped || BallA->bIsMerging)
 		{
 			continue;
 		}
@@ -75,7 +75,9 @@ void PhysicsWorld::ResolveBallCollisions(
 			}
 
 			UBall* BallB = Balls[j].get();
-			if (!BallB->bHasBeenDropped || !BallA->IsColliding(BallB))
+			if (!BallB->bHasBeenDropped ||
+				BallB->bIsMerging ||
+				!BallA->IsColliding(BallB))
 			{
 				continue;
 			}
@@ -97,6 +99,11 @@ void PhysicsWorld::ResolveBallCollisions(
 				break;
 			}
 
+			if (BallA->bIsMerging || BallB->bIsMerging)
+			{
+				continue;
+			}
+
 			CollisionSolver::ResolveBallCollision(
 				*BallA,
 				*BallB,
@@ -112,7 +119,7 @@ void PhysicsWorld::ResolveBorderCollisions(
 {
 	for (const std::unique_ptr<UBall>& Ball : Balls)
 	{
-		if (!Ball->bHasBeenDropped)
+		if (!Ball->bHasBeenDropped || Ball->bIsMerging)
 		{
 			continue;
 		}

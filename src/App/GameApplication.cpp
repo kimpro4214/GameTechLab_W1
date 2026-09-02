@@ -15,6 +15,8 @@
 #include "Rendering/ParticleRenderer.h"
 #include "UI/GameUI.h"
 
+#include "Audio/Audio.h"
+
 namespace
 {
 	class ScopedComInitialization
@@ -166,6 +168,8 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 		1000.0 / GameConfig::TargetFps;
 	LARGE_INTEGER Frequency;
 	QueryPerformanceFrequency(&Frequency);
+
+	Audio::GetInstance().Initializer(Window.GetHandle());
 
 	bool bShouldExit = false;
 	while (!bShouldExit)
