@@ -13,9 +13,8 @@ UBall::UBall(
 	SetLevel(InitialLevel, InitialRadius);
 }
 
-bool UBall::IsColliding(const UPrimitive* Other) const
+bool UBall::IsColliding(const UBall* OtherBall) const
 {
-	const UBall* OtherBall = static_cast<const UBall*>(Other);
 	if (OtherBall == nullptr || OtherBall == this)
 	{
 		return false;

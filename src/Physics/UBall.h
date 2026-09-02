@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Physics/UPrimitive.h"
+#include "FVector.h"
 
-class UBall final : public UPrimitive
+class UBall
 {
 public:
 	UBall(
@@ -14,8 +14,8 @@ public:
 	UBall(const UBall&) = delete;
 	UBall& operator=(const UBall&) = delete;
 
-	bool IsColliding(const UPrimitive* Other) const override;
-	void AddVelocity(const FVector& DeltaVelocity) override;
+	bool IsColliding(const UBall* Other) const;
+	void AddVelocity(const FVector& DeltaVelocity);
 
 	float GetMomentOfInertia() const;
 	void AddTorque(float Torque, float DeltaTime);
