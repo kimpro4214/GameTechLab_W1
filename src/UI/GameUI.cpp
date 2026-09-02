@@ -10,7 +10,7 @@
 #include "Rendering/FruitRenderer.h"
 #include <d3d11.h>
 
-#include "Input/GamepadInputManager.h"
+#include "Input/GamepadManager.h"
 
 #include <cctype>
 #include <cmath>

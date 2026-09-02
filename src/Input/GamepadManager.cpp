@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "Input/GamepadInputManager.h"
+#include "Input/GamepadManager.h"
 
 GamepadManager::GamepadManager() : ActiveControllerIndex(-1)
 {
