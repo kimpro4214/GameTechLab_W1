@@ -93,6 +93,8 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)src\External</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -113,6 +115,8 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)src\External</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -131,6 +135,8 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)src\External</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -151,6 +157,8 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)src\External</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -163,15 +171,16 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\External\ImGui\imgui.cpp" />
-    <ClCompile Include="src\External\ImGui\imgui_demo.cpp" />
-    <ClCompile Include="src\External\ImGui\imgui_draw.cpp" />
-    <ClCompile Include="src\External\ImGui\imgui_impl_dx11.cpp" />
-    <ClCompile Include="src\External\ImGui\imgui_impl_win32.cpp" />
-    <ClCompile Include="src\External\ImGui\imgui_tables.cpp" />
-    <ClCompile Include="src\External\ImGui\imgui_widgets.cpp" />
-    <ClCompile Include="src\External\WICTextureLoader\WICTextureLoader11.cpp" />
+    <ClCompile Include="src\External\ImGui\imgui.cpp"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="src\External\ImGui\imgui_demo.cpp"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="src\External\ImGui\imgui_draw.cpp"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="src\External\ImGui\imgui_impl_dx11.cpp"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="src\External\ImGui\imgui_impl_win32.cpp"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="src\External\ImGui\imgui_tables.cpp"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="src\External\ImGui\imgui_widgets.cpp"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="src\External\WICTextureLoader\WICTextureLoader11.cpp"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
     <ClCompile Include="src\App\GameApplication.cpp" />
+    <ClCompile Include="src\pch.cpp"><PrecompiledHeader>Create</PrecompiledHeader></ClCompile>
     <ClCompile Include="src\Game\FruitCatalog.cpp" />
     <ClCompile Include="src\Game\GameController.cpp" />
     <ClCompile Include="src\Game\GameSession.cpp" />
@@ -188,6 +197,7 @@
     <ClCompile Include="src\UI\GameUI.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\External\ImGui\imconfig.h" />
     <ClInclude Include="src\External\ImGui\imgui.h" />
     <ClInclude Include="src\External\ImGui\imgui_impl_dx11.h" />

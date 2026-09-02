@@ -1,6 +1,7 @@
 #pragma once
 
-#include <d3d11.h>
+struct D3D11_VIEWPORT;
+struct ID3D11ShaderResourceView;
 
 class GameSession;
 class FruitRenderer;

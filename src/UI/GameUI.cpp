@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "UI/GameUI.h"
 
 #include "Game/FruitCatalog.h"
@@ -5,6 +6,7 @@
 #include "Game/GameSession.h"
 #include "ImGui/imgui.h"
 #include "Rendering/FruitRenderer.h"
+#include <d3d11.h>
 
 #include <cmath>
 
