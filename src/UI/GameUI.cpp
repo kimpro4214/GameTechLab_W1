@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "UI/GameUI.h"
 
+#include "Audio/Audio.h"
 #include "Game/FruitCatalog.h"
 #include "Game/GameConfig.h"
 #include "Game/GameSession.h"
@@ -160,13 +161,20 @@ EGameUICommand GameUI::DrawMainMenu(const D3D11_VIEWPORT& Viewport) const
 	DrawCreatorCredit(Viewport);
 	if (bStartGame)
 	{
+		Audio::GetInstance().Play("Click");
 		return EGameUICommand::StartGame;
 	}
 	if (bOpenLeaderboard)
 	{
+		Audio::GetInstance().Play("Click");
 		return EGameUICommand::OpenLeaderboard;
 	}
-	return bExitGame ? EGameUICommand::ExitGame : EGameUICommand::None;
+	if (bExitGame)
+	{
+		Audio::GetInstance().Play("Click");
+		return EGameUICommand::ExitGame;
+	}
+	return EGameUICommand::None;
 }
 
 EGameUICommand GameUI::DrawLeaderboard(
@@ -212,6 +220,10 @@ EGameUICommand GameUI::DrawLeaderboard(
 	ImGui::SetCursorPosY(PanelSize.y - 65.0f);
 	const bool bBack = ImGui::Button("Back", ImVec2(120.0f, 40.0f));
 	ImGui::End();
+	if (bBack)
+	{
+		Audio::GetInstance().Play("Click");
+	}
 	return bBack ? EGameUICommand::CloseLeaderboard : EGameUICommand::None;
 }
 
@@ -236,6 +248,7 @@ EGameUICommand GameUI::DrawGamePanel(
 	ImGui::SameLine();
 	if (ImGui::Button("Restart"))
 	{
+		Audio::GetInstance().Play("Click");
 		Command = EGameUICommand::RestartGame;
 	}
 
@@ -323,6 +336,7 @@ EGameUICommand GameUI::DrawGameOverPanel(
 	{
 		InLeaderboard.Add(PlayerName, Session.GetTotalScore());
 		bHasSubmittedGameOverScore = true;
+		Audio::GetInstance().Play("Click");
 	}
 	ImGui::EndDisabled();
 	if (bHasSubmittedGameOverScore)
@@ -341,11 +355,15 @@ EGameUICommand GameUI::DrawGameOverPanel(
 
 	if (bRestart)
 	{
+		Audio::GetInstance().Play("Click");
 		return EGameUICommand::RestartGame;
 	}
-	return bReturnToMainMenu
-		? EGameUICommand::ReturnToMainMenu
-		: EGameUICommand::None;
+	if (bReturnToMainMenu)
+	{
+		Audio::GetInstance().Play("Click");
+		return EGameUICommand::ReturnToMainMenu;
+	}
+	return EGameUICommand::None;
 }
 
 void GameUI::DrawCreatorCredit(const D3D11_VIEWPORT& Viewport) const
