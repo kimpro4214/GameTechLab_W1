@@ -197,7 +197,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\App\GameApplication.cpp" />
-    <ClCompile Include="src\Input\GamepadInputManager.cpp" />
+    <ClCompile Include="src\Input\GamepadManager.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -227,7 +227,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="src\Audio\Audio.h" />
-    <ClInclude Include="src\Input\GamepadInputManager.h" />
+    <ClInclude Include="src\Input\GamepadManager.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\External\ImGui\imconfig.h" />
     <ClInclude Include="src\External\ImGui\imgui.h" />

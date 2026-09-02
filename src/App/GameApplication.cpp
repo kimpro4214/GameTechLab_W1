@@ -16,7 +16,7 @@
 #include "UI/GameUI.h"
 #include "Audio/Audio.h"
 
-#include "Input/GamepadInputManager.h"
+#include "Input/GamepadManager.h"
 
 namespace
 {

@@ -6,7 +6,7 @@
 
 #include "Audio/Audio.h"
 
-#include "Input/GamepadInputManager.h"
+#include "Input/GamepadManager.h"
 
 #include <algorithm>
 

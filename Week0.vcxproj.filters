@@ -138,7 +138,7 @@
     <ClCompile Include="src\Audio\Audio.cpp">
       <Filter>Audio</Filter>
     </ClCompile>
-    <ClCompile Include="src\Input\GamepadInputManager.cpp">
+    <ClCompile Include="src\Input\GamepadManager.cpp">
       <Filter>Input</Filter>
     </ClCompile>
   </ItemGroup>
@@ -245,7 +245,7 @@
     <ClInclude Include="src\Audio\Audio.h">
       <Filter>Audio</Filter>
     </ClInclude>
-    <ClInclude Include="src\Input\GamepadInputManager.h">
+    <ClInclude Include="src\Input\GamepadManager.h">
       <Filter>Input</Filter>
     </ClInclude>
   </ItemGroup>

@@ -6,7 +6,7 @@
 
 #include "Game/FruitCatalog.h"
 
-#include "Input/GamepadInputManager.h"
+#include "Input/GamepadManager.h"
 
 PhysicsWorld::PhysicsWorld(const FPhysicsWorldSettings& InitialSettings)
 	: Settings(InitialSettings)
