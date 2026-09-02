@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "ParticleRenderer.h"
 
+#include "Game/GameConfig.h"
 #include "Particle/FMergeParticle.h"
 #include "RenderPipeline.h"
 #include "SpriteVertex.h"
@@ -19,9 +20,9 @@ namespace
 		FVector Color;
 		float Alpha;
 
-		float Padding1;
-		float Padding2;
-		float Padding3;
+		float WorldToClipYScale;
+		float WorldToClipYOffset;
+		float Padding;
 	};
 	static_assert(sizeof(ObjectConstants) % 16 == 0);
 }
@@ -38,6 +39,12 @@ bool ParticleRenderer::Initialize(URenderer& Renderer)
 	}
 
 	if (!CreateSplashMaterial(Renderer))
+	{
+		Release();
+		return false;
+	}
+
+	if (!CreateFlashMaterial(Renderer))
 	{
 		Release();
 		return false;
@@ -68,6 +75,7 @@ void ParticleRenderer::Release()
 {
 	DropletMaterial.reset();
 	SplashMaterial.reset();
+	FlashMaterial.reset();
 	ParticleMesh.reset();
 	ConstantBuffer.Reset();
 }
@@ -76,6 +84,7 @@ void ParticleRenderer::Draw(URenderer& Renderer, const std::vector<FMergeParticl
 {
 	if (!DropletMaterial.has_value() ||
 		!SplashMaterial.has_value() ||
+		!FlashMaterial.has_value() ||
 		!ParticleMesh ||
 		!ConstantBuffer)
 	{
@@ -85,15 +94,19 @@ void ParticleRenderer::Draw(URenderer& Renderer, const std::vector<FMergeParticl
 	for (const auto& Particle : Particles)
 	{
 		const float Progress = Particle.Age / Particle.Lifetime;
+		const float ScaleProgress = 1.0f - (1.0f - Progress) * (1.0f - Progress);
+		const float Alpha = (1.0f - Progress) * (1.0f - Progress);
 
 		const ObjectConstants Constants{
 			Particle.Position.x,
 			Particle.Position.y,
-			std::lerp(Particle.StartScaleX, Particle.EndScaleX, Progress),
-			std::lerp(Particle.StartScaleY, Particle.EndScaleY, Progress),
+			std::lerp(Particle.StartScaleX, Particle.EndScaleX, ScaleProgress),
+			std::lerp(Particle.StartScaleY, Particle.EndScaleY, ScaleProgress),
 			Particle.Rotation,
 			Particle.Color,
-			1.0f - Progress,
+			Alpha,
+			GameConfig::WorldToClipYScale,
+			GameConfig::WorldToClipYOffset,
 		};
 
 		Renderer.UpdateDynamicConstantBuffer(ConstantBuffer, Constants);
@@ -105,6 +118,9 @@ void ParticleRenderer::Draw(URenderer& Renderer, const std::vector<FMergeParticl
 				break;
 			case EMergeParticleType::Splash:
 				Renderer.Draw(SplashMaterial.value(), *ParticleMesh, ConstantBuffer.Get());
+				break;
+			case EMergeParticleType::Flash:
+				Renderer.Draw(FlashMaterial.value(), *ParticleMesh, ConstantBuffer.Get());
 				break;
 		}
 	}
@@ -168,28 +184,35 @@ bool ParticleRenderer::CreateSplashMaterial(URenderer& Renderer)
 	}
 
 	SplashMaterial.emplace(Pipeline);
+	return true;
+}
 
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Texture =
-		Renderer.LoadTexture(L"assets/splash.png");
-	if (!Texture)
+bool ParticleRenderer::CreateFlashMaterial(URenderer& Renderer)
+{
+	RenderPipelineDesc PipelineDesc{};
+	PipelineDesc.ShaderFileName = L"shaders/FlashShader.hlsl";
+	PipelineDesc.VertexEntryPoint = "mainVS";
+	PipelineDesc.PixelEntryPoint = "mainPS";
+	PipelineDesc.InputElements = SpriteInputLayout;
+	PipelineDesc.InputElementCount = SpriteInputElementCount;
+
+	D3D11_RENDER_TARGET_BLEND_DESC& Target = PipelineDesc.BlendDesc.RenderTarget[0];
+	Target.BlendEnable = TRUE;
+	Target.SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	Target.DestBlend = D3D11_BLEND_ONE;
+	Target.BlendOp = D3D11_BLEND_OP_ADD;
+	Target.SrcBlendAlpha = D3D11_BLEND_ZERO;
+	Target.DestBlendAlpha = D3D11_BLEND_ONE;
+	Target.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	Target.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+	const std::shared_ptr<RenderPipeline> Pipeline =
+		Renderer.CreateRenderPipeline(PipelineDesc);
+	if (!Pipeline)
 	{
 		return false;
 	}
-	SplashMaterial->SetTextureSRV(Texture);
 
-	D3D11_SAMPLER_DESC SamplerDesc{};
-	SamplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-	SamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-	SamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-	SamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-	SamplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
-	const Microsoft::WRL::ComPtr<ID3D11SamplerState> Sampler =
-		Renderer.CreateSamplerState(SamplerDesc);
-	if (!Sampler)
-	{
-		return false;
-	}
-	SplashMaterial->SetSamplerState(Sampler);
-
+	FlashMaterial.emplace(Pipeline);
 	return true;
 }

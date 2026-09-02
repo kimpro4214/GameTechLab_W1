@@ -1,5 +1,7 @@
 #pragma once
 
+#include "FVector.h"
+
 #include <cstddef>
 
 namespace FruitCatalog
@@ -10,4 +12,5 @@ namespace FruitCatalog
 	float GetRadius(int Level);
 	int GetMergeScore(int Level);
 	bool IsValidLevel(int Level);
+	FVector GetColor(int Level);
 }

@@ -33,7 +33,9 @@ GameSession::GameSession()
 void GameSession::Update(float DeltaTime)
 {
 	UpdateDropCooldown();
+
 	ParticleSystem.Update(DeltaTime);
+	AnimationSystem.Update(DeltaTime);
 
 	if (bIsMainMenu || bIsGameOver)
 	{
@@ -56,6 +58,7 @@ void GameSession::StartGame()
 {
 	ResetGameState();
 	ParticleSystem.Clear();
+	AnimationSystem.Clear();
 	bIsMainMenu = false;
 }
 
@@ -63,6 +66,7 @@ void GameSession::RestartGame()
 {
 	ResetGameState();
 	ParticleSystem.Clear();
+	AnimationSystem.Clear();
 	bIsMainMenu = false;
 }
 
@@ -70,6 +74,7 @@ void GameSession::ReturnToMainMenu()
 {
 	ResetGameState();
 	ParticleSystem.Clear();
+	AnimationSystem.Clear();
 	bIsMainMenu = true;
 }
 
@@ -264,6 +269,7 @@ void GameSession::UpdateMerges(float DeltaTime)
 		const int NewLevel = CurrentLevel + 1;
 
 		Merge.LowerBall->SetLevel(NewLevel, FruitCatalog::GetRadius(NewLevel));
+		AnimationSystem.StartPop(Merge.LowerBall);
 
 		Merge.LowerBall->bIsMerging = false;
 

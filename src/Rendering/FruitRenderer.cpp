@@ -1,40 +1,35 @@
 #include "pch.h"
 #include "Rendering/FruitRenderer.h"
 
+#include "Game/GameConfig.h"
 #include "Game/FruitCatalog.h"
 #include "Mesh.h"
 #include "Physics/UBall.h"
 #include "RenderPipeline.h"
 #include "SpriteVertex.h"
 #include "URenderer.h"
+#include "Animation/FruitAnimationSystem.h"
 
 #include <array>
 
 namespace
 {
-	constexpr std::array<LPCWSTR, FruitCatalog::LevelCount> FruitTexturePaths = {
-		L"assets/fruits/fruit_00.png",
-		L"assets/fruits/fruit_01.png",
-		L"assets/fruits/fruit_02.png",
-		L"assets/fruits/fruit_03.png",
-		L"assets/fruits/fruit_04.png",
-		L"assets/fruits/fruit_05.png",
-		L"assets/fruits/fruit_06.png",
-		L"assets/fruits/fruit_07.png",
-		L"assets/fruits/fruit_08.png",
-		L"assets/fruits/fruit_09.png",
-		L"assets/fruits/fruit_10.png",
-	};
-
-	struct FruitObjectConstants
+	struct ObjectConstants
 	{
 		float OffsetX;
 		float OffsetY;
 		float Scale;
 		float RotationAngle;
-	};
 
-	constexpr float FruitSpriteRatio = 736.0f / 1024.0f;
+		FVector Color;
+		float LevelRatio;
+
+		float WorldToClipYScale;
+		float WorldToClipYOffset;
+		float Padding1;
+		float Padding2;
+	};
+	static_assert(sizeof(ObjectConstants) % 16 == 0);
 }
 
 FruitRenderer::FruitRenderer() = default;
@@ -42,14 +37,14 @@ FruitRenderer::~FruitRenderer() = default;
 
 bool FruitRenderer::Initialize(URenderer& Renderer)
 {
-	RenderPipelineDesc PipelineDesc{};
-	PipelineDesc.ShaderFileName = L"shaders/FruitShader.hlsl";
-	PipelineDesc.VertexEntryPoint = "mainVS";
-	PipelineDesc.PixelEntryPoint = "mainPS";
-	PipelineDesc.InputElements = SpriteInputLayout;
-	PipelineDesc.InputElementCount = SpriteInputElementCount;
+	RenderPipelineDesc FruitPipelineDesc{};
+	FruitPipelineDesc.ShaderFileName = L"shaders/FruitShader.hlsl";
+	FruitPipelineDesc.VertexEntryPoint = "mainVS";
+	FruitPipelineDesc.PixelEntryPoint = "mainPS";
+	FruitPipelineDesc.InputElements = SpriteInputLayout;
+	FruitPipelineDesc.InputElementCount = SpriteInputElementCount;
 
-	D3D11_RENDER_TARGET_BLEND_DESC& Target = PipelineDesc.BlendDesc.RenderTarget[0];
+	D3D11_RENDER_TARGET_BLEND_DESC& Target = FruitPipelineDesc.BlendDesc.RenderTarget[0];
 	Target.BlendEnable = TRUE;
 	Target.SrcBlend = D3D11_BLEND_SRC_ALPHA;
 	Target.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
@@ -59,18 +54,43 @@ bool FruitRenderer::Initialize(URenderer& Renderer)
 	Target.BlendOpAlpha = D3D11_BLEND_OP_ADD;
 	Target.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
-	const std::shared_ptr<RenderPipeline> Pipeline =
-		Renderer.CreateRenderPipeline(PipelineDesc);
-	if (!Pipeline)
+	const std::shared_ptr<RenderPipeline> FruitPipeline =
+		Renderer.CreateRenderPipeline(FruitPipelineDesc);
+	if (!FruitPipeline)
 	{
+		return false;
+	}
+
+	RenderPipelineDesc GlowPipelineDesc{};
+	GlowPipelineDesc.ShaderFileName = L"shaders/GlowShader.hlsl";
+	GlowPipelineDesc.VertexEntryPoint = "mainVS";
+	GlowPipelineDesc.PixelEntryPoint = "mainPS";
+	GlowPipelineDesc.InputElements = SpriteInputLayout;
+	GlowPipelineDesc.InputElementCount = SpriteInputElementCount;
+
+	D3D11_RENDER_TARGET_BLEND_DESC& GlowTarget = GlowPipelineDesc.BlendDesc.RenderTarget[0];
+	GlowTarget.BlendEnable = TRUE;
+	GlowTarget.SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	GlowTarget.DestBlend = D3D11_BLEND_ONE;
+	GlowTarget.BlendOp = D3D11_BLEND_OP_ADD;
+	GlowTarget.SrcBlendAlpha = D3D11_BLEND_ZERO;
+	GlowTarget.DestBlendAlpha = D3D11_BLEND_ONE;
+	GlowTarget.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	GlowTarget.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+	const std::shared_ptr<RenderPipeline> GlowPipeline =
+		Renderer.CreateRenderPipeline(GlowPipelineDesc);
+	if (!GlowPipeline)
+	{
+		Release();
 		return false;
 	}
 
 	D3D11_SAMPLER_DESC SamplerDesc{};
 	SamplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-	SamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-	SamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-	SamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	SamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	SamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	SamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
 	SamplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	const Microsoft::WRL::ComPtr<ID3D11SamplerState> Sampler =
 		Renderer.CreateSamplerState(SamplerDesc);
@@ -79,22 +99,17 @@ bool FruitRenderer::Initialize(URenderer& Renderer)
 		return false;
 	}
 
-	FruitMaterials.clear();
-	FruitMaterials.reserve(FruitTexturePaths.size());
-	for (LPCWSTR TexturePath : FruitTexturePaths)
+	auto Texture = Renderer.LoadTexture(L"assets/jelly.png");
+	if (!Texture)
 	{
-		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Texture =
-			Renderer.LoadTexture(TexturePath);
-		if (!Texture)
-		{
-			Release();
-			return false;
-		}
-
-		FruitMaterials.emplace_back(Pipeline);
-		FruitMaterials.back().SetTextureSRV(Texture);
-		FruitMaterials.back().SetSamplerState(Sampler);
+		Release();
+		return false;
 	}
+
+	FruitMaterial.emplace(FruitPipeline);
+	FruitMaterial->SetTextureSRV(Texture);
+	FruitMaterial->SetSamplerState(Sampler);
+	GlowMaterial.emplace(GlowPipeline);
 
 	MeshDesc MeshDescription{};
 	MeshDescription.VertexData = SpriteQuadVertices;
@@ -105,25 +120,26 @@ bool FruitRenderer::Initialize(URenderer& Renderer)
 	MeshDescription.IndexDataSize = sizeof(SpriteQuadIndices);
 	MeshDescription.IndexCount = sizeof(SpriteQuadIndices) / sizeof(std::uint32_t);
 	FruitMesh = Renderer.CreateMesh(MeshDescription);
-	FruitConstantBuffer =
-		Renderer.CreateDynamicConstantBuffer(sizeof(FruitObjectConstants));
+	ConstantBuffer =
+		Renderer.CreateDynamicConstantBuffer(sizeof(ObjectConstants));
 
-	return FruitMesh != nullptr && FruitConstantBuffer != nullptr;
+	return FruitMesh != nullptr && ConstantBuffer != nullptr;
 }
 
 void FruitRenderer::Release()
 {
-	FruitMaterials.clear();
+	FruitMaterial.reset();
+	GlowMaterial.reset();
 	FruitMesh.reset();
-	FruitConstantBuffer.Reset();
+	ConstantBuffer.Reset();
 }
 
 void FruitRenderer::Draw(
 	URenderer& Renderer,
-	const std::vector<std::unique_ptr<UBall>>& Balls) const
+	const std::vector<std::unique_ptr<UBall>>& Balls,
+	const FruitAnimationSystem& AnimationSystem) const
 {
-	if (!FruitMesh || !FruitConstantBuffer ||
-		FruitMaterials.size() != FruitCatalog::LevelCount)
+	if (!FruitMaterial.has_value() || !GlowMaterial.has_value() || !FruitMesh || !ConstantBuffer)
 	{
 		return;
 	}
@@ -135,26 +151,47 @@ void FruitRenderer::Draw(
 			continue;
 		}
 
-		const FruitObjectConstants Constants{
+		const ObjectConstants GlowConstants{
 			Ball->Location.x,
 			Ball->Location.y,
-			Ball->Radius / FruitSpriteRatio,
-			Ball->RotationAngle
+			Ball->Radius * 1.6f,
+			0.0f,
+
+			FruitCatalog::GetColor(Ball->Level),
+			static_cast<float>(Ball->Level) / static_cast<float>(FruitCatalog::LevelCount - 1),
+
+			GameConfig::WorldToClipYScale,
+			GameConfig::WorldToClipYOffset,
 		};
-		Renderer.UpdateDynamicConstantBuffer(FruitConstantBuffer, Constants);
-		Renderer.Draw(
-			FruitMaterials[static_cast<std::size_t>(Ball->Level)],
-			*FruitMesh,
-			FruitConstantBuffer.Get());
+		Renderer.UpdateDynamicConstantBuffer(ConstantBuffer, GlowConstants);
+		Renderer.Draw(GlowMaterial.value(), *FruitMesh, ConstantBuffer.Get());
 	}
-}
 
-ID3D11ShaderResourceView* FruitRenderer::GetFruitTextureSRV(int Level) const
-{
-	if (!FruitCatalog::IsValidLevel(Level))
+	for (const std::unique_ptr<UBall>& Ball : Balls)
 	{
-		return nullptr;
-	}
+		if (!FruitCatalog::IsValidLevel(Ball->Level))
+		{
+			continue;
+		}
 
-	return FruitMaterials[Level].GetTextureSRV();
+		const float VisualScale = AnimationSystem.GetScale(Ball.get());
+
+		const ObjectConstants Constants{
+			Ball->Location.x,
+			Ball->Location.y,
+			Ball->Radius * VisualScale,
+			Ball->RotationAngle,
+
+			FruitCatalog::GetColor(Ball->Level),
+			static_cast<float>(Ball->Level) / static_cast<float>(FruitCatalog::LevelCount - 1),
+
+			GameConfig::WorldToClipYScale,
+			GameConfig::WorldToClipYOffset,
+		};
+		Renderer.UpdateDynamicConstantBuffer(ConstantBuffer, Constants);
+		Renderer.Draw(
+			FruitMaterial.value(),
+			*FruitMesh,
+			ConstantBuffer.Get());
+	}
 }

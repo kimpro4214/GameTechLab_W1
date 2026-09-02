@@ -4,6 +4,7 @@
 #include "Physics/UBall.h"
 #include "Particle/MergeParticleSystem.h"
 #include "Particle/FMergeParticle.h"
+#include "Animation/FruitAnimationSystem.h"
 
 #include <chrono>
 #include <memory>
@@ -27,6 +28,7 @@ public:
 	const std::vector<std::unique_ptr<UBall>>& GetBalls() const { return Balls; }
 	const UBall* GetCurrentBall() const;
 	const std::vector<FMergeParticle>& GetParticles() const { return ParticleSystem.GetParticles(); };
+	const FruitAnimationSystem& GetFruitAnimationSystem() const { return AnimationSystem; };
 	int GetTotalScore() const { return TotalScore; }
 	int GetNextLevel() const { return NextLevel; }
 	int GetStorageLevel() const { return StorageLevel; }
@@ -50,6 +52,7 @@ private:
 	std::chrono::steady_clock::time_point LastDropTime{};
 
 	MergeParticleSystem ParticleSystem;
+	FruitAnimationSystem AnimationSystem;
 
 	int TotalScore = 0;
 	int NextLevel = 0;

@@ -11,6 +11,7 @@
 #include "ImGui/imgui_impl_win32.h"
 #include "Platform/Win32Window.h"
 #include "Rendering/URenderer.h"
+#include "Rendering/BackgroundRenderer.h"
 #include "Rendering/FruitRenderer.h"
 #include "Rendering/ParticleRenderer.h"
 #include "UI/GameUI.h"
@@ -116,6 +117,25 @@ namespace
 			break;
 		}
 	}
+
+	FDropGuideState BuildDropGuideState(const GameSession& Session)
+	{
+		FDropGuideState GuideState;
+
+		const UBall* CurrentBall = Session.GetCurrentBall();
+		if (!CurrentBall ||
+			CurrentBall->bHasBeenDropped ||
+			Session.IsGameOver())
+		{
+			return GuideState;
+		}
+
+		GuideState.X = CurrentBall->Location.x;
+		GuideState.StartY = CurrentBall->Location.y - CurrentBall->Radius;
+		GuideState.EndY = GameConfig::TopBorder;
+		GuideState.bVisible = true;
+		return GuideState;
+	}
 }
 
 int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
@@ -136,19 +156,12 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 	Renderer.Create(Window.GetHandle());
 	Renderer.InitImGui(Window.GetHandle());
 
+	BackgroundRenderer SceneBackgroundRenderer;
 	FruitRenderer FruitSceneRenderer;
-	if (!FruitSceneRenderer.Initialize(Renderer))
-	{
-		FruitSceneRenderer.Release();
-		ImGui_ImplDX11_Shutdown();
-		ImGui_ImplWin32_Shutdown();
-		ImGui::DestroyContext();
-		Renderer.Release();
-		return 3;
-	}
-
 	ParticleRenderer MergeParticleRenderer;
-	if (!MergeParticleRenderer.Initialize(Renderer))
+	if (!SceneBackgroundRenderer.Initialize(Renderer) ||
+		!FruitSceneRenderer.Initialize(Renderer) ||
+		!MergeParticleRenderer.Initialize(Renderer))
 	{
 		FruitSceneRenderer.Release();
 		ImGui_ImplDX11_Shutdown();
@@ -208,7 +221,8 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 		Renderer.Prepare();
 		if (!Session.IsMainMenu())
 		{
-			FruitSceneRenderer.Draw(Renderer, Session.GetBalls());
+			SceneBackgroundRenderer.Draw(Renderer, FrameDeltaTime, BuildDropGuideState(Session));
+			FruitSceneRenderer.Draw(Renderer, Session.GetBalls(), Session.GetFruitAnimationSystem());
 			MergeParticleRenderer.Draw(Renderer, Session.GetParticles());
 		}
 		ApplyUICommand(
@@ -240,6 +254,7 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 	ImGui::DestroyContext();
 	MergeParticleRenderer.Release();
 	FruitSceneRenderer.Release();
+	SceneBackgroundRenderer.Release();
 	Renderer.Release();
 	return 0;
 }

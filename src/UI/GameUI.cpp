@@ -53,7 +53,6 @@ EGameUICommand GameUI::Draw(
 		return DrawMainMenu(Viewport);
 	}
 
-	DrawSceneOverlay(Session, Viewport);
 	EGameUICommand Command = DrawGamePanel(Session, Viewport, InFruitRenderer);
 	if (Session.IsGameOver())
 	{
@@ -61,88 +60,6 @@ EGameUICommand GameUI::Draw(
 	}
 	DrawCreatorCredit(Viewport);
 	return Command;
-}
-
-void GameUI::DrawSceneOverlay(
-	const GameSession& Session,
-	const D3D11_VIEWPORT& Viewport) const
-{
-	ImDrawList* DrawList = ImGui::GetForegroundDrawList();
-
-	//// 물결 선
-	//const ImVec2 WaterTopLeft = ConvertWorldToScreen(
-	//	FVector(GameConfig::LeftBorder, GameConfig::WaterSurfaceY, 0.0f),
-	//	Viewport);
-	//const ImVec2 WaterBottomRight = ConvertWorldToScreen(
-	//	FVector(GameConfig::RightBorder, GameConfig::TopBorder, 0.0f),
-	//	Viewport);
-	//DrawList->AddRectFilled(
-	//	WaterTopLeft,
-	//	WaterBottomRight,
-	//	IM_COL32(30, 130, 220, 75));
-
-	//constexpr int WaterWaveSegmentCount = 32;
-	//const float WaterWidth = WaterBottomRight.x - WaterTopLeft.x;
-	//const float WaterTime = static_cast<float>(ImGui::GetTime());
-	//for (int SegmentIndex = 0;
-	//	SegmentIndex < WaterWaveSegmentCount;
-	//	++SegmentIndex)
-	//{
-	//	const float SegmentStart =
-	//		static_cast<float>(SegmentIndex) / WaterWaveSegmentCount;
-	//	const float SegmentEnd =
-	//		static_cast<float>(SegmentIndex + 1) / WaterWaveSegmentCount;
-	//	const float X0 = WaterTopLeft.x + WaterWidth * SegmentStart;
-	//	const float X1 = WaterTopLeft.x + WaterWidth * SegmentEnd;
-	//	const float Y0 = WaterTopLeft.y +
-	//		std::sinf(WaterTime * 2.0f + SegmentIndex * 0.45f) * 4.0f;
-	//	const float Y1 = WaterTopLeft.y +
-	//		std::sinf(WaterTime * 2.0f + (SegmentIndex + 1) * 0.45f) * 4.0f;
-
-	//	DrawList->AddLine(
-	//		ImVec2(X0, Y0),
-	//		ImVec2(X1, Y1),
-	//		IM_COL32(130, 220, 255, 220),
-	//		3.0f);
-	//}
-
-	if (!Session.IsMainMenu() && !Session.IsGameOver())
-	{
-		const UBall* CurrentBall = Session.GetCurrentBall();
-		if (CurrentBall != nullptr && !CurrentBall->bHasBeenDropped)
-		{
-			const FVector GuideStart(
-				CurrentBall->Location.x,
-				CurrentBall->Location.y - CurrentBall->Radius,
-				0.0f);
-			const FVector GuideEnd(
-				CurrentBall->Location.x,
-				GameConfig::TopBorder + CurrentBall->Radius,
-				0.0f);
-			DrawList->AddLine(
-				ConvertWorldToScreen(GuideStart, Viewport),
-				ConvertWorldToScreen(GuideEnd, Viewport),
-				IM_COL32(255, 255, 255, 90),
-				2.0f);
-		}
-	}
-
-	DrawList->AddRect(
-		ConvertWorldToScreen(
-			FVector(GameConfig::LeftBorder, GameConfig::TopBorder, 0.0f), Viewport),
-		ConvertWorldToScreen(
-			FVector(GameConfig::RightBorder, GameConfig::BottomBorder, 0.0f), Viewport),
-		IM_COL32(255, 255, 255, 180),
-		0.0f,
-		0,
-		2.0f);
-	DrawList->AddLine(
-		ConvertWorldToScreen(
-			FVector(GameConfig::LeftBorder, GameConfig::GameOverLineY, 0.0f), Viewport),
-		ConvertWorldToScreen(
-			FVector(GameConfig::RightBorder, GameConfig::GameOverLineY, 0.0f), Viewport),
-		IM_COL32(255, 80, 80, 255),
-		2.0f);
 }
 
 EGameUICommand GameUI::DrawMainMenu(const D3D11_VIEWPORT& Viewport) const
@@ -291,7 +208,7 @@ EGameUICommand GameUI::DrawGamePanel(
 	}
 
 	ImGui::Text("Next FrogEgg Color");
-	DrawFruitPreview(InFruitRenderer.GetFruitTextureSRV(Session.GetNextLevel()));
+	DrawFruitPreview(Session.GetNextLevel());
 
 	ImGui::Text("Storage FrogEgg Color (RightClick)");
 	if (Session.GetStorageLevel() == -1)
@@ -300,13 +217,13 @@ EGameUICommand GameUI::DrawGamePanel(
 	}
 	else
 	{
-		DrawFruitPreview(InFruitRenderer.GetFruitTextureSRV(Session.GetStorageLevel()));
+		DrawFruitPreview(Session.GetStorageLevel());
 	}
 
 	ImGui::Text("FrogEgg Sequence");
 	for (std::size_t i = 0; i < FruitCatalog::LevelCount; ++i)
 	{
-		DrawFruitPreview(InFruitRenderer.GetFruitTextureSRV(static_cast<int>(i)));
+		DrawFruitPreview(static_cast<int>(i));
 		const bool bHasNextFruit = i + 1 < FruitCatalog::LevelCount;
 		const bool bIsEndOfRow = (i + 1) % 3 == 0;
 		if (bHasNextFruit)
@@ -429,23 +346,22 @@ void GameUI::DrawCreatorCredit(const D3D11_VIEWPORT& Viewport) const
 	ImGui::End();
 }
 
-void GameUI::DrawFruitPreview(ID3D11ShaderResourceView* TextureSRV) const
+void GameUI::DrawFruitPreview(int Level) const
 {
 	const ImVec2 PreviewSize(FruitPreviewSize, FruitPreviewSize);
 
-	if (!TextureSRV)
-	{
-		ImGui::Dummy(PreviewSize);
-		return;
-	}
+	const FVector Color = FruitCatalog::GetColor(Level);
 
-	const ImVec2 PreviewPosition = ImGui::GetCursorScreenPos();
-	const ImVec2 PreviewCenter(
-		PreviewPosition.x + PreviewSize.x * 0.5f,
-		PreviewPosition.y + PreviewSize.y * 0.5f);
+	const ImVec2 Position = ImGui::GetCursorScreenPos();
+	const ImVec2 Center(
+		Position.x + PreviewSize.x * 0.5f,
+		Position.y + PreviewSize.y * 0.5f);
 	ImDrawList* DrawList = ImGui::GetWindowDrawList();
 
-	ImGui::Image(reinterpret_cast<ImTextureID>(TextureSRV), PreviewSize);
+	DrawList->AddCircleFilled(Center, 18.0f, ImColor(Color.x, Color.y, Color.z, 1.0f));
+	DrawList->AddCircle(Center, 18.0f, IM_COL32(150, 230, 255, 210), 32, 2.0f);
+
+	ImGui::Dummy(ImVec2(40.0f, 40.0f));
 }
 
 ImVec2 GameUI::ConvertWorldToScreen(

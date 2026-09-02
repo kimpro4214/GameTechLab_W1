@@ -11,36 +11,12 @@ namespace
     constexpr float HalfPi = std::numbers::pi_v<float> * 0.5f;
     constexpr float TwoPi = std::numbers::pi_v<float> * 2.0f;
 
-    std::uniform_real_distribution<float> SplashRotation(0.0f, TwoPi);
+    std::uniform_real_distribution<float> AngleDistribution(0.0f, TwoPi);
     std::uniform_real_distribution<float> AngleJitter(-0.18f, 0.18f);
     std::uniform_real_distribution<float> SpeedDistribution(0.35f, 0.85f);
     std::uniform_real_distribution<float> LifetimeDistribution(0.30f, 0.55f);
-    std::uniform_real_distribution<float> SizeDistribution(0.75f, 1.25f);
+    std::uniform_real_distribution<float> SizeDistribution(2.0f, 3.5f);
     std::uniform_real_distribution<float> AspectDistribution(1.5f, 2.5f);
-
-    FVector GetMergeParticleColor(int MergeLevel)
-    {
-        const FVector Colors[] = {
-            { 0.85f, 0.49f, 0.13f },
-            { 0.87f, 0.80f, 0.18f },
-            { 0.62f, 0.80f, 0.19f },
-            { 0.19f, 0.72f, 0.35f },
-            { 0.17f, 0.74f, 0.76f },
-            { 0.23f, 0.56f, 0.84f },
-            { 0.34f, 0.35f, 0.82f },
-            { 0.58f, 0.25f, 0.78f },
-            { 0.83f, 0.23f, 0.60f },
-            { 0.82f, 0.21f, 0.22f },
-            { 0.58f, 0.32f, 0.18f },
-        };
-
-        const int ColorIndex = std::clamp(
-            MergeLevel,
-            0,
-            static_cast<int>(std::size(Colors)) - 1);
-
-        return Colors[ColorIndex];
-    }
 }
 
 void MergeParticleSystem::EmitMerge(FVector MergePosition, int MergeLevel)
@@ -51,41 +27,52 @@ void MergeParticleSystem::EmitMerge(FVector MergePosition, int MergeLevel)
         0.008f,
         0.035f);
 
-    const FVector Color = GetMergeParticleColor(MergeLevel);
+    const FVector Color = FruitCatalog::GetColor(MergeLevel);
 
     FMergeParticle Splash{};
     Splash.Type = EMergeParticleType::Splash;
-
     Splash.Position = MergePosition;
     Splash.Color = Color;
-    Splash.Lifetime = 0.5f;
-    Splash.StartScaleX = FruitRadius * 0.6f;
-    Splash.StartScaleY = FruitRadius * 0.6f;
-    Splash.EndScaleX = FruitRadius * 2.0f;
-    Splash.EndScaleY = FruitRadius * 2.0f;
-    Splash.Rotation = SplashRotation(RandomEngine);
+    Splash.Lifetime = 0.22f;
+    Splash.StartScaleX = FruitRadius * 1.2f;
+    Splash.StartScaleY = FruitRadius * 1.2f;
+    Splash.EndScaleX = FruitRadius * 3.0f;
+    Splash.EndScaleY = FruitRadius * 3.0f;
+    Splash.Rotation = AngleDistribution(RandomEngine);
 
     Particles.push_back(Splash);
 
+    FMergeParticle Flash{};
+    Flash.Type = EMergeParticleType::Flash;
+    Flash.Position = MergePosition;
+    Flash.Color = FVector(1.0f, 1.0f, 1.0f);
+    Flash.Lifetime = 0.12f;
+    Flash.StartScaleX = FruitRadius * 0.35f;
+    Flash.StartScaleY = FruitRadius * 0.35f;
+    Flash.EndScaleX = FruitRadius * 1.35f;
+    Flash.EndScaleY = FruitRadius * 1.35f;
+
+    Particles.push_back(Flash);
+
     for (int Index = 0; Index < DropletCount; ++Index)
     {
-        const float Angle =
-            (TwoPi * static_cast<float>(Index) / DropletCount) +
-            AngleJitter(RandomEngine);
+        const float Angle = AngleDistribution(RandomEngine);
 
         const FVector Direction(cosf(Angle), sinf(Angle), 0.0f);
 
         FMergeParticle Droplet{};
         Droplet.Type = EMergeParticleType::Droplet;
 
-        Droplet.Position = MergePosition;
+        Droplet.Position = MergePosition + Direction * FruitRadius * 0.18f;
         Droplet.Velocity = Direction * SpeedDistribution(RandomEngine);
         Droplet.Color = Color;
 
         Droplet.Age = 0.0f;
         Droplet.Lifetime = LifetimeDistribution(RandomEngine);
-        Droplet.StartScaleX = Droplet.EndScaleX = BaseScale * SizeDistribution(RandomEngine);
-        Droplet.StartScaleY = Droplet.EndScaleY = Droplet.StartScaleX * AspectDistribution(RandomEngine);
+        Droplet.StartScaleX = BaseScale * SizeDistribution(RandomEngine);
+        Droplet.EndScaleX = Droplet.StartScaleX * 0.25f;
+        Droplet.StartScaleY = Droplet.StartScaleX * AspectDistribution(RandomEngine);
+		Droplet.EndScaleY = Droplet.StartScaleY * 0.25f;
 
         Droplet.Rotation = Angle - HalfPi;
 
