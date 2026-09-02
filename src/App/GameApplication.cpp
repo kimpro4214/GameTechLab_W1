@@ -12,6 +12,7 @@
 #include "Platform/Win32Window.h"
 #include "Rendering/URenderer.h"
 #include "Rendering/FruitRenderer.h"
+#include "Rendering/ParticleRenderer.h"
 #include "UI/GameUI.h"
 
 namespace
@@ -141,6 +142,17 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 		return 3;
 	}
 
+	ParticleRenderer MergeParticleRenderer;
+	if (!MergeParticleRenderer.Initialize(Renderer))
+	{
+		FruitSceneRenderer.Release();
+		ImGui_ImplDX11_Shutdown();
+		ImGui_ImplWin32_Shutdown();
+		ImGui::DestroyContext();
+		Renderer.Release();
+		return 3;
+	}
+
 	GameSession Session;
 	GameController Controller;
 	GameUI UI;
@@ -190,6 +202,7 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 		if (!Session.IsMainMenu())
 		{
 			FruitSceneRenderer.Draw(Renderer, Session.GetBalls());
+			MergeParticleRenderer.Draw(Renderer, Session.GetParticles());
 		}
 		ApplyUICommand(
 			UI.Draw(Session, Renderer.ViewportInfo, FruitSceneRenderer, Scoreboard, bShowLeaderboard),
@@ -216,6 +229,7 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 	ImGui_ImplDX11_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
+	MergeParticleRenderer.Release();
 	FruitSceneRenderer.Release();
 	Renderer.Release();
 	return 0;

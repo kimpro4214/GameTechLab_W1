@@ -12,13 +12,6 @@
 
 namespace
 {
-	constexpr D3D11_INPUT_ELEMENT_DESC FruitInputLayout[] = {
-		{ "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0,
-			D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 8,
-			D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	};
-
 	constexpr std::array<LPCWSTR, FruitCatalog::LevelCount> FruitTexturePaths = {
 		L"assets/fruits/fruit_00.png",
 		L"assets/fruits/fruit_01.png",
@@ -53,8 +46,8 @@ bool FruitRenderer::Initialize(URenderer& Renderer)
 	PipelineDesc.ShaderFileName = L"shaders/FruitShader.hlsl";
 	PipelineDesc.VertexEntryPoint = "mainVS";
 	PipelineDesc.PixelEntryPoint = "mainPS";
-	PipelineDesc.InputElements = FruitInputLayout;
-	PipelineDesc.InputElementCount = ARRAYSIZE(FruitInputLayout);
+	PipelineDesc.InputElements = SpriteInputLayout;
+	PipelineDesc.InputElementCount = SpriteInputElementCount;
 
 	D3D11_RENDER_TARGET_BLEND_DESC& Target = PipelineDesc.BlendDesc.RenderTarget[0];
 	Target.BlendEnable = TRUE;
