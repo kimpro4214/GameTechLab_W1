@@ -6,6 +6,8 @@
 
 #include "Audio/Audio.h"
 
+#include "Input/GamepadInputManager.h"
+
 #include <algorithm>
 
 namespace
@@ -297,6 +299,7 @@ void GameSession::UpdateMerges(float DeltaTime)
 		TotalScore += FruitCatalog::GetMergeScore(CurrentLevel);
 		ParticleSystem.EmitMerge(Merge.LowerBall->Location, CurrentLevel);
 		Audio::GetInstance().Play("Merge");
+		GamepadManager::GetInstance().AddVibration();
 
 		UBall* UpperBall = Merge.UpperBall;
 		std::erase_if(Balls, [UpperBall](const std::unique_ptr<UBall>& Ball) { return Ball.get() == UpperBall; });

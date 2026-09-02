@@ -10,6 +10,8 @@
 #include "Rendering/FruitRenderer.h"
 #include <d3d11.h>
 
+#include "Input/GamepadInputManager.h"
+
 #include <cctype>
 #include <cmath>
 
@@ -134,6 +136,7 @@ EGameUICommand GameUI::DrawMainMenu(const D3D11_VIEWPORT& Viewport) const
 		ImVec2(0.5f, 0.5f));
 	ImGui::SetNextWindowSize(PanelSize, ImGuiCond_Always);
 	ImGui::SetNextWindowBgAlpha(0.0f);
+	ImGui::SetNextWindowFocus();
 	ImGui::Begin(
 		"Title Screen",
 		nullptr,
@@ -148,9 +151,12 @@ EGameUICommand GameUI::DrawMainMenu(const D3D11_VIEWPORT& Viewport) const
 	ImGui::SetCursorPosY(18.0f);
 	ImGui::TextColored(ImVec4(1.0f, 0.78f, 0.24f, 1.0f), "%s", GameTitle);
 	ImGui::SetWindowFontScale(1.0f);
-
 	ImGui::SetCursorPosY(145.0f);
 	ImGui::SetCursorPosX((PanelSize.x - ButtonSize.x) * 0.5f);
+	if (ImGui::IsWindowAppearing())
+	{
+		ImGui::SetKeyboardFocusHere();
+	}
 	const bool bStartGame = ImGui::Button("START", ButtonSize);
 	ImGui::SetCursorPosX((PanelSize.x - ButtonSize.x) * 0.5f);
 	const bool bOpenLeaderboard = ImGui::Button("LEADERBOARD", ButtonSize);
@@ -242,7 +248,8 @@ EGameUICommand GameUI::DrawGamePanel(
 		nullptr,
 		ImGuiWindowFlags_NoCollapse |
 		ImGuiWindowFlags_NoResize |
-		ImGuiWindowFlags_NoMove);
+		ImGuiWindowFlags_NoMove |
+		ImGuiWindowFlags_NoFocusOnAppearing);
 
 	ImGui::Text("Total Score : %d", Session.GetTotalScore());
 	ImGui::SameLine();
@@ -380,7 +387,8 @@ void GameUI::DrawCreatorCredit(const D3D11_VIEWPORT& Viewport) const
 		ImGuiWindowFlags_AlwaysAutoResize |
 		ImGuiWindowFlags_NoInputs |
 		ImGuiWindowFlags_NoMove |
-		ImGuiWindowFlags_NoSavedSettings);
+		ImGuiWindowFlags_NoSavedSettings |
+		ImGuiWindowFlags_NoFocusOnAppearing);
 	ImGui::TextDisabled("Jaeho, Minkyu, Hyeongyu");
 	ImGui::End();
 }

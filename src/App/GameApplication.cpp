@@ -77,6 +77,8 @@ namespace
 		Input.bIsLeftMouseDown = ImGui::IsMouseDown(ImGuiMouseButton_Left);
 		Input.bIsLeftMouseReleased = ImGui::IsMouseReleased(ImGuiMouseButton_Left);
 		Input.bIsRightMouseReleased = ImGui::IsMouseReleased(ImGuiMouseButton_Right);
+
+		GamepadManager::GetInstance().Update();
 		return Input;
 	}
 
@@ -161,7 +163,7 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 		return 4;
 	}
 
-	GamepadInputManager::GetInstance().Initialize();
+	GamepadManager::GetInstance().Initialize();
 
 	GameSession Session;
 	GameController Controller;
@@ -203,6 +205,7 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 
 		ImGui_ImplDX11_NewFrame();
 		ImGui_ImplWin32_NewFrame();
+
 		ImGui::NewFrame();
 
 		Controller.HandleInput(

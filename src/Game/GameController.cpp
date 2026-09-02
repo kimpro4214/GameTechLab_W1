@@ -12,20 +12,33 @@ void GameController::HandleInput(GameSession& Session, const FGameInput& Input)
 		return;
 	}
 
-	GamepadInputManager& RefGamepadInputManager = GamepadInputManager::GetInstance();
-	if (GamepadInputManager::GetInstance().Update())
+	GamepadManager& RefGamepadInputManager = GamepadManager::GetInstance();
+	bool bIsNavActive = ImGui::GetIO().NavActive;
+
+	// UI에 포커스가 있을 때 B를 누르면 게임으로 복귀
+	if (bIsNavActive && RefGamepadInputManager.IsButtonBPush())
 	{
-		if (RefGamepadInputManager.IsPushLeftStick())
-		{
-			Session.GamepadMoveCurrentBall(RefGamepadInputManager.GetMoveValueLX());
-		}
-		if (RefGamepadInputManager.IsPushRightStick())
-		{
-			Session.GamepadMoveCurrentBall(RefGamepadInputManager.GetMoveValueRX());
-		}
+		ImGui::SetWindowFocus(nullptr);
+		return;
 	}
 
-	if (GamepadInputManager::GetInstance().IsButtonAPush())
+	// 게임 화면에 있을 때 D-Pad → UI 창으로 진입
+	if (!bIsNavActive && RefGamepadInputManager.IsDpadPushed())
+	{
+		ImGui::SetWindowFocus("UI");
+		return;
+	}
+
+	if (!bIsNavActive && RefGamepadInputManager.IsPushLeftStick())
+	{
+		Session.GamepadMoveCurrentBall(RefGamepadInputManager.GetMoveValueLX());
+	}
+	if (!bIsNavActive && RefGamepadInputManager.IsPushRightStick())
+	{
+		Session.GamepadMoveCurrentBall(RefGamepadInputManager.GetMoveValueRX());
+	}
+
+	if (!bIsNavActive && GamepadManager::GetInstance().IsButtonAPush())
 	{
 		Session.DropCurrentBall();
 	}
@@ -45,7 +58,7 @@ void GameController::HandleInput(GameSession& Session, const FGameInput& Input)
 		}
 	}
 
-	if (GamepadInputManager::GetInstance().IsButtonBPush() || 
+	if (!bIsNavActive && GamepadManager::GetInstance().IsButtonBPush() ||
 		Input.bCanUseSceneMouse && Input.bIsRightMouseReleased)
 	{
 		Session.SwapCurrentBall();
@@ -55,4 +68,5 @@ void GameController::HandleInput(GameSession& Session, const FGameInput& Input)
 void GameController::Reset()
 {
 	bIsDraggingBall = false;
+	ImGui::SetWindowFocus(nullptr);
 }

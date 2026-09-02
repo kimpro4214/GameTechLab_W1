@@ -50,6 +50,6 @@ private:
 		const FVector& WorldLocation,
 		const D3D11_VIEWPORT& Viewport) const;
 
-	char PlayerName[17] = "";
+	char PlayerName[17] = "NoName";
 	bool bHasSubmittedGameOverScore = false;
 };

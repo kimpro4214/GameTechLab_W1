@@ -22,7 +22,7 @@ Audio::Audio()
 
 Audio::~Audio()
 {
-
+    Shutdown();
 }
 
 Audio& Audio::GetInstance()
