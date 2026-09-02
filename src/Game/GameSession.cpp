@@ -192,11 +192,11 @@ bool GameSession::TryMergeBalls(UBall& BallA, const UBall& BallB)
 	}
 
 	TotalScore += FruitCatalog::GetMergeScore(BallA.Level);
-	const int NewLevel = BallA.Level + 1;
+	const int CurrentLevel = BallA.Level;
+	const int NewLevel = CurrentLevel + 1;
 	BallA.SetLevel(NewLevel, FruitCatalog::GetRadius(NewLevel));
 
-	const FVector MergePosition = (BallA.Location + BallB.Location) * 0.5f;
-	ParticleSystem.EmitMerge(MergePosition, NewLevel);
+	ParticleSystem.EmitMerge(BallA.Location, CurrentLevel);
 
 	return true;
 }

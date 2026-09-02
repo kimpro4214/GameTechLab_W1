@@ -221,12 +221,15 @@
     <ClInclude Include="src\Rendering\ParticleRenderer.h">
       <Filter>Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="shaders\SplashShader.hlsl">
+      <Filter>Shaders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\FruitShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="shaders\ParticleShader.hlsl">
+    <FxCompile Include="shaders\DropletShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

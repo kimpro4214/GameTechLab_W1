@@ -27,7 +27,12 @@ public:
 	void Draw(URenderer& Renderer, const std::vector<FMergeParticle>& Particles) const;
 
 private:
-	std::optional<Material> ParticleMaterial;
+	bool CreateDropletMaterial(URenderer& Renderer);
+	bool CreateSplashMaterial(URenderer& Renderer);
+
+private:
+	std::optional<Material> DropletMaterial;
+	std::optional<Material> SplashMaterial;
 	std::shared_ptr<Mesh> ParticleMesh;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> ConstantBuffer;
 };
