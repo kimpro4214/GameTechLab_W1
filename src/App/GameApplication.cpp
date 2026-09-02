@@ -259,6 +259,7 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 	}
 
 	Audio::GetInstance().Shutdown();
+	GamepadManager::GetInstance().Shutdown();
 
 	ImGui_ImplDX11_Shutdown();
 	ImGui_ImplWin32_Shutdown();
