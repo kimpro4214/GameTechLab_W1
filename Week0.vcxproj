@@ -185,6 +185,7 @@
     <ClCompile Include="src\Game\GameController.cpp" />
     <ClCompile Include="src\Game\GameSession.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Particle\MergeParticleSystem.cpp" />
     <ClCompile Include="src\Physics\CollisionSolver.cpp" />
     <ClCompile Include="src\Physics\PhysicsWorld.cpp" />
     <ClCompile Include="src\Physics\UBall.cpp" />
@@ -192,6 +193,7 @@
     <ClCompile Include="src\Rendering\FruitRenderer.cpp" />
     <ClCompile Include="src\Rendering\Material.cpp" />
     <ClCompile Include="src\Rendering\Mesh.cpp" />
+    <ClCompile Include="src\Rendering\ParticleRenderer.cpp" />
     <ClCompile Include="src\Rendering\RenderPipeline.cpp" />
     <ClCompile Include="src\Rendering\URenderer.cpp" />
     <ClCompile Include="src\UI\GameUI.cpp" />
@@ -214,6 +216,8 @@
     <ClInclude Include="src\Game\GameController.h" />
     <ClInclude Include="src\Game\GameInput.h" />
     <ClInclude Include="src\Game\GameSession.h" />
+    <ClInclude Include="src\Particle\FMergeParticle.h" />
+    <ClInclude Include="src\Particle\MergeParticleSystem.h" />
     <ClInclude Include="src\Physics\CollisionSolver.h" />
     <ClInclude Include="src\Physics\PhysicsWorld.h" />
     <ClInclude Include="src\Physics\UBall.h" />
@@ -221,6 +225,7 @@
     <ClInclude Include="src\Rendering\FruitRenderer.h" />
     <ClInclude Include="src\Rendering\Material.h" />
     <ClInclude Include="src\Rendering\Mesh.h" />
+    <ClInclude Include="src\Rendering\ParticleRenderer.h" />
     <ClInclude Include="src\Rendering\RenderPipeline.h" />
     <ClInclude Include="src\Rendering\SpriteVertex.h" />
     <ClInclude Include="src\Rendering\URenderer.h" />
@@ -230,6 +235,12 @@
     <FxCompile Include="shaders\FruitShader.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="shaders\ParticleShader.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

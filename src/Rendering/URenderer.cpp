@@ -224,6 +224,7 @@ void URenderer::Draw(const Material& Material, const Mesh& Mesh, ID3D11Buffer* O
 	Mesh.Bind(DeviceContext.Get());
 
 	DeviceContext->VSSetConstantBuffers(0, 1, &ObjectConstantBuffer);
+	DeviceContext->PSSetConstantBuffers(0, 1, &ObjectConstantBuffer);
 	
 	if (Mesh.HasIndices())
 	{
