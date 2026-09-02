@@ -9,7 +9,7 @@
 namespace
 {
 	// test ¼¼ÆÃ
-	constexpr bool bSpawnLargestFruitForTesting = true;
+	constexpr bool bSpawnLargestFruitForTesting = false;
 }
 
 GameSession::GameSession()
