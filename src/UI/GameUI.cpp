@@ -9,12 +9,25 @@
 #include "Rendering/FruitRenderer.h"
 #include <d3d11.h>
 
+#include <cctype>
 #include <cmath>
 
 namespace
 {
 	constexpr float FruitPreviewSize = 40.0f;
 	constexpr float FruitPreviewRadius = 18.0f;
+
+	bool IsBlankName(const char* Name)
+	{
+		for (const char* Character = Name; *Character != '\0'; ++Character)
+		{
+			if (!std::isspace(static_cast<unsigned char>(*Character)))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
 }
 
 EGameUICommand GameUI::Draw(
@@ -305,7 +318,7 @@ EGameUICommand GameUI::DrawGameOverPanel(
 	ImGui::Spacing();
 	ImGui::InputText("Name", PlayerName, IM_ARRAYSIZE(PlayerName));
 	ImGui::SameLine();
-	ImGui::BeginDisabled(bHasSubmittedGameOverScore || PlayerName[0] == '\0');
+	ImGui::BeginDisabled(bHasSubmittedGameOverScore || IsBlankName(PlayerName));
 	if (ImGui::Button("Submit Score"))
 	{
 		InLeaderboard.Add(PlayerName, Session.GetTotalScore());
