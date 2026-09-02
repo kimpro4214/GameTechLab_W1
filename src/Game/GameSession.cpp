@@ -147,9 +147,10 @@ void GameSession::SwapCurrentBall()
 	}
 
 	CurrentBall->Location = FVector(
-		-FruitCatalog::GetRadius(CurrentBall->Level) * 0.5f,
+		-0.25f,
 		0.9f,
 		0.0f);
+
 	bCanStoreBall = false;
 	LastStoreTime = std::chrono::steady_clock::now();
 	Audio::GetInstance().Play("Store");
