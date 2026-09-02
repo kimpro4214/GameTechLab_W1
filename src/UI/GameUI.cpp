@@ -20,9 +20,13 @@ EGameUICommand GameUI::Draw(
 	const FruitRenderer& InFruitRenderer) const
 {
 	DrawSceneOverlay(Session, Viewport);
-	const EGameUICommand Command = Session.IsMainMenu()
+	EGameUICommand Command = Session.IsMainMenu()
 		? DrawMainMenu(Viewport)
 		: DrawGamePanel(Session, Viewport, InFruitRenderer);
+	if (Session.IsGameOver())
+	{
+		Command = DrawGameOverPanel(Session, Viewport);
+	}
 	DrawCreatorCredit(Viewport);
 	return Command;
 }
@@ -117,15 +121,6 @@ EGameUICommand GameUI::DrawGamePanel(
 		Command = EGameUICommand::RestartGame;
 	}
 
-	if (Session.IsGameOver())
-	{
-		ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), "GAME OVER");
-		if (ImGui::Button("Main Menu"))
-		{
-			Command = EGameUICommand::ReturnToMainMenu;
-		}
-	}
-
 	ImGui::Text("Next Fruit Color");
 	DrawFruitPreview(InFruitRenderer.GetFruitTextureSRV(Session.GetNextLevel()));
 
@@ -163,6 +158,51 @@ EGameUICommand GameUI::DrawGamePanel(
 
 	ImGui::End();
 	return Command;
+}
+
+EGameUICommand GameUI::DrawGameOverPanel(
+	const GameSession& Session,
+	const D3D11_VIEWPORT& Viewport) const
+{
+	constexpr ImVec2 PanelSize(420.0f, 280.0f);
+	constexpr ImVec2 RestartButtonSize(240.0f, 48.0f);
+
+	ImGui::SetNextWindowPos(
+		ImVec2(
+			Viewport.TopLeftX + Viewport.Width * 0.5f,
+			Viewport.TopLeftY + Viewport.Height * 0.5f),
+		ImGuiCond_Always,
+		ImVec2(0.5f, 0.5f));
+	ImGui::SetNextWindowSize(PanelSize, ImGuiCond_Always);
+	ImGui::SetNextWindowBgAlpha(0.92f);
+	ImGui::Begin(
+		"Game Over",
+		nullptr,
+		ImGuiWindowFlags_NoCollapse |
+		ImGuiWindowFlags_NoResize |
+		ImGuiWindowFlags_NoMove |
+		ImGuiWindowFlags_NoSavedSettings);
+
+	ImGui::SetWindowFontScale(2.5f);
+	const char* GameOverText = "GAME OVER";
+	const float TitleWidth = ImGui::CalcTextSize(GameOverText).x;
+	ImGui::SetCursorPosX((PanelSize.x - TitleWidth) * 0.5f);
+	ImGui::TextColored(ImVec4(1.0f, 0.08f, 0.08f, 1.0f), "%s", GameOverText);
+	ImGui::SetWindowFontScale(1.0f);
+
+	ImGui::Spacing();
+	const char* ScoreText = "Final Score : %d";
+	const ImVec2 ScoreSize = ImGui::CalcTextSize("Final Score : 000000");
+	ImGui::SetCursorPosX((PanelSize.x - ScoreSize.x) * 0.5f);
+	ImGui::Text(ScoreText, Session.GetTotalScore());
+
+	ImGui::Spacing();
+	ImGui::Spacing();
+	ImGui::SetCursorPosX((PanelSize.x - RestartButtonSize.x) * 0.5f);
+	const bool bRestart = ImGui::Button("Restart", RestartButtonSize);
+	ImGui::End();
+
+	return bRestart ? EGameUICommand::RestartGame : EGameUICommand::None;
 }
 
 void GameUI::DrawCreatorCredit(const D3D11_VIEWPORT& Viewport) const
