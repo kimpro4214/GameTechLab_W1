@@ -8,7 +8,6 @@ namespace GameConfig
 {
 	inline constexpr float LeftBorder = -1.0f;
 	inline constexpr float RightBorder = 0.5f;
-	// The taller 1024x1280 window shows a 2.5-unit-high play field.
 	inline constexpr float TopBorder = -1.25f;
 	inline constexpr float BottomBorder = 1.25f;
 	inline constexpr float GameOverLineY = 1.0f;
@@ -24,8 +23,13 @@ namespace GameConfig
 	inline constexpr float DropHorizontalJitter = 0.005f;
 
 	inline constexpr float WaterSurfaceY = 0.5f;
-	inline constexpr float UnderwaterGravityScale = 0.25f;
-	inline constexpr float UnderwaterVelocityDamping = 0.90f;
+	inline constexpr float LargestBallRadius = 0.4f;
+
+	
+	inline constexpr float MinBuoyancyGravityScale = 0.1f;
+	inline constexpr float MaxBuoyancyGravityScale = 0.98f;
+	inline constexpr float MinWaterDragCoefficient = 0.5f;
+	inline constexpr float MaxWaterDragCoefficient = 25.0f;
 
 	inline constexpr int TargetFps = 30;
 }

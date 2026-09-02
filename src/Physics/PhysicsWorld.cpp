@@ -7,6 +7,8 @@
 #include "Game/FruitCatalog.h"
 #include "Game/GameConfig.h"
 
+#include <algorithm>
+
 PhysicsWorld::PhysicsWorld(const FPhysicsWorldSettings& InitialSettings)
 	: Settings(InitialSettings)
 {
@@ -34,16 +36,43 @@ void PhysicsWorld::Step(
 				continue;
 			}
 
-			const bool bIsUnderwater = Ball->Location.y < GameConfig::WaterSurfaceY;
-			
-			const float GravityScale = bIsUnderwater ? GameConfig::UnderwaterGravityScale : 1.0f;
+			Ball->AddVelocity(GravityVelocityChange);
 
-			Ball->AddVelocity(GravityVelocityChange * GravityScale);
+			const float BallBottomY = Ball->Location.y - Ball->Radius;
 
-			if (bIsUnderwater)
-			{
-				Ball->Velocity *= GameConfig::UnderwaterVelocityDamping;
-			}
+			const float SubmergedRatio = std::clamp(
+				(GameConfig::WaterSurfaceY - BallBottomY) / (2.0f * Ball->Radius),
+				0.0f,
+				1.0f);
+
+			// Radius squared is proportional to a circle's area.  Keeping the
+			// ratio in [0, 1] gives every fruit a slow sink speed, while larger
+			// fruit still receives more buoyancy and drag.
+			const float SizeRatio = std::clamp(
+				(Ball->Radius * Ball->Radius) /
+					(GameConfig::LargestBallRadius * GameConfig::LargestBallRadius),
+				0.0f,
+				1.0f);
+
+			const float BuoyancyGravityScale =
+				std::lerp(
+					GameConfig::MinBuoyancyGravityScale,
+					GameConfig::MaxBuoyancyGravityScale,
+					SizeRatio) *
+				SubmergedRatio;
+			const float BuoyancyAcceleration =
+				-Settings.GravityAcceleration.y * BuoyancyGravityScale;
+
+			Ball->AddVelocity(FVector(0.0f, BuoyancyAcceleration * SubstepDeltaTime, 0.0f));
+
+			const float WaterDragCoefficient = std::lerp(
+				GameConfig::MinWaterDragCoefficient,
+				GameConfig::MaxWaterDragCoefficient,
+				SizeRatio) *
+				SubmergedRatio;
+			const FVector DragAcceleration = Ball->Velocity * -WaterDragCoefficient;
+
+			Ball->AddVelocity(DragAcceleration * SubstepDeltaTime);
 
 			Ball->Move(SubstepDeltaTime, Settings.AngularDamping);
 		}
