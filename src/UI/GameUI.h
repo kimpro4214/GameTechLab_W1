@@ -45,7 +45,7 @@ private:
 		const D3D11_VIEWPORT& Viewport,
 		Leaderboard& InLeaderboard);
 	void DrawCreatorCredit(const D3D11_VIEWPORT& Viewport) const;
-	void DrawFruitPreview(ID3D11ShaderResourceView* TextureSRV) const;
+	void DrawFruitPreview(int Level) const;
 	ImVec2 ConvertWorldToScreen(
 		const FVector& WorldLocation,
 		const D3D11_VIEWPORT& Viewport) const;

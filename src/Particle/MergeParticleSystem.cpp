@@ -17,30 +17,6 @@ namespace
     std::uniform_real_distribution<float> LifetimeDistribution(0.30f, 0.55f);
     std::uniform_real_distribution<float> SizeDistribution(0.75f, 1.25f);
     std::uniform_real_distribution<float> AspectDistribution(1.5f, 2.5f);
-
-    FVector GetMergeParticleColor(int MergeLevel)
-    {
-        const FVector Colors[] = {
-            { 0.85f, 0.49f, 0.13f },
-            { 0.87f, 0.80f, 0.18f },
-            { 0.62f, 0.80f, 0.19f },
-            { 0.19f, 0.72f, 0.35f },
-            { 0.17f, 0.74f, 0.76f },
-            { 0.23f, 0.56f, 0.84f },
-            { 0.34f, 0.35f, 0.82f },
-            { 0.58f, 0.25f, 0.78f },
-            { 0.83f, 0.23f, 0.60f },
-            { 0.82f, 0.21f, 0.22f },
-            { 0.58f, 0.32f, 0.18f },
-        };
-
-        const int ColorIndex = std::clamp(
-            MergeLevel,
-            0,
-            static_cast<int>(std::size(Colors)) - 1);
-
-        return Colors[ColorIndex];
-    }
 }
 
 void MergeParticleSystem::EmitMerge(FVector MergePosition, int MergeLevel)
@@ -51,7 +27,7 @@ void MergeParticleSystem::EmitMerge(FVector MergePosition, int MergeLevel)
         0.008f,
         0.035f);
 
-    const FVector Color = GetMergeParticleColor(MergeLevel);
+    const FVector Color = FruitCatalog::GetColor(MergeLevel);
 
     FMergeParticle Splash{};
     Splash.Type = EMergeParticleType::Splash;

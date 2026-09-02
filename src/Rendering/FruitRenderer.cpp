@@ -12,29 +12,17 @@
 
 namespace
 {
-	constexpr std::array<LPCWSTR, FruitCatalog::LevelCount> FruitTexturePaths = {
-		L"assets/fruits/fruit_00.png",
-		L"assets/fruits/fruit_01.png",
-		L"assets/fruits/fruit_02.png",
-		L"assets/fruits/fruit_03.png",
-		L"assets/fruits/fruit_04.png",
-		L"assets/fruits/fruit_05.png",
-		L"assets/fruits/fruit_06.png",
-		L"assets/fruits/fruit_07.png",
-		L"assets/fruits/fruit_08.png",
-		L"assets/fruits/fruit_09.png",
-		L"assets/fruits/fruit_10.png",
-	};
-
-	struct FruitObjectConstants
+	struct ObjectConstants
 	{
 		float OffsetX;
 		float OffsetY;
 		float Scale;
 		float RotationAngle;
-	};
 
-	constexpr float FruitSpriteRatio = 736.0f / 1024.0f;
+		FVector Color;
+		float LevelRatio;
+	};
+	static_assert(sizeof(ObjectConstants) % 16 == 0);
 }
 
 FruitRenderer::FruitRenderer() = default;
@@ -68,9 +56,9 @@ bool FruitRenderer::Initialize(URenderer& Renderer)
 
 	D3D11_SAMPLER_DESC SamplerDesc{};
 	SamplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-	SamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-	SamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-	SamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	SamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	SamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	SamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
 	SamplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	const Microsoft::WRL::ComPtr<ID3D11SamplerState> Sampler =
 		Renderer.CreateSamplerState(SamplerDesc);
@@ -79,22 +67,16 @@ bool FruitRenderer::Initialize(URenderer& Renderer)
 		return false;
 	}
 
-	FruitMaterials.clear();
-	FruitMaterials.reserve(FruitTexturePaths.size());
-	for (LPCWSTR TexturePath : FruitTexturePaths)
+	auto Texture = Renderer.LoadTexture(L"assets/jelly.png");
+	if (!Texture)
 	{
-		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Texture =
-			Renderer.LoadTexture(TexturePath);
-		if (!Texture)
-		{
-			Release();
-			return false;
-		}
-
-		FruitMaterials.emplace_back(Pipeline);
-		FruitMaterials.back().SetTextureSRV(Texture);
-		FruitMaterials.back().SetSamplerState(Sampler);
+		Release();
+		return false;
 	}
+
+	FruitMaterial.emplace(Pipeline);
+	FruitMaterial->SetTextureSRV(Texture);
+	FruitMaterial->SetSamplerState(Sampler);
 
 	MeshDesc MeshDescription{};
 	MeshDescription.VertexData = SpriteQuadVertices;
@@ -105,25 +87,24 @@ bool FruitRenderer::Initialize(URenderer& Renderer)
 	MeshDescription.IndexDataSize = sizeof(SpriteQuadIndices);
 	MeshDescription.IndexCount = sizeof(SpriteQuadIndices) / sizeof(std::uint32_t);
 	FruitMesh = Renderer.CreateMesh(MeshDescription);
-	FruitConstantBuffer =
-		Renderer.CreateDynamicConstantBuffer(sizeof(FruitObjectConstants));
+	ConstantBuffer =
+		Renderer.CreateDynamicConstantBuffer(sizeof(ObjectConstants));
 
-	return FruitMesh != nullptr && FruitConstantBuffer != nullptr;
+	return FruitMesh != nullptr && ConstantBuffer != nullptr;
 }
 
 void FruitRenderer::Release()
 {
-	FruitMaterials.clear();
+	FruitMaterial.reset();
 	FruitMesh.reset();
-	FruitConstantBuffer.Reset();
+	ConstantBuffer.Reset();
 }
 
 void FruitRenderer::Draw(
 	URenderer& Renderer,
 	const std::vector<std::unique_ptr<UBall>>& Balls) const
 {
-	if (!FruitMesh || !FruitConstantBuffer ||
-		FruitMaterials.size() != FruitCatalog::LevelCount)
+	if (!FruitMaterial.has_value() || !FruitMesh || !ConstantBuffer)
 	{
 		return;
 	}
@@ -135,26 +116,19 @@ void FruitRenderer::Draw(
 			continue;
 		}
 
-		const FruitObjectConstants Constants{
+		const ObjectConstants Constants{
 			Ball->Location.x,
 			Ball->Location.y,
-			Ball->Radius / FruitSpriteRatio,
-			Ball->RotationAngle
+			Ball->Radius,
+			Ball->RotationAngle,
+
+			FruitCatalog::GetColor(Ball->Level),
+			static_cast<float>(Ball->Level) / static_cast<float>(FruitCatalog::LevelCount - 1),
 		};
-		Renderer.UpdateDynamicConstantBuffer(FruitConstantBuffer, Constants);
+		Renderer.UpdateDynamicConstantBuffer(ConstantBuffer, Constants);
 		Renderer.Draw(
-			FruitMaterials[static_cast<std::size_t>(Ball->Level)],
+			FruitMaterial.value(),
 			*FruitMesh,
-			FruitConstantBuffer.Get());
+			ConstantBuffer.Get());
 	}
-}
-
-ID3D11ShaderResourceView* FruitRenderer::GetFruitTextureSRV(int Level) const
-{
-	if (!FruitCatalog::IsValidLevel(Level))
-	{
-		return nullptr;
-	}
-
-	return FruitMaterials[Level].GetTextureSRV();
 }

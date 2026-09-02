@@ -306,7 +306,7 @@ EGameUICommand GameUI::DrawGamePanel(
 	}
 
 	ImGui::Text("Next FrogEgg Color");
-	DrawFruitPreview(InFruitRenderer.GetFruitTextureSRV(Session.GetNextLevel()));
+	DrawFruitPreview(Session.GetNextLevel());
 
 	ImGui::Text("Storage FrogEgg Color (RightClick)");
 	if (Session.GetStorageLevel() == -1)
@@ -315,13 +315,13 @@ EGameUICommand GameUI::DrawGamePanel(
 	}
 	else
 	{
-		DrawFruitPreview(InFruitRenderer.GetFruitTextureSRV(Session.GetStorageLevel()));
+		DrawFruitPreview(Session.GetStorageLevel());
 	}
 
 	ImGui::Text("FrogEgg Sequence");
 	for (std::size_t i = 0; i < FruitCatalog::LevelCount; ++i)
 	{
-		DrawFruitPreview(InFruitRenderer.GetFruitTextureSRV(static_cast<int>(i)));
+		DrawFruitPreview(static_cast<int>(i));
 		const bool bHasNextFruit = i + 1 < FruitCatalog::LevelCount;
 		const bool bIsEndOfRow = (i + 1) % 3 == 0;
 		if (bHasNextFruit)
@@ -444,23 +444,22 @@ void GameUI::DrawCreatorCredit(const D3D11_VIEWPORT& Viewport) const
 	ImGui::End();
 }
 
-void GameUI::DrawFruitPreview(ID3D11ShaderResourceView* TextureSRV) const
+void GameUI::DrawFruitPreview(int Level) const
 {
 	const ImVec2 PreviewSize(FruitPreviewSize, FruitPreviewSize);
 
-	if (!TextureSRV)
-	{
-		ImGui::Dummy(PreviewSize);
-		return;
-	}
+	const FVector Color = FruitCatalog::GetColor(Level);
 
-	const ImVec2 PreviewPosition = ImGui::GetCursorScreenPos();
-	const ImVec2 PreviewCenter(
-		PreviewPosition.x + PreviewSize.x * 0.5f,
-		PreviewPosition.y + PreviewSize.y * 0.5f);
+	const ImVec2 Position = ImGui::GetCursorScreenPos();
+	const ImVec2 Center(
+		Position.x + PreviewSize.x * 0.5f,
+		Position.y + PreviewSize.y * 0.5f);
 	ImDrawList* DrawList = ImGui::GetWindowDrawList();
 
-	ImGui::Image(reinterpret_cast<ImTextureID>(TextureSRV), PreviewSize);
+	DrawList->AddCircleFilled(Center, 18.0f, ImColor(Color.x, Color.y, Color.z, 1.0f));
+	DrawList->AddCircle(Center, 18.0f, IM_COL32(150, 230, 255, 210), 32, 2.0f);
+
+	ImGui::Dummy(ImVec2(40.0f, 40.0f));
 }
 
 ImVec2 GameUI::ConvertWorldToScreen(
