@@ -34,7 +34,7 @@ namespace
 }
 
 EGameUICommand GameUI::Draw(
-	const GameSession& Session,
+	GameSession& Session,
 	const D3D11_VIEWPORT& Viewport,
 	const FruitRenderer& InFruitRenderer,
 	Leaderboard& InLeaderboard,
@@ -189,7 +189,7 @@ EGameUICommand GameUI::DrawLeaderboard(
 }
 
 EGameUICommand GameUI::DrawGamePanel(
-	const GameSession& Session,
+	GameSession& Session,
 	const D3D11_VIEWPORT& Viewport,
 	const FruitRenderer& InFruitRenderer) const
 {
@@ -212,6 +212,15 @@ EGameUICommand GameUI::DrawGamePanel(
 	{
 		Audio::GetInstance().Play("Click");
 		Command = EGameUICommand::RestartGame;
+	}
+
+	const char* TestButtonLabel = Session.IsLargestFruitSpawnTestEnabled()
+		? "Test: Largest FrogEgg ON"
+		: "Test: Largest FrogEgg OFF";
+	if (ImGui::Button(TestButtonLabel))
+	{
+		Session.ToggleLargestFruitSpawnForTesting();
+		Audio::GetInstance().Play("Click");
 	}
 
 	ImGui::Text("Next FrogEgg Color");
