@@ -75,3 +75,6 @@ Testing/
 # ImGui
 imgui.ini
 
+# Data Files
+data/
+
