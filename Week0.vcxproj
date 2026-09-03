@@ -176,9 +176,6 @@
     <ClCompile Include="src\External\ImGui\imgui.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="src\External\ImGui\imgui_demo.cpp">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="src\External\ImGui\imgui_draw.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -302,6 +299,9 @@ xcopy /E /I /Y "$(ProjectDir)shaders" "$(OutDir)shaders\"
 xcopy /E /I /Y "$(ProjectDir)sound" "$(OutDir)sound\"
 xcopy /E /I /Y "$(ProjectDir)data" "$(OutDir)data\"</Command>
     </PostBuildEvent>
+    <ClCompile>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Disabled</Optimization>
+    </ClCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

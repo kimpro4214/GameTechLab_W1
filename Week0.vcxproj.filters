@@ -96,9 +96,6 @@
     <ClCompile Include="src\External\ImGui\imgui.cpp">
       <Filter>External\ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="src\External\ImGui\imgui_demo.cpp">
-      <Filter>External\ImGui</Filter>
-    </ClCompile>
     <ClCompile Include="src\External\ImGui\imgui_draw.cpp">
       <Filter>External\ImGui</Filter>
     </ClCompile>
