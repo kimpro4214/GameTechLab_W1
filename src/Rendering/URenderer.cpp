@@ -44,6 +44,8 @@ void URenderer::InitImGui(HWND hWindow)
 	ImGuiIO& io = ImGui::GetIO();
 	ImGui_ImplWin32_Init((void*)hWindow);
 	ImGui_ImplDX11_Init(Device.Get(), DeviceContext.Get());
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+	io.BackendFlags |= ImGuiBackendFlags_HasGamepad;
 }
 
 void URenderer::Prepare()

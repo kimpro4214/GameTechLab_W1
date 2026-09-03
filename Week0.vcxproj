@@ -198,6 +198,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\App\GameApplication.cpp" />
+    <ClCompile Include="src\Input\GamepadManager.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -235,6 +236,7 @@
     </ClInclude>
     <ClInclude Include="src\Animation\FruitAnimationSystem.h" />
     <ClInclude Include="src\Audio\Audio.h" />
+    <ClInclude Include="src\Input\GamepadManager.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\External\ImGui\imconfig.h" />
     <ClInclude Include="src\External\ImGui\imgui.h" />

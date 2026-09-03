@@ -23,6 +23,7 @@ namespace GameConfig
 	inline constexpr int PhysicsSubsteps = 2;
 	inline constexpr int CollisionSolverIterations = 8;
 	inline constexpr std::chrono::milliseconds DropCooldown(600);
+	inline constexpr std::chrono::milliseconds StoreCooldown(300);
 	inline constexpr float DropHorizontalJitter = 0.005f;
 
 	inline constexpr float WaterSurfaceY = 0.5f;

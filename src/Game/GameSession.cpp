@@ -6,6 +6,8 @@
 
 #include "Audio/Audio.h"
 
+#include "Input/GamepadManager.h"
+
 #include <algorithm>
 
 GameSession::GameSession()
@@ -28,7 +30,7 @@ GameSession::GameSession()
 void GameSession::Update(float DeltaTime)
 {
 	UpdateDropCooldown();
-
+	UpdateStoreCooldown();
 	ParticleSystem.Update(DeltaTime);
 	AnimationSystem.Update(DeltaTime);
 
@@ -81,6 +83,19 @@ void GameSession::ToggleLargestFruitSpawnForTesting()
 		: RandomSpawnLevel();
 }
 
+void GameSession::GamepadMoveCurrentBall(float CurrentMoveValueX)
+{
+	UBall* CurrentBall = GetCurrentBall();
+	if (CurrentBall == nullptr || CurrentBall->bHasBeenDropped)
+	{
+		return;
+	}
+
+	const float MinBallX = GameConfig::LeftBorder + CurrentBall->Radius;
+	const float MaxBallX = GameConfig::RightBorder - CurrentBall->Radius;
+	CurrentBall->Location.x = std::clamp(CurrentBall->Location.x + CurrentMoveValueX, MinBallX, MaxBallX);
+}
+
 void GameSession::MoveCurrentBall(float MouseWorldX)
 {
 	UBall* CurrentBall = GetCurrentBall();
@@ -122,7 +137,7 @@ bool GameSession::DropCurrentBall()
 void GameSession::SwapCurrentBall()
 {
 	UBall* CurrentBall = GetCurrentBall();
-	if (CurrentBall == nullptr || CurrentBall->bHasBeenDropped)
+	if (!bCanStoreBall || CurrentBall == nullptr || CurrentBall->bHasBeenDropped)
 	{
 		return;
 	}
@@ -140,10 +155,10 @@ void GameSession::SwapCurrentBall()
 		StorageLevel = PreviousLevel;
 	}
 
-	CurrentBall->Location = FVector(
-		-FruitCatalog::GetRadius(CurrentBall->Level) * 0.5f,
-		GameConfig::BallSpawnY,
-		0.0f);
+	CurrentBall->Location = FVector(-0.25f, GameConfig::BallSpawnY, 0.0f),
+
+	bCanStoreBall = false;
+	LastStoreTime = std::chrono::steady_clock::now();
 	Audio::GetInstance().Play("Store");
 }
 
@@ -165,6 +180,7 @@ void GameSession::ResetGameState()
 	StorageLevel = -1;
 	NextLevel = RandomSpawnLevel();
 	bCanDropBall = true;
+	bCanStoreBall = true;
 	bIsGameOver = false;
 	AddWaitingBall();
 }
@@ -229,6 +245,15 @@ void GameSession::UpdateDropCooldown()
 	}
 }
 
+void GameSession::UpdateStoreCooldown()
+{
+	if (!bCanStoreBall &&
+		std::chrono::steady_clock::now() - LastStoreTime >= GameConfig::StoreCooldown)
+	{
+		bCanStoreBall = true;
+	}
+}
+
 void GameSession::ResetFrameDebugState()
 {
 	for (const std::unique_ptr<UBall>& Ball : Balls)
@@ -279,6 +304,7 @@ void GameSession::UpdateMerges(float DeltaTime)
 		TotalScore += FruitCatalog::GetMergeScore(CurrentLevel);
 		ParticleSystem.EmitMerge(Merge.LowerBall->Location, CurrentLevel);
 		Audio::GetInstance().Play("Merge");
+		GamepadManager::GetInstance().AddVibration();
 
 		UBall* UpperBall = Merge.UpperBall;
 		std::erase_if(Balls, [UpperBall](const std::unique_ptr<UBall>& Ball) { return Ball.get() == UpperBall; });

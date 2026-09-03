@@ -3,6 +3,8 @@
 
 #include "Game/GameSession.h"
 
+#include "Input/GamepadManager.h"
+
 void GameController::HandleInput(GameSession& Session, const FGameInput& Input)
 {
 	if (Session.IsMainMenu() || Session.IsGameOver())
@@ -10,20 +12,54 @@ void GameController::HandleInput(GameSession& Session, const FGameInput& Input)
 		return;
 	}
 
-	const bool bCanMoveDraggedBall =
-		Input.bIsLeftMouseDown && (Input.bCanUseSceneMouse || bIsDraggingBall);
-	if (bCanMoveDraggedBall)
+	GamepadManager& RefGamepadInputManager = GamepadManager::GetInstance();
+	bool bIsNavActive = ImGui::GetIO().NavActive;
+
+	// UI에 포커스가 있을 때 B를 누르면 게임으로 복귀
+	if (bIsNavActive && RefGamepadInputManager.IsButtonBPush())
 	{
-		Session.MoveCurrentBall(Input.MouseWorldX);
-		bIsDraggingBall = true;
+		ImGui::SetWindowFocus(nullptr);
+		return;
 	}
 
-	if (bIsDraggingBall && Input.bIsLeftMouseReleased && Session.DropCurrentBall())
+	// 게임 화면에 있을 때 D-Pad → UI 창으로 진입
+	if (!bIsNavActive && RefGamepadInputManager.IsDpadPushed())
 	{
-		bIsDraggingBall = false;
+		ImGui::SetWindowFocus("UI");
+		return;
 	}
 
-	if (Input.bCanUseSceneMouse && Input.bIsRightMouseReleased)
+	if (!bIsNavActive && RefGamepadInputManager.IsPushLeftStick())
+	{
+		Session.GamepadMoveCurrentBall(RefGamepadInputManager.GetMoveValueLX());
+	}
+	if (!bIsNavActive && RefGamepadInputManager.IsPushRightStick())
+	{
+		Session.GamepadMoveCurrentBall(RefGamepadInputManager.GetMoveValueRX());
+	}
+
+	if (!bIsNavActive && GamepadManager::GetInstance().IsButtonAPush())
+	{
+		Session.DropCurrentBall();
+	}
+	else
+	{
+		const bool bCanMoveDraggedBall =
+			Input.bIsLeftMouseDown && (Input.bCanUseSceneMouse || bIsDraggingBall);
+		if (bCanMoveDraggedBall)
+		{
+			Session.MoveCurrentBall(Input.MouseWorldX);
+			bIsDraggingBall = true;
+		}
+
+		if (bIsDraggingBall && Input.bIsLeftMouseReleased && Session.DropCurrentBall())
+		{
+			bIsDraggingBall = false;
+		}
+	}
+
+	if (!bIsNavActive && GamepadManager::GetInstance().IsButtonBPush() ||
+		Input.bCanUseSceneMouse && Input.bIsRightMouseReleased)
 	{
 		Session.SwapCurrentBall();
 	}
@@ -32,4 +68,5 @@ void GameController::HandleInput(GameSession& Session, const FGameInput& Input)
 void GameController::Reset()
 {
 	bIsDraggingBall = false;
+	ImGui::SetWindowFocus(nullptr);
 }

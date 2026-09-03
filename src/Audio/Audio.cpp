@@ -22,7 +22,7 @@ Audio::Audio()
 
 Audio::~Audio()
 {
-
+    Shutdown();
 }
 
 Audio& Audio::GetInstance()
@@ -74,21 +74,22 @@ HRESULT Audio::CreateSoundBuffer(FWaveData& _FWaveData)
     return hr;
 }
 
-void Audio::AllLoadWav()
+bool Audio::AllLoadWav()
 {
     HRESULT Hr;
     for (auto& [key, value] : WaveDataMap)
     {
         if (LoadWav(value) == -1)
         {
-            return;
+            return (false);
         }
         Hr = CreateSoundBuffer(value);
         if (FAILED(Hr))
         {
-            return;
+            return (false);
         }
     }
+    return (true);
 }
 
 int Audio::LoadWav(FWaveData& _WaveData)
@@ -210,17 +211,21 @@ int Audio::Play(std::string name)
     return (0);
 }
 
-void Audio::Initializer(HWND HWindow)
+bool Audio::Initialize(HWND HWindow)
 {
     HRESULT Hr;
 
     Hr = CreateDirectSound(HWindow);
     if (FAILED(Hr))
     {
-        return;
+        return (false);
     }
 
-    AllLoadWav();
+    if (!AllLoadWav())
+    {
+        return (false);
+    }
+    return (true);
 }
 
 void Audio::Shutdown()
