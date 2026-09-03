@@ -8,11 +8,6 @@
 
 #include <algorithm>
 
-namespace
-{
-	constexpr bool bSpawnLargestFruitForTesting = false;
-}
-
 GameSession::GameSession()
 	: Physics(FPhysicsWorldSettings{
 		GameConfig::GravityAcceleration,
@@ -76,6 +71,14 @@ void GameSession::ReturnToMainMenu()
 	ParticleSystem.Clear();
 	AnimationSystem.Clear();
 	bIsMainMenu = true;
+}
+
+void GameSession::ToggleLargestFruitSpawnForTesting()
+{
+	bSpawnLargestFruitForTesting = !bSpawnLargestFruitForTesting;
+	NextLevel = bSpawnLargestFruitForTesting
+		? static_cast<int>(FruitCatalog::LevelCount) - 1
+		: RandomSpawnLevel();
 }
 
 void GameSession::MoveCurrentBall(float MouseWorldX)

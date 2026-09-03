@@ -20,6 +20,7 @@ public:
 	void StartGame();
 	void RestartGame();
 	void ReturnToMainMenu();
+	void ToggleLargestFruitSpawnForTesting();
 
 	void MoveCurrentBall(float MouseWorldX);
 	bool DropCurrentBall();
@@ -35,6 +36,7 @@ public:
 	bool CanDropBall() const { return bCanDropBall; }
 	bool IsMainMenu() const { return bIsMainMenu; }
 	bool IsGameOver() const { return bIsGameOver; }
+	bool IsLargestFruitSpawnTestEnabled() const { return bSpawnLargestFruitForTesting; }
 
 private:
 	void ResetGameState();
@@ -60,6 +62,7 @@ private:
 	bool bCanDropBall = true;
 	bool bIsGameOver = false;
 	bool bIsMainMenu = true;
+	bool bSpawnLargestFruitForTesting = false;
 
 	struct FPendingMerge
 	{

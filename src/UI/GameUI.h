@@ -24,7 +24,7 @@ class GameUI
 {
 public:
 	EGameUICommand Draw(
-		const GameSession& Session,
+		GameSession& Session,
 		const D3D11_VIEWPORT& Viewport,
 		const FruitRenderer& InFruitRenderer,
 		Leaderboard& InLeaderboard,
@@ -34,7 +34,7 @@ private:
 	EGameUICommand DrawMainMenu(const D3D11_VIEWPORT& Viewport) const;
 	EGameUICommand DrawLeaderboard(const D3D11_VIEWPORT& Viewport, const Leaderboard& InLeaderboard) const;
 	EGameUICommand DrawGamePanel(
-		const GameSession& Session,
+		GameSession& Session,
 		const D3D11_VIEWPORT& Viewport,
 		const FruitRenderer& InFruitRenderer) const;
 	EGameUICommand DrawGameOverPanel(
