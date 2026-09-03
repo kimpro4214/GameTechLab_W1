@@ -9,6 +9,8 @@
 
 #include <algorithm>
 
+#include "Input/GamepadManager.h"
+
 PhysicsWorld::PhysicsWorld(const FPhysicsWorldSettings& InitialSettings)
 	: Settings(InitialSettings)
 {

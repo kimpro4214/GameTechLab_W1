@@ -15,8 +15,9 @@
 #include "Rendering/FruitRenderer.h"
 #include "Rendering/ParticleRenderer.h"
 #include "UI/GameUI.h"
-
 #include "Audio/Audio.h"
+
+#include "Input/GamepadManager.h"
 
 namespace
 {
@@ -80,6 +81,8 @@ namespace
 		Input.bIsLeftMouseDown = ImGui::IsMouseDown(ImGuiMouseButton_Left);
 		Input.bIsLeftMouseReleased = ImGui::IsMouseReleased(ImGuiMouseButton_Left);
 		Input.bIsRightMouseReleased = ImGui::IsMouseReleased(ImGuiMouseButton_Right);
+
+		GamepadManager::GetInstance().Update();
 		return Input;
 	}
 
@@ -171,6 +174,13 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 		return 3;
 	}
 
+	if (!Audio::GetInstance().Initialize(Window.GetHandle()))
+	{
+		return 4;
+	}
+
+	GamepadManager::GetInstance().Initialize();
+
 	GameSession Session;
 	GameController Controller;
 	GameUI UI;
@@ -185,7 +195,7 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 	LARGE_INTEGER Frequency;
 	QueryPerformanceFrequency(&Frequency);
 
-	Audio::GetInstance().Initializer(Window.GetHandle());
+	
 
 	bool bShouldExit = false;
 	while (!bShouldExit)
@@ -211,6 +221,7 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 
 		ImGui_ImplDX11_NewFrame();
 		ImGui_ImplWin32_NewFrame();
+
 		ImGui::NewFrame();
 
 		Controller.HandleInput(
@@ -248,6 +259,7 @@ int GameApplication::Run(HINSTANCE Instance, int ShowCommand)
 	}
 
 	Audio::GetInstance().Shutdown();
+	GamepadManager::GetInstance().Shutdown();
 
 	ImGui_ImplDX11_Shutdown();
 	ImGui_ImplWin32_Shutdown();

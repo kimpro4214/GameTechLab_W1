@@ -22,6 +22,7 @@ public:
 	void ReturnToMainMenu();
 
 	void MoveCurrentBall(float MouseWorldX);
+	void GamepadMoveCurrentBall(float CurrentMoveValueX);
 	bool DropCurrentBall();
 	void SwapCurrentBall();
 
@@ -42,6 +43,7 @@ private:
 	void CheckGameOver();
 	bool TryMergeBalls(UBall& BallA, UBall& BallB);
 	void UpdateDropCooldown();
+	void UpdateStoreCooldown();
 	void ResetFrameDebugState();
 	int RandomSpawnLevel();
 	UBall* GetCurrentBall();
@@ -50,6 +52,7 @@ private:
 	PhysicsWorld Physics;
 	std::mt19937 RandomEngine;
 	std::chrono::steady_clock::time_point LastDropTime{};
+	std::chrono::steady_clock::time_point LastStoreTime{};
 
 	MergeParticleSystem ParticleSystem;
 	FruitAnimationSystem AnimationSystem;
@@ -58,6 +61,7 @@ private:
 	int NextLevel = 0;
 	int StorageLevel = -1;
 	bool bCanDropBall = true;
+	bool bCanStoreBall = true;
 	bool bIsGameOver = false;
 	bool bIsMainMenu = true;
 

@@ -44,7 +44,7 @@ public:
 	static Audio& GetInstance();
 
 	int Play(std::string name);
-	void Initializer(HWND hWindow);
+	bool Initialize(HWND hWindow);
 	void Shutdown();
 
 private:
@@ -53,9 +53,10 @@ private:
 
 	HRESULT CreateDirectSound(HWND hWindow);
 	HRESULT CreateSoundBuffer(FWaveData& _FWaveData);
-	void AllLoadWav();
+	bool AllLoadWav();
 	int LoadWav(FWaveData& _WaveData);
 
-	std::unordered_map<std::string, FWaveData> WaveDataMap;
 	ComPtr<IDirectSound8> DirectSoundPtr;
+	std::unordered_map<std::string, FWaveData> WaveDataMap;
+	
 };
